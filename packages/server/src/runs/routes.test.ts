@@ -1,4 +1,4 @@
-import { mkdirSync, rmSync } from 'node:fs'
+import { existsSync, mkdirSync, rmSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { afterEach, beforeEach, describe, expect, it } from 'vitest'
@@ -89,6 +89,52 @@ describe('GET /api/runs/:runId', () => {
     const body = (await res.json()) as storage.RunRecord & { tests: storage.TestRecord[] }
     expect(body.runId).toBe('run-1')
     expect(body.tests).toHaveLength(1)
+  })
+})
+
+describe('POST /api/runs/:runId/tests', () => {
+  it('saves test metadata and returns 201', async () => {
+    storage.createRun({ runId: 'run-1', project: 'p', startedAt: '2026-04-02T10:00:00.000Z', status: 'running' })
+    const metadata: storage.TestRecord = {
+      testId: 'suite--my-test',
+      title: 'my test',
+      titlePath: ['suite', 'my test'],
+      location: { file: 'a.spec.ts', line: 5, column: 1 },
+      status: 'passed',
+      duration: 300,
+      errors: [],
+      retry: 0,
+      annotations: [],
+      attachments: [],
+    }
+    const form = new FormData()
+    form.append('metadata', JSON.stringify(metadata))
+    const res = await runs.request('/run-1/tests', { method: 'POST', body: form })
+    expect(res.status).toBe(201)
+    expect(storage.getTestResults('run-1')).toHaveLength(1)
+    expect(storage.getTestResults('run-1')[0].testId).toBe('suite--my-test')
+  })
+
+  it('saves attachment files to disk', async () => {
+    storage.createRun({ runId: 'run-1', project: 'p', startedAt: '2026-04-02T10:00:00.000Z', status: 'running' })
+    const metadata: storage.TestRecord = {
+      testId: 'test-with-attach',
+      title: 'test',
+      titlePath: ['test'],
+      location: { file: 'a.spec.ts', line: 1, column: 1 },
+      status: 'failed',
+      duration: 100,
+      errors: [],
+      retry: 0,
+      annotations: [],
+      attachments: [{ name: 'screenshot.png', contentType: 'image/png', filename: 'screenshot.png' }],
+    }
+    const form = new FormData()
+    form.append('metadata', JSON.stringify(metadata))
+    form.append('attachment_0', new Blob([Buffer.from('fake-png')], { type: 'image/png' }), 'screenshot.png')
+    await runs.request('/run-1/tests', { method: 'POST', body: form })
+    const attachPath = join(testDir, 'run-1', 'attachments', 'test-with-attach', 'screenshot.png')
+    expect(existsSync(attachPath)).toBe(true)
   })
 })
 
