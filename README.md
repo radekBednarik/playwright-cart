@@ -86,6 +86,10 @@ Environment variables for the server (set in `.env` or your CI environment):
 | `PORT` | `3001` | Port the server listens on |
 | `DATA_DIR` | `/app/data` | Directory for run data, attachments, and extracted reports |
 
+> **Note:** Changing `DATA_DIR` requires updating the volume mount in `docker-compose.yml` as well,
+> since Docker Compose does not interpolate environment variables in volume definitions. Find the line
+> `- reports_data:/app/data` under the `server` service and change `/app/data` to match your chosen path.
+
 Copy `.env.example` to `.env` to customise:
 
 ```bash
