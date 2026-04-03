@@ -149,6 +149,63 @@ pnpm --filter @playwright-cart/server test
 pnpm --filter @playwright-cart/server test:watch
 ```
 
+## Manual E2E Testing
+
+A self-contained E2E test suite lives in `packages/e2e`. It uses `@playwright-cart/reporter` directly from the monorepo (no npm publish needed) and runs Playwright tests against a tiny static Todo demo app. Use this to manually verify the full reporter → server → dashboard pipeline.
+
+### Prerequisites
+
+- Docker + Docker Compose (to run the server and web dashboard)
+- Node.js ≥ 20 + pnpm (already required for development)
+- Playwright browsers installed once:
+  ```bash
+  pnpm --filter @playwright-cart/e2e exec playwright install chromium
+  ```
+
+### Running the E2E tests
+
+**1. Start the stack:**
+
+```bash
+docker compose up --build -d
+```
+
+Wait until both services are healthy:
+
+```bash
+docker compose ps   # server and web should show "healthy"
+```
+
+**2. Run the tests** (reporter is built automatically via `pretest`):
+
+```bash
+pnpm --filter @playwright-cart/e2e test
+```
+
+Expect 4 passing tests and 1 intentional failure — the failing test exists to verify that the dashboard correctly displays error states and attached traces.
+
+**3. Open the dashboard:**
+
+Open `http://localhost` in your browser.
+
+### What to verify
+
+| Check | Where |
+|-------|-------|
+| New run appears with project `e2e-demo` | Runs list |
+| Shows 4 passed, 1 failed | Run summary |
+| Each test has a trace attachment | Test detail view |
+| Failing test shows a timeout error message | Test detail view |
+| Trace viewer opens for a test | Click the trace attachment |
+| HTML report link is present | Run detail |
+
+### Tear down
+
+```bash
+docker compose down          # stop containers, preserve data volume
+docker compose down -v       # stop containers AND delete all run data
+```
+
 ## API Reference
 
 All endpoints are under the server (default: `http://localhost:3001`).
