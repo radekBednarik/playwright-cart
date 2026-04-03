@@ -1,8 +1,8 @@
-import { existsSync, mkdirSync, readdirSync, readFileSync, writeFileSync } from 'node:fs'
+import { existsSync, mkdirSync, readFileSync, readdirSync, writeFileSync } from 'node:fs'
 import { join } from 'node:path'
 
 export const storageConfig = {
-  dataDir: process.env['DATA_DIR'] ?? './data',
+  dataDir: process.env.DATA_DIR ?? './data',
 }
 
 export interface RunRecord {
@@ -54,11 +54,9 @@ export function updateRun(runId: string, update: Partial<RunRecord>): void {
 export function listRuns(): RunRecord[] {
   if (!existsSync(storageConfig.dataDir)) return []
   return readdirSync(storageConfig.dataDir, { withFileTypes: true })
-    .filter(
-      e => e.isDirectory() && existsSync(join(storageConfig.dataDir, e.name, 'run.json')),
-    )
+    .filter((e) => e.isDirectory() && existsSync(join(storageConfig.dataDir, e.name, 'run.json')))
     .map(
-      e =>
+      (e) =>
         JSON.parse(
           readFileSync(join(storageConfig.dataDir, e.name, 'run.json'), 'utf-8'),
         ) as RunRecord,
@@ -83,8 +81,8 @@ export function getTestResults(runId: string): TestRecord[] {
   const dir = join(storageConfig.dataDir, runId, 'tests')
   if (!existsSync(dir)) return []
   return readdirSync(dir)
-    .filter(f => f.endsWith('.json'))
-    .map(f => JSON.parse(readFileSync(join(dir, f), 'utf-8')) as TestRecord)
+    .filter((f) => f.endsWith('.json'))
+    .map((f) => JSON.parse(readFileSync(join(dir, f), 'utf-8')) as TestRecord)
 }
 
 export function getAttachmentsDir(runId: string, testId: string): string {

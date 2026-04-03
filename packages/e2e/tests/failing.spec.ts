@@ -1,4 +1,4 @@
-import { test, expect } from '@playwright/test'
+import { expect, test } from '@playwright/test'
 
 // This test is intentionally designed to fail.
 // Its purpose is to verify that the playwright-cart dashboard correctly

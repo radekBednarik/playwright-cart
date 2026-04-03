@@ -9,11 +9,7 @@ interface Props {
 
 export default function RunsTable({ runs }: Props) {
   if (runs.length === 0) {
-    return (
-      <p className="py-8 text-center text-tn-muted">
-        No runs match the current filters.
-      </p>
-    )
+    return <p className="py-8 text-center text-tn-muted">No runs match the current filters.</p>
   }
 
   return (
@@ -36,15 +32,11 @@ export default function RunsTable({ runs }: Props) {
             <tr key={run.runId} className="transition-colors hover:bg-tn-highlight">
               <td className="px-4 py-3">
                 <div className="font-medium text-tn-fg">{run.project}</div>
-                {run.branch && (
-                  <div className="text-xs text-tn-blue">{run.branch}</div>
-                )}
+                {run.branch && <div className="text-xs text-tn-blue">{run.branch}</div>}
               </td>
               <td className="px-4 py-3">
                 {run.commitSha ? (
-                  <code className="text-xs text-tn-muted">
-                    {run.commitSha.slice(0, 7)}
-                  </code>
+                  <code className="text-xs text-tn-muted">{run.commitSha.slice(0, 7)}</code>
                 ) : (
                   <span className="text-xs text-tn-muted">—</span>
                 )}

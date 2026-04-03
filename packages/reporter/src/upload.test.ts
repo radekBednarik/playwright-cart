@@ -23,7 +23,8 @@ describe('uploadWithRetry', () => {
   })
 
   it('retries on non-2xx response until success', async () => {
-    const fn = vi.fn()
+    const fn = vi
+      .fn()
       .mockResolvedValueOnce(new Response('', { status: 500 }))
       .mockResolvedValueOnce(new Response('', { status: 503 }))
       .mockResolvedValue(new Response('', { status: 201 }))
@@ -38,7 +39,8 @@ describe('uploadWithRetry', () => {
   })
 
   it('retries on network error', async () => {
-    const fn = vi.fn()
+    const fn = vi
+      .fn()
       .mockRejectedValueOnce(new Error('ECONNREFUSED'))
       .mockResolvedValue(new Response('', { status: 200 }))
     await uploadWithRetry(fn, 3, 1)

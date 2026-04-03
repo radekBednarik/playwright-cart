@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { cycleTheme, type Theme } from './theme.js'
+import { type Theme, cycleTheme } from './theme.js'
 
 describe('cycleTheme', () => {
   it('cycles system → dark → light → system', () => {

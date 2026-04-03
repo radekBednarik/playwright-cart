@@ -2,8 +2,8 @@ import { existsSync, mkdirSync, rmSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { afterEach, beforeEach, describe, expect, it } from 'vitest'
-import * as storage from './storage.js'
 import { runs } from './routes.js'
+import * as storage from './storage.js'
 
 let testDir: string
 
@@ -56,7 +56,12 @@ describe('GET /api/runs', () => {
   })
 
   it('returns existing runs', async () => {
-    storage.createRun({ runId: 'run-1', project: 'p', startedAt: '2026-04-02T10:00:00.000Z', status: 'running' })
+    storage.createRun({
+      runId: 'run-1',
+      project: 'p',
+      startedAt: '2026-04-02T10:00:00.000Z',
+      status: 'running',
+    })
     const res = await runs.request('/')
     const body = (await res.json()) as storage.RunRecord[]
     expect(body).toHaveLength(1)
@@ -71,7 +76,12 @@ describe('GET /api/runs/:runId', () => {
   })
 
   it('returns run with test results', async () => {
-    storage.createRun({ runId: 'run-1', project: 'p', startedAt: '2026-04-02T10:00:00.000Z', status: 'running' })
+    storage.createRun({
+      runId: 'run-1',
+      project: 'p',
+      startedAt: '2026-04-02T10:00:00.000Z',
+      status: 'running',
+    })
     storage.writeTestResult('run-1', {
       testId: 'my-test',
       title: 'my test',
@@ -94,7 +104,12 @@ describe('GET /api/runs/:runId', () => {
 
 describe('POST /api/runs/:runId/tests', () => {
   it('saves test metadata and returns 201', async () => {
-    storage.createRun({ runId: 'run-1', project: 'p', startedAt: '2026-04-02T10:00:00.000Z', status: 'running' })
+    storage.createRun({
+      runId: 'run-1',
+      project: 'p',
+      startedAt: '2026-04-02T10:00:00.000Z',
+      status: 'running',
+    })
     const metadata: storage.TestRecord = {
       testId: 'suite--my-test',
       title: 'my test',
@@ -116,7 +131,12 @@ describe('POST /api/runs/:runId/tests', () => {
   })
 
   it('saves attachment files to disk', async () => {
-    storage.createRun({ runId: 'run-1', project: 'p', startedAt: '2026-04-02T10:00:00.000Z', status: 'running' })
+    storage.createRun({
+      runId: 'run-1',
+      project: 'p',
+      startedAt: '2026-04-02T10:00:00.000Z',
+      status: 'running',
+    })
     const metadata: storage.TestRecord = {
       testId: 'test-with-attach',
       title: 'test',
@@ -127,11 +147,17 @@ describe('POST /api/runs/:runId/tests', () => {
       errors: [],
       retry: 0,
       annotations: [],
-      attachments: [{ name: 'screenshot.png', contentType: 'image/png', filename: 'screenshot.png' }],
+      attachments: [
+        { name: 'screenshot.png', contentType: 'image/png', filename: 'screenshot.png' },
+      ],
     }
     const form = new FormData()
     form.append('metadata', JSON.stringify(metadata))
-    form.append('attachment_0', new Blob([Buffer.from('fake-png')], { type: 'image/png' }), 'screenshot.png')
+    form.append(
+      'attachment_0',
+      new Blob([Buffer.from('fake-png')], { type: 'image/png' }),
+      'screenshot.png',
+    )
     await runs.request('/run-1/tests', { method: 'POST', body: form })
     const attachPath = join(testDir, 'run-1', 'attachments', 'test-with-attach', 'screenshot.png')
     expect(existsSync(attachPath)).toBe(true)
@@ -141,7 +167,12 @@ describe('POST /api/runs/:runId/tests', () => {
 describe('POST /api/runs/:runId/report', () => {
   it('extracts zip, sets reportUrl, updates run status', async () => {
     const AdmZip = (await import('adm-zip')).default
-    storage.createRun({ runId: 'run-1', project: 'p', startedAt: '2026-04-02T10:00:00.000Z', status: 'running' })
+    storage.createRun({
+      runId: 'run-1',
+      project: 'p',
+      startedAt: '2026-04-02T10:00:00.000Z',
+      status: 'running',
+    })
 
     const zip = new AdmZip()
     zip.addFile('index.html', Buffer.from('<html>Report</html>'))
@@ -168,7 +199,12 @@ describe('POST /api/runs/:runId/report', () => {
 
 describe('POST /api/runs/:runId/complete', () => {
   it('updates run status and completedAt', async () => {
-    storage.createRun({ runId: 'run-1', project: 'p', startedAt: '2026-04-02T10:00:00.000Z', status: 'running' })
+    storage.createRun({
+      runId: 'run-1',
+      project: 'p',
+      startedAt: '2026-04-02T10:00:00.000Z',
+      status: 'running',
+    })
     const res = await runs.request('/run-1/complete', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },

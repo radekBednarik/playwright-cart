@@ -1,5 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
-import { fetchRun, fetchRuns, fetchTest, NotFoundError } from './api.js'
+import { NotFoundError, fetchRun, fetchRuns, fetchTest } from './api.js'
 
 beforeEach(() => {
   vi.stubGlobal('fetch', vi.fn())
@@ -11,7 +11,14 @@ afterEach(() => {
 
 describe('fetchRuns', () => {
   it('fetches /api/runs and returns the array', async () => {
-    const mockRuns = [{ runId: 'run-1', project: 'my-app', startedAt: '2026-04-02T10:00:00.000Z', status: 'passed' }]
+    const mockRuns = [
+      {
+        runId: 'run-1',
+        project: 'my-app',
+        startedAt: '2026-04-02T10:00:00.000Z',
+        status: 'passed',
+      },
+    ]
     vi.mocked(fetch).mockResolvedValue(new Response(JSON.stringify(mockRuns), { status: 200 }))
 
     const result = await fetchRuns()
@@ -28,7 +35,13 @@ describe('fetchRuns', () => {
 
 describe('fetchRun', () => {
   it('fetches /api/runs/:runId and returns run with tests', async () => {
-    const mockRun = { runId: 'run-1', project: 'p', startedAt: '2026-04-02T10:00:00.000Z', status: 'passed', tests: [] }
+    const mockRun = {
+      runId: 'run-1',
+      project: 'p',
+      startedAt: '2026-04-02T10:00:00.000Z',
+      status: 'passed',
+      tests: [],
+    }
     vi.mocked(fetch).mockResolvedValue(new Response(JSON.stringify(mockRun), { status: 200 }))
 
     const result = await fetchRun('run-1')

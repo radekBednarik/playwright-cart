@@ -17,10 +17,9 @@ export default function AttachmentList({ runId, testId, attachments }: Props) {
         Attachments
       </h3>
       <div className="flex flex-wrap gap-2">
-        {items.map((att, i) => {
-          const url = `/reports/${runId}/attachments/${testId}/${att.filename!}`
-          const isTrace =
-            att.name === 'trace' || att.filename!.endsWith('.zip')
+        {items.map((att) => {
+          const url = `/reports/${runId}/attachments/${testId}/${att.filename ?? ''}`
+          const isTrace = att.name === 'trace' || att.filename?.endsWith('.zip')
 
           if (isTrace) {
             const traceUrl = `https://trace.playwright.dev/?trace=${encodeURIComponent(
@@ -28,7 +27,7 @@ export default function AttachmentList({ runId, testId, attachments }: Props) {
             )}`
             return (
               <a
-                key={i}
+                key={att.filename ?? att.name}
                 href={traceUrl}
                 target="_blank"
                 rel="noopener noreferrer"
@@ -41,7 +40,7 @@ export default function AttachmentList({ runId, testId, attachments }: Props) {
 
           return (
             <a
-              key={i}
+              key={att.filename ?? att.name}
               href={url}
               download={att.filename}
               className="inline-flex items-center gap-1.5 rounded border border-tn-border px-3 py-1.5 text-sm text-tn-fg transition-colors hover:bg-tn-highlight"

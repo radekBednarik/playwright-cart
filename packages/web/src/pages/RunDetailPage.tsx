@@ -7,7 +7,7 @@ import type { TestRecord } from '../lib/api.js'
 
 export default function RunDetailPage() {
   const { runId } = useParams<{ runId: string }>()
-  const { data: run, isLoading, error } = useRun(runId!)
+  const { data: run, isLoading, error } = useRun(runId ?? '')
 
   if (isLoading) return <Skeleton />
 
@@ -30,27 +30,17 @@ export default function RunDetailPage() {
 
   return (
     <div>
-      <Link
-        to="/"
-        className="mb-4 inline-block text-sm text-tn-blue hover:text-tn-purple"
-      >
+      <Link to="/" className="mb-4 inline-block text-sm text-tn-blue hover:text-tn-purple">
         ← All runs
       </Link>
       <RunHeader run={run} />
       <RunStats tests={run.tests} />
       {run.tests.length === 0 ? (
-        <p className="py-8 text-center text-tn-muted">
-          No test results uploaded yet.
-        </p>
+        <p className="py-8 text-center text-tn-muted">No test results uploaded yet.</p>
       ) : (
         <div className="space-y-3">
           {[...suites.entries()].map(([suite, tests]) => (
-            <SuiteGroup
-              key={suite}
-              runId={run.runId}
-              suite={suite}
-              tests={tests}
-            />
+            <SuiteGroup key={suite} runId={run.runId} suite={suite} tests={tests} />
           ))}
         </div>
       )}
@@ -63,7 +53,7 @@ function groupBySuite(tests: TestRecord[]): Map<string, TestRecord[]> {
   for (const test of tests) {
     const suite = test.titlePath[0] ?? 'Uncategorized'
     if (!map.has(suite)) map.set(suite, [])
-    map.get(suite)!.push(test)
+    map.get(suite)?.push(test)
   }
   return map
 }

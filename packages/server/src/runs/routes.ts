@@ -58,7 +58,7 @@ runs.post('/:runId/complete', async (c) => {
 
 runs.post('/:runId/tests', async (c) => {
   const body = await c.req.parseBody()
-  const metadata = JSON.parse(body['metadata'] as string) as storage.TestRecord
+  const metadata = JSON.parse(body.metadata as string) as storage.TestRecord
   const attachmentsDir = storage.getAttachmentsDir(c.req.param('runId'), metadata.testId)
 
   for (let i = 0; ; i++) {
@@ -77,9 +77,9 @@ runs.post('/:runId/tests', async (c) => {
 runs.post('/:runId/report', async (c) => {
   const runId = c.req.param('runId')
   const body = await c.req.parseBody()
-  const reportFile = body['report'] as File
-  const completedAt = body['completedAt'] as string
-  const status = body['status'] as storage.RunRecord['status']
+  const reportFile = body.report as File
+  const completedAt = body.completedAt as string
+  const status = body.status as storage.RunRecord['status']
 
   const zipBuf = Buffer.from(await reportFile.arrayBuffer())
   const zip = new AdmZip(zipBuf)

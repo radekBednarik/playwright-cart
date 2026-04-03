@@ -1,5 +1,5 @@
 import { useCallback, useState } from 'react'
-import { applyTheme, cycleTheme, getStoredTheme, type Theme } from '../lib/theme.js'
+import { type Theme, applyTheme, cycleTheme, getStoredTheme } from '../lib/theme.js'
 
 export function useTheme() {
   const [theme, setTheme] = useState<Theme>(getStoredTheme)

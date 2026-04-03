@@ -19,7 +19,10 @@ export default function TopNav() {
   return (
     <nav className="border-b border-tn-border bg-tn-panel px-4 py-3">
       <div className="mx-auto flex max-w-6xl items-center">
-        <a href="/" className="text-lg font-bold text-tn-purple hover:opacity-80 transition-opacity">
+        <a
+          href="/"
+          className="text-lg font-bold text-tn-purple hover:opacity-80 transition-opacity"
+        >
           🎭 Playwright Cart
         </a>
         <div className="ml-auto">

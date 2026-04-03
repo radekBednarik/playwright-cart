@@ -30,11 +30,7 @@ export function FilterBar({ runs }: Props) {
 
   return (
     <div className="mb-4 flex gap-3">
-      <FilterSelect
-        label="Project"
-        value={project}
-        onChange={(v) => setParam('project', v)}
-      >
+      <FilterSelect label="Project" value={project} onChange={(v) => setParam('project', v)}>
         <option value="">All projects</option>
         {projects.map((p) => (
           <option key={p} value={p}>
@@ -42,11 +38,7 @@ export function FilterBar({ runs }: Props) {
           </option>
         ))}
       </FilterSelect>
-      <FilterSelect
-        label="Branch"
-        value={branch}
-        onChange={(v) => setParam('branch', v)}
-      >
+      <FilterSelect label="Branch" value={branch} onChange={(v) => setParam('branch', v)}>
         <option value="">All branches</option>
         {branches.map((b) => (
           <option key={b} value={b}>
@@ -54,11 +46,7 @@ export function FilterBar({ runs }: Props) {
           </option>
         ))}
       </FilterSelect>
-      <FilterSelect
-        label="Status"
-        value={status}
-        onChange={(v) => setParam('status', v)}
-      >
+      <FilterSelect label="Status" value={status} onChange={(v) => setParam('status', v)}>
         <option value="">All statuses</option>
         {ALL_STATUSES.map((s) => (
           <option key={s} value={s}>

@@ -6,7 +6,7 @@ import { useTest } from '../hooks/useTest.js'
 
 export default function TestDetailPage() {
   const { runId, testId } = useParams<{ runId: string; testId: string }>()
-  const { data: test, isLoading, error } = useTest(runId!, testId!)
+  const { data: test, isLoading, error } = useTest(runId ?? '', testId ?? '')
 
   if (isLoading) return <Skeleton />
 
@@ -16,10 +16,7 @@ export default function TestDetailPage() {
         <p className="mb-4 text-tn-muted">
           {error.name === 'NotFoundError' ? 'Test not found.' : error.message}
         </p>
-        <Link
-          to={`/runs/${runId}`}
-          className="text-tn-blue hover:text-tn-purple"
-        >
+        <Link to={`/runs/${runId}`} className="text-tn-blue hover:text-tn-purple">
           ← Back to run
         </Link>
       </div>
@@ -39,10 +36,9 @@ export default function TestDetailPage() {
       <TestHeader test={test} />
       {test.errors.length > 0 && (
         <div className="mb-6 space-y-3">
-          <h3 className="text-xs font-medium uppercase tracking-wider text-tn-muted">
-            Errors
-          </h3>
+          <h3 className="text-xs font-medium uppercase tracking-wider text-tn-muted">Errors</h3>
           {test.errors.map((err, i) => (
+            // biome-ignore lint/suspicious/noArrayIndexKey: errors have no stable unique id
             <ErrorBlock key={i} error={err} />
           ))}
         </div>
@@ -54,21 +50,16 @@ export default function TestDetailPage() {
           </h3>
           <div className="space-y-1">
             {test.annotations.map((ann, i) => (
+              // biome-ignore lint/suspicious/noArrayIndexKey: annotations have no stable unique id
               <div key={i} className="text-sm text-tn-fg">
                 <span className="text-tn-blue">[{ann.type}]</span>
-                {ann.description && (
-                  <span className="ml-2 text-tn-muted">{ann.description}</span>
-                )}
+                {ann.description && <span className="ml-2 text-tn-muted">{ann.description}</span>}
               </div>
             ))}
           </div>
         </div>
       )}
-      <AttachmentList
-        runId={runId!}
-        testId={testId!}
-        attachments={test.attachments}
-      />
+      <AttachmentList runId={runId ?? ''} testId={testId ?? ''} attachments={test.attachments} />
     </div>
   )
 }

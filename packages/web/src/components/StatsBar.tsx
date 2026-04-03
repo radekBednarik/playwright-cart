@@ -8,8 +8,7 @@ export default function StatsBar({ runs }: Props) {
   const completed = runs.filter((r) => r.status !== 'running')
   const passed = runs.filter((r) => r.status === 'passed').length
   const failed = runs.filter((r) => r.status === 'failed').length
-  const passRate =
-    completed.length > 0 ? Math.round((passed / completed.length) * 100) : 0
+  const passRate = completed.length > 0 ? Math.round((passed / completed.length) * 100) : 0
 
   return (
     <div className="mb-6 grid grid-cols-3 gap-4">

@@ -15,9 +15,7 @@ export default function RunHeader({ run }: Props) {
         </div>
         <div className="space-x-3 text-sm text-tn-muted">
           {run.branch && <span className="text-tn-blue">{run.branch}</span>}
-          {run.commitSha && (
-            <code className="text-tn-muted">{run.commitSha.slice(0, 7)}</code>
-          )}
+          {run.commitSha && <code className="text-tn-muted">{run.commitSha.slice(0, 7)}</code>}
           <span>{new Date(run.startedAt).toLocaleString()}</span>
         </div>
       </div>

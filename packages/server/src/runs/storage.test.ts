@@ -35,7 +35,12 @@ describe('createRun / getRun', () => {
 
 describe('updateRun', () => {
   it('merges partial updates into the existing record', () => {
-    storage.createRun({ runId: 'run-1', project: 'p', startedAt: '2026-04-02T10:00:00.000Z', status: 'running' })
+    storage.createRun({
+      runId: 'run-1',
+      project: 'p',
+      startedAt: '2026-04-02T10:00:00.000Z',
+      status: 'running',
+    })
     storage.updateRun('run-1', { status: 'passed', completedAt: '2026-04-02T10:01:00.000Z' })
     const run = storage.getRun('run-1')
     expect(run?.status).toBe('passed')
@@ -50,8 +55,18 @@ describe('listRuns', () => {
   })
 
   it('returns runs sorted by startedAt descending', () => {
-    storage.createRun({ runId: 'a', project: 'p', startedAt: '2026-04-02T09:00:00.000Z', status: 'running' })
-    storage.createRun({ runId: 'b', project: 'p', startedAt: '2026-04-02T10:00:00.000Z', status: 'running' })
+    storage.createRun({
+      runId: 'a',
+      project: 'p',
+      startedAt: '2026-04-02T09:00:00.000Z',
+      status: 'running',
+    })
+    storage.createRun({
+      runId: 'b',
+      project: 'p',
+      startedAt: '2026-04-02T10:00:00.000Z',
+      status: 'running',
+    })
     const runs = storage.listRuns()
     expect(runs[0].runId).toBe('b')
     expect(runs[1].runId).toBe('a')
@@ -60,7 +75,12 @@ describe('listRuns', () => {
 
 describe('writeTestResult / getTestResults', () => {
   it('stores and retrieves test results', () => {
-    storage.createRun({ runId: 'run-1', project: 'p', startedAt: '2026-04-02T10:00:00.000Z', status: 'running' })
+    storage.createRun({
+      runId: 'run-1',
+      project: 'p',
+      startedAt: '2026-04-02T10:00:00.000Z',
+      status: 'running',
+    })
     const test: storage.TestRecord = {
       testId: 'suite--my-test',
       title: 'my test',

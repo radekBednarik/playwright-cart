@@ -1,12 +1,10 @@
-import archiver from 'archiver'
 import { createWriteStream, readFileSync, rmSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
+import archiver from 'archiver'
 
 export function buildTestId(titlePath: string[], retry: number): string {
-  const slug = titlePath
-    .map((p) => p.replace(/[^a-z0-9]/gi, '-').toLowerCase())
-    .join('--')
+  const slug = titlePath.map((p) => p.replace(/[^a-z0-9]/gi, '-').toLowerCase()).join('--')
   return retry > 0 ? `${slug}-retry${retry}` : slug
 }
 

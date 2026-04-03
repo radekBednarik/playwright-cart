@@ -1,3 +1,5 @@
+import { existsSync, readFileSync } from 'node:fs'
+import { join, resolve } from 'node:path'
 import type {
   FullConfig,
   FullResult,
@@ -6,8 +8,6 @@ import type {
   TestCase,
   TestResult,
 } from '@playwright/test/reporter'
-import { existsSync, readFileSync } from 'node:fs'
-import { join, resolve } from 'node:path'
 import { Semaphore, buildTestId, uploadWithRetry, zipDirectory } from './upload.js'
 
 export interface PlaywrightCartReporterOptions {

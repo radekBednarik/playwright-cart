@@ -11,9 +11,7 @@ interface Props {
 
 export default function SuiteGroup({ runId, suite, tests }: Props) {
   const [open, setOpen] = useState(true)
-  const failed = tests.filter(
-    (t) => t.status === 'failed' || t.status === 'timedOut',
-  ).length
+  const failed = tests.filter((t) => t.status === 'failed' || t.status === 'timedOut').length
 
   return (
     <div className="overflow-hidden rounded-lg border border-tn-border">
@@ -42,9 +40,7 @@ export default function SuiteGroup({ runId, suite, tests }: Props) {
             >
               <TestStatusIcon status={test.status} />
               <span className="flex-1 text-sm text-tn-fg">{test.title}</span>
-              <span className="text-xs text-tn-muted">
-                {formatDuration(test.duration)}
-              </span>
+              <span className="text-xs text-tn-muted">{formatDuration(test.duration)}</span>
             </Link>
           ))}
         </div>
@@ -54,10 +50,10 @@ export default function SuiteGroup({ runId, suite, tests }: Props) {
 }
 
 const STATUS_ICON: Record<TestStatus, { icon: string; className: string }> = {
-  passed:      { icon: '✓', className: 'text-tn-green' },
-  failed:      { icon: '✗', className: 'text-tn-red' },
-  timedOut:    { icon: '⏱', className: 'text-tn-yellow' },
-  skipped:     { icon: '○', className: 'text-tn-muted' },
+  passed: { icon: '✓', className: 'text-tn-green' },
+  failed: { icon: '✗', className: 'text-tn-red' },
+  timedOut: { icon: '⏱', className: 'text-tn-yellow' },
+  skipped: { icon: '○', className: 'text-tn-muted' },
   interrupted: { icon: '!', className: 'text-tn-muted' },
 }
 
