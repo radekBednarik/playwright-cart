@@ -8,11 +8,18 @@
   "scripts": {
     "build": "tsc",
     "dev": "tsc --watch",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run",
+    "test:watch": "vitest"
   },
   "devDependencies": {
     "@playwright/test": "^1.49.0",
+    "@types/archiver": "^7.0.0",
     "@types/node": "^22.0.0",
-    "typescript": "^5.7.3"
+    "typescript": "^5.7.3",
+    "vitest": "^4.1.2"
+  },
+  "dependencies": {
+    "archiver": "^7.0.1"
   }
 }
