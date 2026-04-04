@@ -7,6 +7,6 @@ import { db } from './client.js'
  */
 export async function resetDb(): Promise<void> {
   await db.execute(
-    sql`TRUNCATE TABLE test_errors, test_annotations, test_attachments, tests, runs RESTART IDENTITY CASCADE`,
+    sql`TRUNCATE TABLE runs RESTART IDENTITY CASCADE`,
   )
 }

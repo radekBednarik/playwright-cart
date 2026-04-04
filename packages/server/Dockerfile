@@ -23,6 +23,7 @@ ENV NODE_ENV=production
 COPY --from=deps /app/node_modules /app/node_modules
 COPY --from=deps /app/packages/server/node_modules ./node_modules
 COPY --from=build /app/packages/server/dist ./dist
+COPY --from=build /app/packages/server/src/db/migrations ./dist/db/migrations
 COPY packages/server/package.json ./
 
 EXPOSE 3001
