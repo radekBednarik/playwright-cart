@@ -1,5 +1,7 @@
 import { defineConfig } from '@playwright/test'
 
+import 'dotenv/config'
+
 export default defineConfig({
   testDir: './tests',
   reporter: [
@@ -11,6 +13,7 @@ export default defineConfig({
         project: 'e2e-demo',
         branch: process.env.BRANCH ?? 'local',
         commitSha: process.env.COMMIT_SHA ?? 'manual',
+        apiKey: process.env.API_KEY,
       },
     ],
   ],
