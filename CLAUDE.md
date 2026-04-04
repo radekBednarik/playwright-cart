@@ -74,8 +74,10 @@ A monorepo for collecting and viewing Playwright test reports in a centralized d
 - `POST /api/runs/:runId/report` — upload zipped HTML report, extracts and links it
 - `POST /api/runs/:runId/complete` — mark run complete without an HTML report
 - `GET /reports/*` — serves extracted static report files (`Service-Worker-Allowed` + cache headers required for Playwright trace viewer)
-- On-disk layout: `{DATA_DIR}/{runId}/run.json`, `tests/`, `attachments/`, `report/`
-- Env vars: `DATA_DIR` (default `./data`), `PORT` (default `3001`)
+- Uses **Drizzle ORM** + PostgreSQL for structured data: `runs`, `tests`, `test_errors`, `test_annotations`, `test_attachments` tables
+- Binary files (screenshots, traces, extracted HTML reports) remain on disk at `{DATA_DIR}/{runId}/attachments/` and `{DATA_DIR}/{runId}/report/`
+- Runs DB migrations at startup via `src/db/migrate.ts` (Drizzle migrate)
+- Env vars: `DATABASE_URL` (required), `DATA_DIR` (default `./data`), `PORT` (default `3001`)
 
 **`packages/web`** — React 19 + Vite frontend
 - Lists uploaded reports with project name, upload time, and test status

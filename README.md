@@ -23,12 +23,13 @@ playwright tests
 │  (Hono API) │  /api  │ (React SPA) │
 │  port 3001  │        │   port 80   │
 └─────────────┘        └─────────────┘
-      │
-  data volume
-  (run.json, attachments, report/)
+      │                      
+  PostgreSQL         data volume
+  (run + test        (attachments,
+   metadata)          report files)
 ```
 
-The **server** stores all run data on disk. The **web** frontend is a static React SPA served by Nginx; Nginx proxies `/api` and `/reports` to the server container. The **reporter** npm package is installed in the project under test — not deployed here.
+The **server** stores run and test metadata in PostgreSQL via Drizzle ORM. Binary files — test attachments (screenshots, traces) and extracted HTML reports — are stored on disk in `DATA_DIR`. The **web** frontend is a static React SPA served by Nginx; Nginx proxies `/api` and `/reports` to the server container. The **reporter** npm package is installed in the project under test — not deployed here.
 
 ## Quick Start
 
@@ -84,11 +85,10 @@ Environment variables for the server (set in `.env` or your CI environment):
 | Variable | Default | Description |
 |---|---|---|
 | `PORT` | `3001` | Port the server listens on |
-| `DATA_DIR` | `/app/data` | Directory for run data, attachments, and extracted reports |
+| `DATABASE_URL` | *(required)* | PostgreSQL connection string. In Docker Compose this is set automatically. For local dev, copy `.env.example` to `.env` and point at your local instance. |
+| `DATA_DIR` | `/app/data` | Directory for binary files: test attachments and extracted HTML reports |
 
-> **Note:** Changing `DATA_DIR` requires updating the volume mount in `docker-compose.yml` as well,
-> since Docker Compose does not interpolate environment variables in volume definitions. Find the line
-> `- reports_data:/app/data` under the `server` service and change `/app/data` to match your chosen path.
+> **Note:** `DATABASE_URL` is automatically set when using `docker compose up`. For local development without Docker, you need a running PostgreSQL instance and `DATABASE_URL` set in your environment or `.env`.
 
 Copy `.env.example` to `.env` to customise:
 
@@ -223,12 +223,13 @@ All endpoints are under the server (default: `http://localhost:3001`).
 
 ## Docker Details
 
-The stack uses two containers:
+The stack uses three containers:
 
-- **server** — Node.js 20 Alpine, built from `packages/server/Dockerfile`
-- **web** — Nginx 1.27 Alpine serving the Vite build, proxying to server
+- **postgres** — PostgreSQL 17 Alpine, stores all run and test metadata
+- **server** — Node.js Alpine, built from `packages/server/Dockerfile`; runs DB migrations at startup then starts the Hono API
+- **web** — Nginx Alpine serving the Vite build, proxying to server
 
-Both use multi-stage Docker builds. The named volume `reports_data` persists all run data across container restarts.
+Both server and web use multi-stage Docker builds. Two named volumes persist data across restarts: `db_data` for the PostgreSQL database, `reports_data` for binary attachments and extracted HTML reports.
 
 ```bash
 # Rebuild after code changes
@@ -240,9 +241,9 @@ docker compose logs -f
 # Check health status
 docker compose ps
 
-# Stop and remove containers (data volume preserved)
+# Stop and remove containers (volumes preserved)
 docker compose down
 
-# Stop and remove containers AND data volume
+# Stop and remove containers AND all data (DB + reports)
 docker compose down -v
 ```
