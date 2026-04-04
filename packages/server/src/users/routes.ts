@@ -28,54 +28,48 @@ usersRouter.post('/', adminMiddleware, async (c) => {
   if (typeof body.username !== 'string' || typeof body.password !== 'string') {
     return c.json({ error: 'username and password are required strings' }, 400)
   }
+  if (body.username.trim().length === 0) {
+    return c.json({ error: 'Username cannot be empty' }, 400)
+  }
+  if (body.password.trim().length === 0) {
+    return c.json({ error: 'Password cannot be empty' }, 400)
+  }
+  if (body.password.length < 8) {
+    return c.json({ error: 'Password must be at least 8 characters' }, 400)
+  }
+  if (body.password.length > 64) {
+    return c.json({ error: 'Password too long' }, 400)
+  }
   if (body.role !== 'admin' && body.role !== 'user') {
     return c.json({ error: 'role must be "admin" or "user"' }, 400)
   }
 
-  const passwordHash = await hashPassword(body.password)
-  const [inserted] = await db
-    .insert(users)
-    .values({ username: body.username, passwordHash, role: body.role })
-    .returning({ id: users.id, username: users.username, role: users.role })
+  let inserted: { id: number; username: string; role: 'admin' | 'user' } | undefined
+  try {
+    ;[inserted] = await db
+      .insert(users)
+      .values({
+        username: body.username,
+        passwordHash: await hashPassword(body.password),
+        role: body.role,
+      })
+      .returning({ id: users.id, username: users.username, role: users.role })
+  } catch (err: unknown) {
+    if (
+      typeof err === 'object' &&
+      err !== null &&
+      'code' in err &&
+      (err as { code: string }).code === '23505'
+    ) {
+      return c.json({ error: 'Username already taken' }, 409)
+    }
+    throw err
+  }
 
   return c.json(inserted, 201)
 })
 
-usersRouter.patch('/:userId', adminMiddleware, async (c) => {
-  const userId = Number(c.req.param('userId'))
-  if (!Number.isFinite(userId)) {
-    return c.json({ error: 'Invalid userId' }, 400)
-  }
-
-  const body = await c.req.json<{ role?: unknown }>()
-  if (body.role !== 'admin' && body.role !== 'user') {
-    return c.json({ error: 'role must be "admin" or "user"' }, 400)
-  }
-
-  const [updated] = await db
-    .update(users)
-    .set({ role: body.role })
-    .where(eq(users.id, userId))
-    .returning({ id: users.id, username: users.username, role: users.role })
-
-  if (!updated) {
-    return c.json({ error: 'User not found' }, 404)
-  }
-
-  return c.json(updated)
-})
-
-usersRouter.delete('/:userId', adminMiddleware, async (c) => {
-  const userId = Number(c.req.param('userId'))
-  if (!Number.isFinite(userId)) {
-    return c.json({ error: 'Invalid userId' }, 400)
-  }
-
-  await db.delete(users).where(eq(users.id, userId))
-  return c.json({ ok: true })
-})
-
-// ── Own-account route (any authenticated user) ─────────────────────────────────
+// ── Own-account route (any authenticated user) — must be before /:userId ──────
 
 usersRouter.patch('/me', async (c) => {
   const authUser = c.get('authUser')
@@ -100,6 +94,15 @@ usersRouter.patch('/me', async (c) => {
   if (body.password !== undefined) {
     if (typeof body.password !== 'string') {
       return c.json({ error: 'password must be a string' }, 400)
+    }
+    if (body.password.trim().length === 0) {
+      return c.json({ error: 'Password cannot be empty' }, 400)
+    }
+    if (body.password.length < 8) {
+      return c.json({ error: 'Password must be at least 8 characters' }, 400)
+    }
+    if (body.password.length > 64) {
+      return c.json({ error: 'Password too long' }, 400)
     }
     if (typeof body.currentPassword !== 'string') {
       return c.json({ error: 'currentPassword is required when changing password' }, 400)
@@ -127,6 +130,9 @@ usersRouter.patch('/me', async (c) => {
   if (body.username !== undefined) {
     if (typeof body.username !== 'string') {
       return c.json({ error: 'username must be a string' }, 400)
+    }
+    if (body.username.trim().length === 0) {
+      return c.json({ error: 'Username cannot be empty' }, 400)
     }
     updateData.username = body.username
   }
@@ -171,4 +177,52 @@ usersRouter.patch('/me', async (c) => {
   }
 
   return c.json(updated)
+})
+
+usersRouter.patch('/:userId', adminMiddleware, async (c) => {
+  const userId = Number(c.req.param('userId'))
+  if (!Number.isFinite(userId)) {
+    return c.json({ error: 'Invalid userId' }, 400)
+  }
+
+  const authUser = c.get('authUser')
+  if (authUser.type === 'user' && authUser.id === userId) {
+    return c.json({ error: 'Cannot modify your own account via admin API' }, 403)
+  }
+
+  const body = await c.req.json<{ role?: unknown }>()
+  if (body.role !== 'admin' && body.role !== 'user') {
+    return c.json({ error: 'role must be "admin" or "user"' }, 400)
+  }
+
+  const [updated] = await db
+    .update(users)
+    .set({ role: body.role })
+    .where(eq(users.id, userId))
+    .returning({ id: users.id, username: users.username, role: users.role })
+
+  if (!updated) {
+    return c.json({ error: 'User not found' }, 404)
+  }
+
+  return c.json(updated)
+})
+
+usersRouter.delete('/:userId', adminMiddleware, async (c) => {
+  const userId = Number(c.req.param('userId'))
+  if (!Number.isFinite(userId)) {
+    return c.json({ error: 'Invalid userId' }, 400)
+  }
+
+  const authUser = c.get('authUser')
+  if (authUser.type === 'user' && authUser.id === userId) {
+    return c.json({ error: 'Cannot modify your own account via admin API' }, 403)
+  }
+
+  const deleted = await db.delete(users).where(eq(users.id, userId)).returning({ id: users.id })
+  if (deleted.length === 0) {
+    return c.json({ error: 'User not found' }, 404)
+  }
+
+  return c.json({ ok: true })
 })
