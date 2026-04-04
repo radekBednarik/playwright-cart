@@ -3,11 +3,13 @@ import { Hono } from 'hono'
 import { cors } from 'hono/cors'
 import { logger } from 'hono/logger'
 import { streamSSE } from 'hono/streaming'
+import { apiKeysRouter } from './api-keys/routes.js'
 import { authMiddleware } from './auth/middleware.js'
 import { authRouter } from './auth/routes.js'
 import type { HonoEnv } from './auth/types.js'
 import { type RunEvent, runEmitter } from './events.js'
 import { runs } from './runs/routes.js'
+import { settingsRouter } from './settings/routes.js'
 import { usersRouter } from './users/routes.js'
 
 export const app = new Hono<HonoEnv>()
@@ -39,6 +41,8 @@ app.get('/api/events', (c) =>
 
 app.route('/api/runs', runs)
 app.route('/api/users', usersRouter)
+app.route('/api/settings', settingsRouter)
+app.route('/api/api-keys', apiKeysRouter)
 
 app.use('/reports/*', cors())
 app.use('/reports/*', async (c, next) => {
