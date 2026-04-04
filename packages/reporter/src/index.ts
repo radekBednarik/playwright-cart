@@ -25,6 +25,8 @@ export interface PlaywrightCartReporterOptions {
   retries?: number
   /** Initial retry backoff in ms, doubles each attempt (default: 500) */
   retryDelay?: number
+  /** API key for server authentication */
+  apiKey?: string
 }
 
 export class PlaywrightCartReporter implements Reporter {
@@ -34,6 +36,7 @@ export class PlaywrightCartReporter implements Reporter {
   private readonly commitSha: string | undefined
   private readonly retries: number
   private readonly retryDelay: number
+  private readonly apiKey: string | undefined
   private readonly semaphore: Semaphore
 
   private runIdPromise: Promise<string | null> = Promise.resolve(null)
@@ -48,7 +51,12 @@ export class PlaywrightCartReporter implements Reporter {
     this.commitSha = options.commitSha
     this.retries = options.retries ?? 3
     this.retryDelay = options.retryDelay ?? 500
+    this.apiKey = options.apiKey
     this.semaphore = new Semaphore(options.uploadConcurrency ?? 3)
+  }
+
+  private authHeaders(): Record<string, string> {
+    return this.apiKey ? { Authorization: `Bearer ${this.apiKey}` } : {}
   }
 
   onBegin(config: FullConfig, _suite: Suite): void {
@@ -63,7 +71,7 @@ export class PlaywrightCartReporter implements Reporter {
     // Fire-and-forget run creation (onBegin is synchronous)
     this.runIdPromise = fetch(`${this.serverUrl}/api/runs`, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: { 'Content-Type': 'application/json', ...this.authHeaders() },
       body: JSON.stringify({
         project: this.project,
         branch: this.branch,
@@ -130,6 +138,7 @@ export class PlaywrightCartReporter implements Reporter {
           () =>
             fetch(`${this.serverUrl}/api/runs/${runId}/tests`, {
               method: 'POST',
+              headers: { ...this.authHeaders() },
               body: form,
             }),
           this.retries,
@@ -173,6 +182,7 @@ export class PlaywrightCartReporter implements Reporter {
           () =>
             fetch(`${this.serverUrl}/api/runs/${runId}/report`, {
               method: 'POST',
+              headers: { ...this.authHeaders() },
               body: form,
             }),
           this.retries,
@@ -186,7 +196,7 @@ export class PlaywrightCartReporter implements Reporter {
         () =>
           fetch(`${this.serverUrl}/api/runs/${runId}/complete`, {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
+            headers: { 'Content-Type': 'application/json', ...this.authHeaders() },
             body: JSON.stringify({ completedAt, status }),
           }),
         this.retries,

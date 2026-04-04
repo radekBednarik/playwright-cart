@@ -307,6 +307,7 @@ function UsersSection({ currentUserId }: { currentUserId: number }) {
   }, [])
 
   async function handleDelete(id: number) {
+    if (!window.confirm('Delete this user? This cannot be undone.')) return
     try {
       await deleteUser(id)
       setUsers((prev) => prev.filter((u) => u.id !== id))
@@ -494,6 +495,7 @@ function ApiKeysSection() {
   }, [])
 
   async function handleRevoke(id: number) {
+    if (!window.confirm('Revoke this API key? This cannot be undone.')) return
     try {
       await deleteApiKey(id)
       setKeys((prev) => prev.filter((k) => k.id !== id))

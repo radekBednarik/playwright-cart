@@ -14,7 +14,7 @@ settingsRouter.get('/', async (c) => {
     .where(eq(appSettings.key, 'data_retention_days'))
     .limit(1)
 
-  const data_retention_days = row ? Number.parseInt(row.value, 10) : 30
+  const data_retention_days = row ? Number.parseInt(row.value, 10) : 90
   return c.json({ data_retention_days })
 })
 
@@ -27,9 +27,9 @@ settingsRouter.patch('/', adminMiddleware, async (c) => {
   }
 
   await db
-    .update(appSettings)
-    .set({ value: String(days) })
-    .where(eq(appSettings.key, 'data_retention_days'))
+    .insert(appSettings)
+    .values({ key: 'data_retention_days', value: String(days) })
+    .onConflictDoUpdate({ target: appSettings.key, set: { value: String(days) } })
 
   return c.json({ data_retention_days: days })
 })

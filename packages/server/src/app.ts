@@ -19,11 +19,11 @@ const PUBLIC_PATHS = new Set(['/api/auth/login', '/api/health'])
 app.use('*', logger())
 app.use('/api/*', cors())
 app.get('/api/health', (c) => c.json({ ok: true }))
-app.route('/api/auth', authRouter)
 app.use('/api/*', async (c, next) => {
   if (PUBLIC_PATHS.has(c.req.path)) return next()
   return authMiddleware(c, next)
 })
+app.route('/api/auth', authRouter)
 
 app.get('/api/events', (c) =>
   streamSSE(c, (stream) => {

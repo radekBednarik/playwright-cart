@@ -43,15 +43,23 @@ export default function RunsTable({ runs, isAdmin, onDeleteSuccess }: Props) {
   async function handleDeleteSelected() {
     const count = selected.size
     if (!window.confirm(`Delete ${count} run(s)? This cannot be undone.`)) return
-    await deleteRunsBatch(Array.from(selected))
-    setSelected(new Set())
-    onDeleteSuccess?.()
+    try {
+      await deleteRunsBatch(Array.from(selected))
+      setSelected(new Set())
+      onDeleteSuccess?.()
+    } catch (err) {
+      alert(`Delete failed: ${String(err)}`)
+    }
   }
 
   async function handleDeleteOne(runId: string) {
     if (!window.confirm('Delete this run? This cannot be undone.')) return
-    await deleteRun(runId)
-    onDeleteSuccess?.()
+    try {
+      await deleteRun(runId)
+      onDeleteSuccess?.()
+    } catch (err) {
+      alert(`Delete failed: ${String(err)}`)
+    }
   }
 
   const dataHeaders = ['Project / Branch', 'Commit', 'Status', 'When', '']
