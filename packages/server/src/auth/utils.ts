@@ -1,0 +1,39 @@
+import * as bcrypt from 'bcrypt'
+import { sign, verify } from 'hono/jwt'
+import { createHash, randomBytes } from 'node:crypto'
+
+export function getJwtSecret(): string {
+  const secret = process.env.JWT_SECRET
+  if (!secret) throw new Error('JWT_SECRET environment variable is not set')
+  return secret
+}
+
+export async function signToken(payload: { userId: number }): Promise<string> {
+  const exp = Math.floor(Date.now() / 1000) + 8 * 60 * 60
+  return sign({ ...payload, exp }, getJwtSecret())
+}
+
+export async function verifyToken(token: string): Promise<{ userId: number } | null> {
+  try {
+    const payload = await verify(token, getJwtSecret(), 'HS256')
+    return { userId: payload['userId'] as number }
+  } catch {
+    return null
+  }
+}
+
+export async function hashPassword(password: string): Promise<string> {
+  return bcrypt.hash(password, 12)
+}
+
+export async function verifyPassword(password: string, hash: string): Promise<boolean> {
+  return bcrypt.compare(password, hash)
+}
+
+export function generateApiKey(): string {
+  return randomBytes(32).toString('hex')
+}
+
+export function hashApiKey(key: string): string {
+  return createHash('sha256').update(key).digest('hex')
+}

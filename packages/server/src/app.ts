@@ -3,13 +3,24 @@ import { Hono } from 'hono'
 import { cors } from 'hono/cors'
 import { logger } from 'hono/logger'
 import { streamSSE } from 'hono/streaming'
+import { authMiddleware } from './auth/middleware.js'
+import { authRouter } from './auth/routes.js'
+import type { HonoEnv } from './auth/types.js'
 import { type RunEvent, runEmitter } from './events.js'
 import { runs } from './runs/routes.js'
 
-export const app = new Hono()
+export const app = new Hono<HonoEnv>()
 
 app.use('*', logger())
 app.use('/api/*', cors())
+app.use('/api/*', async (c, next) => {
+  if (c.req.method === 'POST' && c.req.path === '/api/auth/login') {
+    return next()
+  }
+  return authMiddleware(c, next)
+})
+
+app.route('/api/auth', authRouter)
 
 app.get('/api/events', (c) =>
   streamSSE(c, (stream) => {
