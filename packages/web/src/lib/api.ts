@@ -67,6 +67,24 @@ export async function logout(): Promise<void> {
   await fetch('/api/auth/logout', { method: 'POST' })
 }
 
+export async function updateMe(data: {
+  username?: string
+  password?: string
+  currentPassword?: string
+  theme?: string
+}): Promise<CurrentUser> {
+  const res = await fetch('/api/users/me', {
+    method: 'PATCH',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(data),
+  })
+  if (!res.ok) {
+    const err = await res.json()
+    throw new Error((err as { error?: string }).error || `HTTP ${res.status}`)
+  }
+  return res.json() as Promise<CurrentUser>
+}
+
 export async function fetchRuns(): Promise<RunRecord[]> {
   const res = await fetch('/api/runs')
   if (!res.ok) throw new Error(`HTTP ${res.status}`)
