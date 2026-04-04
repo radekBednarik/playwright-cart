@@ -1,4 +1,19 @@
 services:
+  postgres:
+    image: postgres:17-alpine
+    environment:
+      POSTGRES_USER: playwright_cart
+      POSTGRES_PASSWORD: playwright_cart
+      POSTGRES_DB: playwright_cart
+    volumes:
+      - db_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U playwright_cart"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+    restart: unless-stopped
+
   server:
     build:
       context: .
@@ -7,18 +22,22 @@ services:
       - "3001:3001"
     volumes:
       - reports_data:/app/data
+    depends_on:
+      postgres:
+        condition: service_healthy
     env_file:
       - path: .env
         required: false
     environment:
       PORT: "${PORT:-3001}"
       DATA_DIR: "${DATA_DIR:-/app/data}"
+      DATABASE_URL: "${DATABASE_URL:-postgresql://playwright_cart:playwright_cart@postgres:5432/playwright_cart}"
     healthcheck:
       test: ["CMD", "wget", "-qO-", "http://localhost:3001/api/runs"]
       interval: 10s
       timeout: 5s
       retries: 5
-      start_period: 10s
+      start_period: 15s
     restart: unless-stopped
 
   web:
@@ -40,3 +59,4 @@ services:
 
 volumes:
   reports_data:
+  db_data:
