@@ -1,0 +1,17 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32">
+  <defs>
+    <linearGradient id="g" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#9b72f7"/>
+      <stop offset="100%" stop-color="#4d9ef7"/>
+    </linearGradient>
+  </defs>
+  <!-- Dark rounded-square background -->
+  <rect width="32" height="32" rx="7" fill="#0e0f14"/>
+  <!-- Cart: handle pole + basket trapezoid -->
+  <path d="M5 7h3l4 12h11l2-8H11"
+        stroke="url(#g)" stroke-width="2" fill="none"
+        stroke-linecap="round" stroke-linejoin="round"/>
+  <!-- Wheels (green = "passed") -->
+  <circle cx="14" cy="23" r="2" fill="#3dd68c"/>
+  <circle cx="22" cy="23" r="2" fill="#3dd68c"/>
+</svg>
