@@ -5,7 +5,6 @@ import {
   integer,
   pgEnum,
   pgTable,
-  serial,
   text,
   timestamp,
   uniqueIndex,
@@ -26,6 +25,10 @@ export const testStatusEnum = pgEnum('test_status', [
   'skipped',
   'interrupted',
 ])
+
+export const userRoleEnum = pgEnum('user_role', ['admin', 'user'])
+
+export const userThemeEnum = pgEnum('user_theme', ['dark', 'light', 'system'])
 
 export const runs = pgTable(
   'runs',
@@ -96,28 +99,28 @@ export const testAttachments = pgTable('test_attachments', {
   filename: text('filename'),
 })
 
-export const userRoleEnum = pgEnum('user_role', ['admin', 'user'])
-
-export const userThemeEnum = pgEnum('user_theme', ['dark', 'light', 'system'])
-
 export const users = pgTable('users', {
-  id: serial('id').primaryKey(),
+  id: bigserial('id', { mode: 'number' }).primaryKey(),
   username: text('username').notNull().unique(),
   passwordHash: text('password_hash').notNull(),
-  role: userRoleEnum('role').notNull(),
+  role: userRoleEnum('role').notNull().default('user'),
   theme: userThemeEnum('theme').notNull().default('system'),
   createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
 })
 
-export const apiKeys = pgTable('api_keys', {
-  id: serial('id').primaryKey(),
-  keyHash: text('key_hash').notNull(),
-  label: text('label').notNull(),
-  createdBy: integer('created_by')
-    .notNull()
-    .references(() => users.id, { onDelete: 'cascade' }),
-  createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
-})
+export const apiKeys = pgTable(
+  'api_keys',
+  {
+    id: bigserial('id', { mode: 'number' }).primaryKey(),
+    keyHash: text('key_hash').notNull(),
+    label: text('label').notNull(),
+    createdBy: bigint('created_by', { mode: 'number' })
+      .notNull()
+      .references(() => users.id, { onDelete: 'cascade' }),
+    createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => [uniqueIndex('api_keys_key_hash_uniq').on(t.keyHash)],
+)
 
 export const appSettings = pgTable('app_settings', {
   key: text('key').primaryKey(),
