@@ -5,6 +5,8 @@ export default defineConfig({
   out: './src/db/migrations',
   dialect: 'postgresql',
   dbCredentials: {
-    url: process.env.DATABASE_URL ?? 'postgresql://playwright_cart:playwright_cart@localhost:5432/playwright_cart',
+    url:
+      process.env.DATABASE_URL ??
+      'postgresql://playwright_cart:playwright_cart@localhost:5432/playwright_cart',
   },
 })
