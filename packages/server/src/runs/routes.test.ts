@@ -1,7 +1,8 @@
 import { existsSync, mkdirSync, rmSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
-import { afterEach, beforeEach, describe, expect, it } from 'vitest'
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
+import { runEmitter } from '../events.js'
 import { runs } from './routes.js'
 import * as storage from './storage.js'
 
@@ -45,6 +46,17 @@ describe('POST /api/runs', () => {
     const run = storage.getRun(runId)
     expect(run?.branch).toBe('main')
     expect(run?.commitSha).toBe('abc123')
+  })
+
+  it('emits run:created with the new runId', async () => {
+    const spy = vi.spyOn(runEmitter, 'emit')
+    await runs.request('/', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ project: 'my-app', startedAt: '2026-04-04T10:00:00.000Z' }),
+    })
+    expect(spy).toHaveBeenCalledWith('event', expect.objectContaining({ type: 'run:created' }))
+    spy.mockRestore()
   })
 })
 
@@ -162,6 +174,28 @@ describe('POST /api/runs/:runId/tests', () => {
     const attachPath = join(testDir, 'run-1', 'attachments', 'test-with-attach', 'screenshot.png')
     expect(existsSync(attachPath)).toBe(true)
   })
+
+  it('emits run:updated after saving a test', async () => {
+    storage.createRun({ runId: 'run-1', project: 'p', startedAt: '2026-04-04T10:00:00.000Z', status: 'running' })
+    const spy = vi.spyOn(runEmitter, 'emit')
+    const metadata: storage.TestRecord = {
+      testId: 'suite--my-test',
+      title: 'my test',
+      titlePath: ['suite', 'my test'],
+      location: { file: 'a.spec.ts', line: 5, column: 1 },
+      status: 'passed',
+      duration: 300,
+      errors: [],
+      retry: 0,
+      annotations: [],
+      attachments: [],
+    }
+    const form = new FormData()
+    form.append('metadata', JSON.stringify(metadata))
+    await runs.request('/run-1/tests', { method: 'POST', body: form })
+    expect(spy).toHaveBeenCalledWith('event', { type: 'run:updated', runId: 'run-1' })
+    spy.mockRestore()
+  })
 })
 
 describe('POST /api/runs/:runId/report', () => {
@@ -187,13 +221,30 @@ describe('POST /api/runs/:runId/report', () => {
     expect(res.status).toBe(200)
 
     const { reportUrl } = (await res.json()) as { reportUrl: string }
-    expect(reportUrl).toBe('/reports/run-1/index.html')
+    expect(reportUrl).toBe('/reports/run-1/report/index.html')
 
     const run = storage.getRun('run-1')
     expect(run?.status).toBe('passed')
-    expect(run?.reportUrl).toBe('/reports/run-1/index.html')
+    expect(run?.reportUrl).toBe('/reports/run-1/report/index.html')
 
     expect(existsSync(join(testDir, 'run-1', 'report', 'index.html'))).toBe(true)
+  })
+
+  it('emits run:updated after uploading a report', async () => {
+    const AdmZip = (await import('adm-zip')).default
+    storage.createRun({ runId: 'run-1', project: 'p', startedAt: '2026-04-04T10:00:00.000Z', status: 'running' })
+    const spy = vi.spyOn(runEmitter, 'emit')
+
+    const zip = new AdmZip()
+    zip.addFile('index.html', Buffer.from('<html/>'))
+    const form = new FormData()
+    form.append('report', new Blob([zip.toBuffer()], { type: 'application/zip' }), 'report.zip')
+    form.append('completedAt', '2026-04-04T10:05:00.000Z')
+    form.append('status', 'passed')
+    await runs.request('/run-1/report', { method: 'POST', body: form })
+
+    expect(spy).toHaveBeenCalledWith('event', { type: 'run:updated', runId: 'run-1' })
+    spy.mockRestore()
   })
 })
 
@@ -214,6 +265,18 @@ describe('POST /api/runs/:runId/complete', () => {
     const run = storage.getRun('run-1')
     expect(run?.status).toBe('passed')
     expect(run?.completedAt).toBe('2026-04-02T10:05:00.000Z')
+  })
+
+  it('emits run:updated after completing a run', async () => {
+    storage.createRun({ runId: 'run-1', project: 'p', startedAt: '2026-04-04T10:00:00.000Z', status: 'running' })
+    const spy = vi.spyOn(runEmitter, 'emit')
+    await runs.request('/run-1/complete', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ completedAt: '2026-04-04T10:05:00.000Z', status: 'passed' }),
+    })
+    expect(spy).toHaveBeenCalledWith('event', { type: 'run:updated', runId: 'run-1' })
+    spy.mockRestore()
   })
 })
 

@@ -2,6 +2,7 @@ import { writeFileSync } from 'node:fs'
 import { join } from 'node:path'
 import AdmZip from 'adm-zip'
 import { Hono } from 'hono'
+import { type RunEvent, runEmitter } from '../events.js'
 import * as storage from './storage.js'
 
 export const runs = new Hono()
@@ -24,6 +25,7 @@ runs.post('/', async (c) => {
     status: 'running',
   }
   storage.createRun(run)
+  runEmitter.emit('event', { type: 'run:created', runId } satisfies RunEvent)
   return c.json({ runId }, 201)
 })
 
@@ -48,18 +50,21 @@ runs.get('/:runId/tests/:testId', (c) => {
 })
 
 runs.post('/:runId/complete', async (c) => {
+  const runId = c.req.param('runId')
   const { completedAt, status } = await c.req.json<{
     completedAt: string
     status: storage.RunRecord['status']
   }>()
-  storage.updateRun(c.req.param('runId'), { completedAt, status })
+  storage.updateRun(runId, { completedAt, status })
+  runEmitter.emit('event', { type: 'run:updated', runId } satisfies RunEvent)
   return c.json({})
 })
 
 runs.post('/:runId/tests', async (c) => {
+  const runId = c.req.param('runId')
   const body = await c.req.parseBody()
   const metadata = JSON.parse(body.metadata as string) as storage.TestRecord
-  const attachmentsDir = storage.getAttachmentsDir(c.req.param('runId'), metadata.testId)
+  const attachmentsDir = storage.getAttachmentsDir(runId, metadata.testId)
 
   for (let i = 0; ; i++) {
     const file = body[`attachment_${i}`]
@@ -70,7 +75,8 @@ runs.post('/:runId/tests', async (c) => {
     }
   }
 
-  storage.writeTestResult(c.req.param('runId'), metadata)
+  storage.writeTestResult(runId, metadata)
+  runEmitter.emit('event', { type: 'run:updated', runId } satisfies RunEvent)
   return c.json({ testId: metadata.testId }, 201)
 })
 
@@ -87,6 +93,7 @@ runs.post('/:runId/report', async (c) => {
 
   const reportUrl = `/reports/${runId}/report/index.html`
   storage.updateRun(runId, { completedAt, status, reportUrl })
+  runEmitter.emit('event', { type: 'run:updated', runId } satisfies RunEvent)
 
   return c.json({ reportUrl })
 })
