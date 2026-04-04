@@ -5,6 +5,7 @@ import {
   integer,
   pgEnum,
   pgTable,
+  serial,
   text,
   timestamp,
   uniqueIndex,
@@ -93,4 +94,32 @@ export const testAttachments = pgTable('test_attachments', {
   name: text('name').notNull(),
   contentType: text('content_type').notNull(),
   filename: text('filename'),
+})
+
+export const userRoleEnum = pgEnum('user_role', ['admin', 'user'])
+
+export const userThemeEnum = pgEnum('user_theme', ['dark', 'light', 'system'])
+
+export const users = pgTable('users', {
+  id: serial('id').primaryKey(),
+  username: text('username').notNull().unique(),
+  passwordHash: text('password_hash').notNull(),
+  role: userRoleEnum('role').notNull(),
+  theme: userThemeEnum('theme').notNull().default('system'),
+  createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+})
+
+export const apiKeys = pgTable('api_keys', {
+  id: serial('id').primaryKey(),
+  keyHash: text('key_hash').notNull(),
+  label: text('label').notNull(),
+  createdBy: integer('created_by')
+    .notNull()
+    .references(() => users.id, { onDelete: 'cascade' }),
+  createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+})
+
+export const appSettings = pgTable('app_settings', {
+  key: text('key').primaryKey(),
+  value: text('value').notNull(),
 })
