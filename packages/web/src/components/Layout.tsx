@@ -7,8 +7,10 @@ export default function Layout() {
   return (
     <div className="min-h-screen bg-tn-bg text-tn-fg">
       <TopNav />
-      <main className="mx-auto max-w-6xl px-4 py-8">
-        <Outlet />
+      <main className="mx-auto max-w-7xl px-6 py-8">
+        <div className="animate-fade-in">
+          <Outlet />
+        </div>
       </main>
     </div>
   )

@@ -14,10 +14,13 @@ export default function RunDetailPage() {
   if (error) {
     return (
       <div className="py-16 text-center">
-        <p className="mb-4 text-tn-muted">
+        <p className="mb-4 font-mono text-sm text-tn-muted">
           {error.name === 'NotFoundError' ? 'Run not found.' : error.message}
         </p>
-        <Link to="/" className="text-tn-blue hover:text-tn-purple">
+        <Link
+          to="/"
+          className="font-display text-xs font-semibold uppercase tracking-widest text-tn-blue transition-colors hover:text-tn-purple"
+        >
           ← All runs
         </Link>
       </div>
@@ -30,13 +33,24 @@ export default function RunDetailPage() {
 
   return (
     <div>
-      <Link to="/" className="mb-4 inline-block text-sm text-tn-blue hover:text-tn-purple">
-        ← All runs
-      </Link>
+      {/* Breadcrumb */}
+      <nav className="mb-5 flex items-center gap-2 font-mono text-xs text-tn-muted">
+        <Link to="/" className="transition-colors hover:text-tn-blue">
+          Runs
+        </Link>
+        <span>/</span>
+        <span className="text-tn-fg">{run.project}</span>
+      </nav>
+
+      {/* Run card with progress bar */}
       <RunHeader run={run} />
       <RunStats tests={run.tests} />
+
+      {/* Suite groups */}
       {run.tests.length === 0 ? (
-        <p className="py-8 text-center text-tn-muted">No test results uploaded yet.</p>
+        <p className="py-8 text-center font-mono text-sm text-tn-muted">
+          No test results uploaded yet.
+        </p>
       ) : (
         <div className="space-y-3">
           {[...suites.entries()].map(([suite, tests]) => (
@@ -61,11 +75,14 @@ function groupBySuite(tests: TestRecord[]): Map<string, TestRecord[]> {
 function Skeleton() {
   return (
     <div className="animate-pulse space-y-4">
-      <div className="h-6 w-24 rounded bg-tn-highlight" />
-      <div className="h-16 rounded-lg bg-tn-highlight" />
-      <div className="h-6 w-48 rounded bg-tn-highlight" />
+      <div className="flex gap-2">
+        <div className="h-4 w-10 rounded bg-tn-panel" />
+        <div className="h-4 w-4 rounded bg-tn-panel" />
+        <div className="h-4 w-24 rounded bg-tn-panel" />
+      </div>
+      <div className="h-28 rounded-xl border border-tn-border bg-tn-panel" />
       {[0, 1, 2].map((i) => (
-        <div key={i} className="h-32 rounded-lg bg-tn-highlight" />
+        <div key={i} className="h-32 rounded-xl border border-tn-border bg-tn-panel" />
       ))}
     </div>
   )

@@ -3,29 +3,29 @@ import type { RunStatus, TestStatus } from '../lib/api.js'
 type Status = RunStatus | TestStatus
 
 const STYLES: Record<Status, string> = {
-  passed: 'bg-tn-green/20 text-tn-green',
-  failed: 'bg-tn-red/20 text-tn-red',
-  running: 'bg-tn-yellow/20 text-tn-yellow',
-  timedOut: 'bg-tn-yellow/20 text-tn-yellow',
-  interrupted: 'bg-tn-muted/20 text-tn-muted',
-  skipped: 'bg-tn-muted/20 text-tn-muted',
+  passed: 'bg-tn-green/15 text-tn-green',
+  failed: 'bg-tn-red/15 text-tn-red',
+  running: 'bg-tn-yellow/15 text-tn-yellow',
+  timedOut: 'bg-tn-yellow/15 text-tn-yellow',
+  interrupted: 'bg-tn-muted/15 text-tn-muted',
+  skipped: 'bg-tn-muted/15 text-tn-muted',
 }
 
-const DOTS: Record<Status, string> = {
-  passed: '●',
-  failed: '●',
-  running: '◌',
-  timedOut: '●',
-  interrupted: '●',
-  skipped: '○',
+const DOT_STYLES: Record<Status, string> = {
+  passed: 'bg-tn-green',
+  failed: 'bg-tn-red',
+  running: 'bg-tn-yellow animate-pulse-slow',
+  timedOut: 'bg-tn-yellow',
+  interrupted: 'bg-tn-muted',
+  skipped: 'bg-tn-muted opacity-50',
 }
 
 export default function StatusBadge({ status }: { status: Status }) {
   return (
     <span
-      className={`inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-xs font-medium ${STYLES[status]}`}
+      className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-0.5 font-display text-xs font-semibold ${STYLES[status]}`}
     >
-      <span>{DOTS[status]}</span>
+      <span className={`size-1.5 rounded-full inline-block flex-shrink-0 ${DOT_STYLES[status]}`} />
       {status}
     </span>
   )

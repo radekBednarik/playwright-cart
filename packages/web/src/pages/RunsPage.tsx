@@ -15,12 +15,12 @@ export default function RunsPage() {
   if (error) {
     return (
       <div className="py-16 text-center">
-        <p className="mb-2 text-tn-red">Failed to load runs.</p>
-        <p className="mb-4 text-sm text-tn-muted">{error.message}</p>
+        <p className="mb-2 font-mono text-sm text-tn-red">Failed to load runs.</p>
+        <p className="mb-4 font-mono text-xs text-tn-muted">{error.message}</p>
         <button
           type="button"
           onClick={() => refetch()}
-          className="rounded border border-tn-border px-4 py-2 text-sm text-tn-fg transition-colors hover:bg-tn-highlight"
+          className="rounded-lg border border-tn-border px-4 py-2 font-display text-sm text-tn-fg transition-colors hover:bg-tn-highlight"
         >
           Retry
         </button>
@@ -34,8 +34,18 @@ export default function RunsPage() {
 
   return (
     <div>
+      {/* Page header: title left, filters right */}
+      <div className="mb-5 flex items-center justify-between">
+        <h1 className="font-display text-lg font-bold uppercase tracking-[0.15em] text-tn-fg">
+          Runs
+        </h1>
+        <FilterBar runs={runs} />
+      </div>
+
+      {/* Stats strip */}
       <StatsBar runs={runs} />
-      <FilterBar runs={runs} />
+
+      {/* Table */}
       <RunsTable runs={filtered} isAdmin={isAdmin} onDeleteSuccess={() => refetch()} />
     </div>
   )
@@ -43,29 +53,35 @@ export default function RunsPage() {
 
 function Skeleton() {
   return (
-    <div className="animate-pulse space-y-4">
-      <div className="grid grid-cols-3 gap-4">
+    <div className="animate-pulse space-y-5">
+      <div className="flex items-center justify-between">
+        <div className="h-5 w-16 rounded bg-tn-panel" />
+        <div className="h-5 w-48 rounded bg-tn-panel" />
+      </div>
+      <div className="flex gap-8">
         {[0, 1, 2].map((i) => (
-          <div key={i} className="h-20 rounded-lg bg-tn-highlight" />
+          <div key={i} className="h-8 w-24 rounded bg-tn-panel" />
         ))}
       </div>
-      <div className="h-8 w-64 rounded bg-tn-highlight" />
-      {[0, 1, 2, 3, 4].map((i) => (
-        <div key={i} className="h-12 rounded bg-tn-highlight" />
-      ))}
+      <div className="overflow-hidden rounded-xl border border-tn-border bg-tn-panel">
+        <div className="h-10 border-b-2 border-tn-border" />
+        {[0, 1, 2, 3, 4].map((i) => (
+          <div key={i} className="h-14 border-b border-tn-border last:border-0" />
+        ))}
+      </div>
     </div>
   )
 }
 
 function EmptyState() {
   return (
-    <div className="py-16 text-center">
-      <p className="mb-4 text-4xl">🎭</p>
-      <h2 className="mb-2 text-lg font-semibold text-tn-fg">No test runs yet</h2>
-      <p className="mb-6 text-sm text-tn-muted">
+    <div className="py-20 text-center">
+      <div className="mb-6 font-display text-7xl font-bold leading-none text-tn-border">PW</div>
+      <h2 className="mb-2 font-display text-lg font-bold text-tn-fg">No test runs yet</h2>
+      <p className="mb-8 text-sm text-tn-muted">
         Add the reporter to your Playwright config to get started:
       </p>
-      <pre className="mx-auto max-w-xl overflow-x-auto rounded-lg border border-tn-border bg-tn-panel p-4 text-left text-xs text-tn-fg">
+      <pre className="mx-auto max-w-xl overflow-x-auto rounded-xl border border-tn-border bg-tn-panel p-5 text-left font-mono text-xs text-tn-fg">
         {`// playwright.config.ts
 reporter: [
   ['html'],

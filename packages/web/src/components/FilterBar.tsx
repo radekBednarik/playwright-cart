@@ -29,7 +29,7 @@ export function FilterBar({ runs }: Props) {
   }
 
   return (
-    <div className="mb-4 flex gap-3">
+    <div className="flex items-center gap-1">
       <FilterSelect label="Project" value={project} onChange={(v) => setParam('project', v)}>
         <option value="">All projects</option>
         {projects.map((p) => (
@@ -38,6 +38,7 @@ export function FilterBar({ runs }: Props) {
           </option>
         ))}
       </FilterSelect>
+      <span className="text-tn-border select-none">|</span>
       <FilterSelect label="Branch" value={branch} onChange={(v) => setParam('branch', v)}>
         <option value="">All branches</option>
         {branches.map((b) => (
@@ -46,6 +47,7 @@ export function FilterBar({ runs }: Props) {
           </option>
         ))}
       </FilterSelect>
+      <span className="text-tn-border select-none">|</span>
       <FilterSelect label="Status" value={status} onChange={(v) => setParam('status', v)}>
         <option value="">All statuses</option>
         {ALL_STATUSES.map((s) => (
@@ -74,7 +76,7 @@ function FilterSelect({
       aria-label={label}
       value={value}
       onChange={(e) => onChange(e.target.value)}
-      className="rounded border border-tn-border bg-tn-highlight px-3 py-1.5 text-sm text-tn-fg focus:outline-none focus:ring-1 focus:ring-tn-blue"
+      className="cursor-pointer bg-transparent px-2 py-1 font-display text-xs text-tn-muted outline-none transition-colors hover:text-tn-fg focus:text-tn-fg"
     >
       {children}
     </select>

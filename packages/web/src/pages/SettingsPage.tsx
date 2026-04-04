@@ -25,44 +25,44 @@ export default function SettingsPage() {
   const { user, isAdmin } = useCurrentUser()
   const [tab, setTab] = useState<Tab>('account')
 
-  return (
-    <div className="mx-auto max-w-3xl">
-      <h1 className="mb-6 text-xl font-bold text-tn-fg">Settings</h1>
+  const navItems: { id: Tab; label: string }[] = [
+    { id: 'account', label: 'Account' },
+    ...(isAdmin ? [{ id: 'admin' as Tab, label: 'Admin' }] : []),
+  ]
 
-      {/* Tab bar */}
-      <div className="mb-6 flex gap-2 border-b border-tn-border">
-        <TabBtn label="Account" active={tab === 'account'} onClick={() => setTab('account')} />
-        {isAdmin && (
-          <TabBtn label="Admin" active={tab === 'admin'} onClick={() => setTab('admin')} />
-        )}
+  return (
+    <div className="mx-auto max-w-4xl">
+      <h1 className="mb-8 font-display text-lg font-bold uppercase tracking-[0.15em] text-tn-fg">
+        Settings
+      </h1>
+
+      <div className="flex flex-col gap-8 sm:flex-row sm:gap-10">
+        {/* Sidebar nav */}
+        <nav className="flex shrink-0 flex-row gap-1 sm:w-44 sm:flex-col">
+          {navItems.map((item) => (
+            <button
+              key={item.id}
+              type="button"
+              onClick={() => setTab(item.id)}
+              className={[
+                'rounded-lg px-4 py-2.5 text-left font-display text-sm font-medium transition-colors',
+                tab === item.id
+                  ? 'border-l-2 border-l-tn-blue bg-tn-panel text-tn-fg'
+                  : 'text-tn-muted hover:bg-tn-panel/60 hover:text-tn-fg',
+              ].join(' ')}
+            >
+              {item.label}
+            </button>
+          ))}
+        </nav>
+
+        {/* Content */}
+        <div className="min-w-0 flex-1">
+          {tab === 'account' && user && <AccountTab user={user} />}
+          {tab === 'admin' && isAdmin && <AdminTab currentUserId={user?.id ?? -1} />}
+        </div>
       </div>
-
-      {tab === 'account' && user && <AccountTab user={user} />}
-      {tab === 'admin' && isAdmin && <AdminTab currentUserId={user?.id ?? -1} />}
     </div>
-  )
-}
-
-function TabBtn({
-  label,
-  active,
-  onClick,
-}: {
-  label: string
-  active: boolean
-  onClick: () => void
-}) {
-  return (
-    <button
-      type="button"
-      onClick={onClick}
-      className={[
-        'px-4 py-2 text-sm font-medium transition-colors',
-        active ? 'border-b-2 border-tn-purple text-tn-purple' : 'text-tn-muted hover:text-tn-fg',
-      ].join(' ')}
-    >
-      {label}
-    </button>
   )
 }
 
@@ -72,7 +72,7 @@ function AccountTab({ user }: { user: { id: number; username: string; theme: The
   const queryClient = useQueryClient()
 
   return (
-    <div className="space-y-8">
+    <div className="space-y-10">
       <ChangeUsernameForm
         initialUsername={user.username}
         onSuccess={() => queryClient.invalidateQueries({ queryKey: ['me'] })}
@@ -85,6 +85,23 @@ function AccountTab({ user }: { user: { id: number; username: string; theme: The
     </div>
   )
 }
+
+function SectionHeading({ children }: { children: React.ReactNode }) {
+  return (
+    <h2 className="mb-4 font-display text-xs font-semibold uppercase tracking-widest text-tn-muted">
+      {children}
+    </h2>
+  )
+}
+
+const inputClass =
+  'w-full rounded-lg border border-tn-border/60 bg-tn-bg/60 px-4 py-2.5 text-sm text-tn-fg outline-none transition-colors placeholder:text-tn-muted/50 focus:border-tn-blue'
+
+const btnSecondaryClass =
+  'rounded-lg border border-tn-border px-4 py-2.5 font-display text-sm text-tn-fg transition-colors hover:bg-tn-highlight disabled:opacity-50'
+
+const btnPrimaryClass =
+  'rounded-lg bg-tn-purple px-4 py-2.5 font-display text-sm font-semibold text-white transition-colors hover:bg-tn-blue disabled:opacity-50'
 
 function ChangeUsernameForm({
   initialUsername,
@@ -113,9 +130,7 @@ function ChangeUsernameForm({
 
   return (
     <section>
-      <h2 className="mb-3 text-sm font-semibold uppercase tracking-wide text-tn-muted">
-        Change Username
-      </h2>
+      <SectionHeading>Change Username</SectionHeading>
       <form onSubmit={handleSubmit} className="flex max-w-sm gap-2">
         <input
           type="text"
@@ -125,18 +140,14 @@ function ChangeUsernameForm({
             setStatus('idle')
           }}
           required
-          className="flex-1 rounded border border-tn-border bg-tn-bg px-3 py-2 text-sm text-tn-fg focus:outline-none focus:ring-1 focus:ring-tn-purple"
+          className={`${inputClass} flex-1`}
         />
-        <button
-          type="submit"
-          disabled={status === 'saving'}
-          className="rounded border border-tn-border px-4 py-2 text-sm text-tn-fg transition-colors hover:bg-tn-highlight disabled:opacity-50"
-        >
+        <button type="submit" disabled={status === 'saving'} className={btnSecondaryClass}>
           {status === 'saving' ? 'Saving…' : 'Save'}
         </button>
       </form>
-      {status === 'ok' && <p className="mt-2 text-sm text-tn-green">Username updated.</p>}
-      {status === 'err' && <p className="mt-2 text-sm text-tn-red">{errMsg}</p>}
+      {status === 'ok' && <p className="mt-2 font-mono text-xs text-tn-green">Username updated.</p>}
+      {status === 'err' && <p className="mt-2 font-mono text-xs text-tn-red">{errMsg}</p>}
     </section>
   )
 }
@@ -171,9 +182,7 @@ function ChangePasswordForm() {
 
   return (
     <section>
-      <h2 className="mb-3 text-sm font-semibold uppercase tracking-wide text-tn-muted">
-        Change Password
-      </h2>
+      <SectionHeading>Change Password</SectionHeading>
       <form onSubmit={handleSubmit} className="max-w-sm space-y-3">
         <input
           type="password"
@@ -185,7 +194,7 @@ function ChangePasswordForm() {
             setStatus('idle')
           }}
           required
-          className="w-full rounded border border-tn-border bg-tn-bg px-3 py-2 text-sm text-tn-fg placeholder-tn-muted focus:outline-none focus:ring-1 focus:ring-tn-purple"
+          className={inputClass}
         />
         <input
           type="password"
@@ -197,7 +206,7 @@ function ChangePasswordForm() {
             setStatus('idle')
           }}
           required
-          className="w-full rounded border border-tn-border bg-tn-bg px-3 py-2 text-sm text-tn-fg placeholder-tn-muted focus:outline-none focus:ring-1 focus:ring-tn-purple"
+          className={inputClass}
         />
         <input
           type="password"
@@ -209,17 +218,13 @@ function ChangePasswordForm() {
             setStatus('idle')
           }}
           required
-          className="w-full rounded border border-tn-border bg-tn-bg px-3 py-2 text-sm text-tn-fg placeholder-tn-muted focus:outline-none focus:ring-1 focus:ring-tn-purple"
+          className={inputClass}
         />
-        <button
-          type="submit"
-          disabled={status === 'saving'}
-          className="rounded border border-tn-border px-4 py-2 text-sm text-tn-fg transition-colors hover:bg-tn-highlight disabled:opacity-50"
-        >
+        <button type="submit" disabled={status === 'saving'} className={btnSecondaryClass}>
           {status === 'saving' ? 'Saving…' : 'Update password'}
         </button>
-        {status === 'ok' && <p className="text-sm text-tn-green">Password updated.</p>}
-        {status === 'err' && <p className="text-sm text-tn-red">{errMsg}</p>}
+        {status === 'ok' && <p className="font-mono text-xs text-tn-green">Password updated.</p>}
+        {status === 'err' && <p className="font-mono text-xs text-tn-red">{errMsg}</p>}
       </form>
     </section>
   )
@@ -232,10 +237,10 @@ function ThemeSelector({
   currentTheme: Theme
   onThemeChange: () => void
 }) {
-  const themes: { value: Theme; label: string }[] = [
-    { value: 'dark', label: 'Dark' },
-    { value: 'light', label: 'Light' },
-    { value: 'system', label: 'System' },
+  const themes: { value: Theme; label: string; glyph: string }[] = [
+    { value: 'dark', label: 'Dark', glyph: '◑' },
+    { value: 'light', label: 'Light', glyph: '○' },
+    { value: 'system', label: 'System', glyph: '◐' },
   ]
 
   async function handleTheme(theme: Theme) {
@@ -244,26 +249,27 @@ function ThemeSelector({
       await updateMe({ theme })
       onThemeChange()
     } catch {
-      // best-effort — theme is already applied locally
+      // best-effort
     }
   }
 
   return (
     <section>
-      <h2 className="mb-3 text-sm font-semibold uppercase tracking-wide text-tn-muted">Theme</h2>
+      <SectionHeading>Theme</SectionHeading>
       <div className="flex gap-2">
-        {themes.map(({ value, label }) => (
+        {themes.map(({ value, label, glyph }) => (
           <button
             key={value}
             type="button"
             onClick={() => handleTheme(value)}
             className={[
-              'rounded border px-4 py-2 text-sm transition-colors',
+              'flex items-center gap-2 rounded-lg border px-4 py-2 font-display text-sm transition-colors',
               currentTheme === value
-                ? 'border-tn-purple bg-tn-highlight text-tn-purple'
+                ? 'border-tn-blue bg-tn-highlight text-tn-blue'
                 : 'border-tn-border text-tn-muted hover:bg-tn-highlight hover:text-tn-fg',
             ].join(' ')}
           >
+            <span className="font-mono">{glyph}</span>
             {label}
           </button>
         ))}
@@ -276,7 +282,7 @@ function ThemeSelector({
 
 function AdminTab({ currentUserId }: { currentUserId: number }) {
   return (
-    <div className="space-y-10">
+    <div className="space-y-12">
       <UsersSection currentUserId={currentUserId} />
       <ApiKeysSection />
       <DataRetentionSection />
@@ -346,26 +352,26 @@ function UsersSection({ currentUserId }: { currentUserId: number }) {
 
   return (
     <section>
-      <div className="mb-3 flex items-center justify-between">
-        <h2 className="text-sm font-semibold uppercase tracking-wide text-tn-muted">Users</h2>
+      <div className="mb-4 flex items-center justify-between">
+        <SectionHeading>Users</SectionHeading>
         <button
           type="button"
           onClick={() => setShowForm((v) => !v)}
-          className="rounded border border-tn-border px-3 py-1 text-xs text-tn-fg transition-colors hover:bg-tn-highlight"
+          className="font-display text-xs text-tn-muted transition-colors hover:text-tn-fg"
         >
           {showForm ? 'Cancel' : '+ Create User'}
         </button>
       </div>
 
-      {errMsg && <p className="mb-2 text-sm text-tn-red">{errMsg}</p>}
+      {errMsg && <p className="mb-3 font-mono text-xs text-tn-red">{errMsg}</p>}
 
       {showForm && (
         <form
           onSubmit={handleCreate}
-          className="mb-4 flex flex-wrap items-end gap-2 rounded border border-tn-border bg-tn-panel p-3"
+          className="mb-5 flex flex-wrap items-end gap-3 rounded-xl border border-tn-border bg-tn-panel p-4"
         >
-          <div className="flex flex-col gap-1">
-            <label htmlFor="new-username" className="text-xs text-tn-muted">
+          <div className="flex flex-col gap-1.5">
+            <label htmlFor="new-username" className="font-display text-xs text-tn-muted">
               Username
             </label>
             <input
@@ -374,11 +380,11 @@ function UsersSection({ currentUserId }: { currentUserId: number }) {
               value={newUsername}
               onChange={(e) => setNewUsername(e.target.value)}
               required
-              className="rounded border border-tn-border bg-tn-bg px-2 py-1 text-sm text-tn-fg focus:outline-none focus:ring-1 focus:ring-tn-purple"
+              className="rounded-lg border border-tn-border/60 bg-tn-bg/60 px-3 py-2 text-sm text-tn-fg outline-none focus:border-tn-blue"
             />
           </div>
-          <div className="flex flex-col gap-1">
-            <label htmlFor="new-password" className="text-xs text-tn-muted">
+          <div className="flex flex-col gap-1.5">
+            <label htmlFor="new-password" className="font-display text-xs text-tn-muted">
               Password
             </label>
             <input
@@ -388,81 +394,85 @@ function UsersSection({ currentUserId }: { currentUserId: number }) {
               onChange={(e) => setNewPassword(e.target.value)}
               required
               autoComplete="new-password"
-              className="rounded border border-tn-border bg-tn-bg px-2 py-1 text-sm text-tn-fg focus:outline-none focus:ring-1 focus:ring-tn-purple"
+              className="rounded-lg border border-tn-border/60 bg-tn-bg/60 px-3 py-2 text-sm text-tn-fg outline-none focus:border-tn-blue"
             />
           </div>
-          <div className="flex flex-col gap-1">
-            <label htmlFor="new-role" className="text-xs text-tn-muted">
+          <div className="flex flex-col gap-1.5">
+            <label htmlFor="new-role" className="font-display text-xs text-tn-muted">
               Role
             </label>
             <select
               id="new-role"
               value={newRole}
               onChange={(e) => setNewRole(e.target.value as 'admin' | 'user')}
-              className="rounded border border-tn-border bg-tn-bg px-2 py-1 text-sm text-tn-fg focus:outline-none focus:ring-1 focus:ring-tn-purple"
+              className="rounded-lg border border-tn-border/60 bg-tn-bg/60 px-3 py-2 text-sm text-tn-fg outline-none focus:border-tn-blue"
             >
               <option value="user">User</option>
               <option value="admin">Admin</option>
             </select>
           </div>
-          <button
-            type="submit"
-            disabled={creating}
-            className="rounded bg-tn-purple px-3 py-1 text-sm text-white transition-opacity hover:opacity-80 disabled:opacity-50"
-          >
+          <button type="submit" disabled={creating} className={btnPrimaryClass}>
             {creating ? 'Creating…' : 'Create'}
           </button>
-          {createErr && <p className="w-full text-sm text-tn-red">{createErr}</p>}
+          {createErr && <p className="w-full font-mono text-xs text-tn-red">{createErr}</p>}
         </form>
       )}
 
       {loading ? (
         <div className="animate-pulse space-y-2">
           {[0, 1, 2].map((i) => (
-            <div key={i} className="h-10 rounded bg-tn-highlight" />
+            <div key={i} className="h-10 rounded-lg bg-tn-panel" />
           ))}
         </div>
       ) : (
-        <table className="w-full text-sm">
-          <thead>
-            <tr className="border-b border-tn-border text-left text-xs text-tn-muted">
-              <th className="pb-2 pr-4 font-medium">Username</th>
-              <th className="pb-2 pr-4 font-medium">Role</th>
-              <th className="pb-2 font-medium">Actions</th>
-            </tr>
-          </thead>
-          <tbody className="divide-y divide-tn-border">
-            {users.map((u) => (
-              <tr key={u.id}>
-                <td className="py-2 pr-4 text-tn-fg">{u.username}</td>
-                <td className="py-2 pr-4">
-                  <button
-                    type="button"
-                    onClick={() => handleRoleToggle(u)}
-                    className={[
-                      'rounded px-2 py-0.5 text-xs font-medium transition-colors',
-                      u.role === 'admin'
-                        ? 'bg-tn-purple/20 text-tn-purple hover:bg-tn-purple/30'
-                        : 'bg-tn-highlight text-tn-muted hover:bg-tn-highlight/80',
-                    ].join(' ')}
-                  >
-                    {u.role}
-                  </button>
-                </td>
-                <td className="py-2">
-                  <button
-                    type="button"
-                    onClick={() => handleDelete(u.id)}
-                    disabled={u.id === currentUserId}
-                    className="rounded border border-tn-border px-3 py-1 text-xs text-tn-red transition-colors hover:bg-tn-highlight disabled:cursor-not-allowed disabled:opacity-30"
-                  >
-                    Delete
-                  </button>
-                </td>
+        <div className="overflow-hidden rounded-xl border border-tn-border">
+          <table className="w-full text-sm">
+            <thead className="border-b border-tn-border bg-tn-panel">
+              <tr>
+                <th className="px-4 py-3 text-left font-display text-xs font-semibold uppercase tracking-widest text-tn-muted">
+                  Username
+                </th>
+                <th className="px-4 py-3 text-left font-display text-xs font-semibold uppercase tracking-widest text-tn-muted">
+                  Role
+                </th>
+                <th className="px-4 py-3 text-left font-display text-xs font-semibold uppercase tracking-widest text-tn-muted">
+                  Actions
+                </th>
               </tr>
-            ))}
-          </tbody>
-        </table>
+            </thead>
+            <tbody className="divide-y divide-tn-border bg-tn-bg/20">
+              {users.map((u) => (
+                <tr key={u.id} className="transition-colors hover:bg-tn-highlight/30">
+                  <td className="px-4 py-3 text-tn-fg">{u.username}</td>
+                  <td className="px-4 py-3">
+                    <button
+                      type="button"
+                      onClick={() => handleRoleToggle(u)}
+                      className={[
+                        'rounded-full px-2.5 py-0.5 font-display text-xs font-semibold transition-colors',
+                        u.role === 'admin'
+                          ? 'bg-tn-purple/15 text-tn-purple hover:bg-tn-purple/25'
+                          : 'bg-tn-highlight text-tn-muted hover:bg-tn-border',
+                      ].join(' ')}
+                    >
+                      {u.role}
+                    </button>
+                  </td>
+                  <td className="px-4 py-3">
+                    <button
+                      type="button"
+                      onClick={() => handleDelete(u.id)}
+                      disabled={u.id === currentUserId}
+                      className="font-display text-xs text-tn-muted transition-colors hover:text-tn-red disabled:cursor-not-allowed disabled:opacity-30"
+                    >
+                      Delete
+                    </button>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
       )}
     </section>
   )
@@ -531,35 +541,35 @@ function ApiKeysSection() {
 
   return (
     <section>
-      <div className="mb-3 flex items-center justify-between">
-        <h2 className="text-sm font-semibold uppercase tracking-wide text-tn-muted">API Keys</h2>
+      <div className="mb-4 flex items-center justify-between">
+        <SectionHeading>API Keys</SectionHeading>
         <button
           type="button"
           onClick={() => {
             setShowForm((v) => !v)
             setNewKey(null)
           }}
-          className="rounded border border-tn-border px-3 py-1 text-xs text-tn-fg transition-colors hover:bg-tn-highlight"
+          className="font-display text-xs text-tn-muted transition-colors hover:text-tn-fg"
         >
           {showForm ? 'Cancel' : '+ Generate Key'}
         </button>
       </div>
 
-      {errMsg && <p className="mb-2 text-sm text-tn-red">{errMsg}</p>}
+      {errMsg && <p className="mb-3 font-mono text-xs text-tn-red">{errMsg}</p>}
 
       {newKey && (
-        <div className="mb-4 rounded border border-tn-green bg-tn-panel p-3">
-          <p className="mb-2 text-xs text-tn-green">
+        <div className="mb-5 rounded-xl border border-tn-green/30 bg-tn-green/5 p-4">
+          <p className="mb-3 font-mono text-xs text-tn-green">
             Key created — copy it now. It will not be shown again.
           </p>
           <div className="flex items-center gap-2">
-            <code className="flex-1 break-all rounded bg-tn-bg px-2 py-1 text-xs text-tn-fg">
+            <code className="flex-1 break-all rounded-lg bg-tn-bg px-3 py-2 font-mono text-xs text-tn-fg">
               {newKey.key}
             </code>
             <button
               type="button"
               onClick={handleCopy}
-              className="shrink-0 rounded border border-tn-border px-3 py-1 text-xs text-tn-fg transition-colors hover:bg-tn-highlight"
+              className="shrink-0 rounded-lg border border-tn-border px-3 py-2 font-display text-xs text-tn-fg transition-colors hover:bg-tn-highlight"
             >
               {copied ? 'Copied!' : 'Copy'}
             </button>
@@ -567,7 +577,7 @@ function ApiKeysSection() {
           <button
             type="button"
             onClick={() => setNewKey(null)}
-            className="mt-2 text-xs text-tn-muted hover:text-tn-fg"
+            className="mt-3 font-display text-xs text-tn-muted hover:text-tn-fg"
           >
             Dismiss
           </button>
@@ -577,10 +587,10 @@ function ApiKeysSection() {
       {showForm && (
         <form
           onSubmit={handleCreate}
-          className="mb-4 flex items-end gap-2 rounded border border-tn-border bg-tn-panel p-3"
+          className="mb-5 flex items-end gap-3 rounded-xl border border-tn-border bg-tn-panel p-4"
         >
-          <div className="flex flex-col gap-1">
-            <label htmlFor="key-label" className="text-xs text-tn-muted">
+          <div className="flex flex-col gap-1.5">
+            <label htmlFor="key-label" className="font-display text-xs text-tn-muted">
               Label
             </label>
             <input
@@ -590,59 +600,61 @@ function ApiKeysSection() {
               onChange={(e) => setLabel(e.target.value)}
               required
               placeholder="e.g. CI pipeline"
-              className="rounded border border-tn-border bg-tn-bg px-2 py-1 text-sm text-tn-fg placeholder-tn-muted focus:outline-none focus:ring-1 focus:ring-tn-purple"
+              className="rounded-lg border border-tn-border/60 bg-tn-bg/60 px-3 py-2 text-sm text-tn-fg outline-none placeholder:text-tn-muted/50 focus:border-tn-blue"
             />
           </div>
-          <button
-            type="submit"
-            disabled={creating}
-            className="rounded bg-tn-purple px-3 py-1 text-sm text-white transition-opacity hover:opacity-80 disabled:opacity-50"
-          >
+          <button type="submit" disabled={creating} className={btnPrimaryClass}>
             {creating ? 'Generating…' : 'Generate'}
           </button>
-          {createErr && <p className="w-full text-sm text-tn-red">{createErr}</p>}
+          {createErr && <p className="w-full font-mono text-xs text-tn-red">{createErr}</p>}
         </form>
       )}
 
       {loading ? (
         <div className="animate-pulse space-y-2">
           {[0, 1].map((i) => (
-            <div key={i} className="h-10 rounded bg-tn-highlight" />
+            <div key={i} className="h-10 rounded-lg bg-tn-panel" />
           ))}
         </div>
       ) : keys.length === 0 ? (
-        <p className="text-sm text-tn-muted">No API keys yet.</p>
+        <p className="font-mono text-xs text-tn-muted">No API keys yet.</p>
       ) : (
-        <table className="w-full text-sm">
-          <thead>
-            <tr className="border-b border-tn-border text-left text-xs text-tn-muted">
-              <th className="pb-2 pr-4 font-medium">Label</th>
-              <th className="pb-2 pr-4 font-medium">Key</th>
-              <th className="pb-2 pr-4 font-medium">Created</th>
-              <th className="pb-2 font-medium">Actions</th>
-            </tr>
-          </thead>
-          <tbody className="divide-y divide-tn-border">
-            {keys.map((k) => (
-              <tr key={k.id}>
-                <td className="py-2 pr-4 text-tn-fg">{k.label}</td>
-                <td className="py-2 pr-4 font-mono text-xs text-tn-muted">{k.maskedKey}</td>
-                <td className="py-2 pr-4 text-tn-muted">
-                  {new Date(k.createdAt).toLocaleDateString()}
-                </td>
-                <td className="py-2">
-                  <button
-                    type="button"
-                    onClick={() => handleRevoke(k.id)}
-                    className="rounded border border-tn-border px-3 py-1 text-xs text-tn-red transition-colors hover:bg-tn-highlight"
+        <div className="overflow-hidden rounded-xl border border-tn-border">
+          <table className="w-full text-sm">
+            <thead className="border-b border-tn-border bg-tn-panel">
+              <tr>
+                {['Label', 'Key', 'Created', 'Actions'].map((h) => (
+                  <th
+                    key={h}
+                    className="px-4 py-3 text-left font-display text-xs font-semibold uppercase tracking-widest text-tn-muted"
                   >
-                    Revoke
-                  </button>
-                </td>
+                    {h}
+                  </th>
+                ))}
               </tr>
-            ))}
-          </tbody>
-        </table>
+            </thead>
+            <tbody className="divide-y divide-tn-border bg-tn-bg/20">
+              {keys.map((k) => (
+                <tr key={k.id} className="transition-colors hover:bg-tn-highlight/30">
+                  <td className="px-4 py-3 text-tn-fg">{k.label}</td>
+                  <td className="px-4 py-3 font-mono text-xs text-tn-muted">{k.maskedKey}</td>
+                  <td className="px-4 py-3 font-mono text-xs text-tn-muted">
+                    {new Date(k.createdAt).toLocaleDateString()}
+                  </td>
+                  <td className="px-4 py-3">
+                    <button
+                      type="button"
+                      onClick={() => handleRevoke(k.id)}
+                      className="font-display text-xs text-tn-muted transition-colors hover:text-tn-red"
+                    >
+                      Revoke
+                    </button>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
       )}
     </section>
   )
@@ -681,15 +693,13 @@ function DataRetentionSection() {
 
   return (
     <section>
-      <h2 className="mb-3 text-sm font-semibold uppercase tracking-wide text-tn-muted">
-        Data Retention
-      </h2>
+      <SectionHeading>Data Retention</SectionHeading>
       {loading ? (
-        <div className="h-10 w-48 animate-pulse rounded bg-tn-highlight" />
+        <div className="h-10 w-48 animate-pulse rounded-lg bg-tn-panel" />
       ) : (
         <form onSubmit={handleSubmit} className="flex max-w-xs items-end gap-3">
-          <div className="flex flex-1 flex-col gap-1">
-            <label htmlFor="retention-days" className="text-xs text-tn-muted">
+          <div className="flex flex-1 flex-col gap-1.5">
+            <label htmlFor="retention-days" className="font-display text-xs text-tn-muted">
               Runs data persistence (days)
             </label>
             <input
@@ -703,20 +713,16 @@ function DataRetentionSection() {
                 setStatus('idle')
               }}
               required
-              className="w-full rounded border border-tn-border bg-tn-bg px-3 py-2 text-sm text-tn-fg focus:outline-none focus:ring-1 focus:ring-tn-purple"
+              className={inputClass}
             />
           </div>
-          <button
-            type="submit"
-            disabled={status === 'saving'}
-            className="rounded border border-tn-border px-4 py-2 text-sm text-tn-fg transition-colors hover:bg-tn-highlight disabled:opacity-50"
-          >
+          <button type="submit" disabled={status === 'saving'} className={btnSecondaryClass}>
             {status === 'saving' ? 'Saving…' : 'Save'}
           </button>
         </form>
       )}
-      {status === 'ok' && <p className="mt-2 text-sm text-tn-green">Settings saved.</p>}
-      {status === 'err' && <p className="mt-2 text-sm text-tn-red">{errMsg}</p>}
+      {status === 'ok' && <p className="mt-2 font-mono text-xs text-tn-green">Settings saved.</p>}
+      {status === 'err' && <p className="mt-2 font-mono text-xs text-tn-red">{errMsg}</p>}
     </section>
   )
 }

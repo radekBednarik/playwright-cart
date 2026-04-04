@@ -13,7 +13,7 @@ export default function AttachmentList({ runId, testId, attachments }: Props) {
 
   return (
     <div>
-      <h3 className="mb-3 text-xs font-medium uppercase tracking-wider text-tn-muted">
+      <h3 className="mb-3 font-display text-xs font-semibold uppercase tracking-widest text-tn-muted">
         Attachments
       </h3>
       <div className="flex flex-wrap gap-2">
@@ -31,9 +31,9 @@ export default function AttachmentList({ runId, testId, attachments }: Props) {
                 href={traceUrl}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="inline-flex items-center gap-1.5 rounded border border-tn-blue px-3 py-1.5 text-sm text-tn-blue transition-colors hover:bg-tn-blue/10"
+                className="inline-flex items-center gap-2 rounded-full border border-tn-blue px-4 py-1.5 font-display text-xs font-semibold text-tn-blue transition-colors hover:bg-tn-blue/10"
               >
-                🔍 Open Trace ↗
+                ⎘ Open Trace ↗
               </a>
             )
           }
@@ -43,9 +43,9 @@ export default function AttachmentList({ runId, testId, attachments }: Props) {
               key={att.filename ?? att.name}
               href={url}
               download={att.filename}
-              className="inline-flex items-center gap-1.5 rounded border border-tn-border px-3 py-1.5 text-sm text-tn-fg transition-colors hover:bg-tn-highlight"
+              className="inline-flex items-center gap-2 rounded-full border border-tn-border px-4 py-1.5 font-display text-xs text-tn-fg transition-colors hover:bg-tn-highlight"
             >
-              {attachmentIcon(att.contentType)} {att.name}
+              {attachmentGlyph(att.contentType)} {att.name}
             </a>
           )
         })}
@@ -54,9 +54,9 @@ export default function AttachmentList({ runId, testId, attachments }: Props) {
   )
 }
 
-function attachmentIcon(contentType: string): string {
-  if (contentType.startsWith('image/')) return '📸'
-  if (contentType.startsWith('video/')) return '🎬'
-  if (contentType === 'application/zip') return '🗜'
-  return '📎'
+function attachmentGlyph(contentType: string): string {
+  if (contentType.startsWith('image/')) return '▣'
+  if (contentType.startsWith('video/')) return '▶'
+  if (contentType === 'application/zip') return '↓'
+  return '→'
 }

@@ -1,4 +1,4 @@
-import type { RunWithTests } from '../lib/api.js'
+import type { RunWithTests, TestRecord } from '../lib/api.js'
 import StatusBadge from './StatusBadge.js'
 
 interface Props {
@@ -7,28 +7,73 @@ interface Props {
 
 export default function RunHeader({ run }: Props) {
   return (
-    <div className="mb-6 flex items-start justify-between">
-      <div>
-        <div className="mb-1 flex items-center gap-3">
-          <h1 className="text-2xl font-bold text-tn-fg">{run.project}</h1>
-          <StatusBadge status={run.status} />
+    <div className="mb-6 rounded-xl border border-tn-border bg-tn-panel p-5">
+      {/* Title row */}
+      <div className="mb-3 flex items-start justify-between gap-4">
+        <div>
+          <div className="mb-1.5 flex items-center gap-3">
+            <h1 className="font-display text-2xl font-bold text-tn-fg">{run.project}</h1>
+            <StatusBadge status={run.status} />
+          </div>
+          <div className="flex flex-wrap items-center gap-3 font-mono text-xs text-tn-muted">
+            {run.branch && <span className="text-tn-blue">{run.branch}</span>}
+            {run.commitSha && (
+              <code className="rounded bg-tn-highlight px-1.5 py-0.5 text-tn-muted">
+                {run.commitSha.slice(0, 7)}
+              </code>
+            )}
+            <span>{new Date(run.startedAt).toLocaleString()}</span>
+          </div>
         </div>
-        <div className="space-x-3 text-sm text-tn-muted">
-          {run.branch && <span className="text-tn-blue">{run.branch}</span>}
-          {run.commitSha && <code className="text-tn-muted">{run.commitSha.slice(0, 7)}</code>}
-          <span>{new Date(run.startedAt).toLocaleString()}</span>
-        </div>
+        {run.reportUrl && (
+          <a
+            href={run.reportUrl}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="shrink-0 rounded-lg border border-tn-blue px-4 py-2 font-display text-xs font-semibold tracking-wide text-tn-blue transition-colors hover:bg-tn-blue/10"
+          >
+            Open Report ↗
+          </a>
+        )}
       </div>
-      {run.reportUrl && (
-        <a
-          href={run.reportUrl}
-          target="_blank"
-          rel="noopener noreferrer"
-          className="rounded border border-tn-blue px-4 py-2 text-sm text-tn-blue transition-colors hover:bg-tn-blue/10"
-        >
-          Open Report ↗
-        </a>
-      )}
+
+      {/* Progress bar + stats */}
+      <PassRateBar tests={run.tests} />
+    </div>
+  )
+}
+
+function PassRateBar({ tests }: { tests: TestRecord[] }) {
+  if (tests.length === 0) return null
+
+  const passed = tests.filter((t) => t.status === 'passed').length
+  const failed = tests.filter((t) => t.status === 'failed').length
+  const timedOut = tests.filter((t) => t.status === 'timedOut').length
+  const skipped = tests.filter((t) => t.status === 'skipped').length
+  const total = tests.length
+
+  const passedPct = (passed / total) * 100
+  const failedPct = ((failed + timedOut) / total) * 100
+
+  return (
+    <div className="mt-3 space-y-2">
+      {/* Progress bar */}
+      <div className="flex h-1.5 overflow-hidden rounded-full bg-tn-highlight">
+        <div
+          className="bg-tn-green transition-all duration-500"
+          style={{ width: `${passedPct}%` }}
+        />
+        <div className="bg-tn-red transition-all duration-500" style={{ width: `${failedPct}%` }} />
+      </div>
+
+      {/* Stat pills */}
+      <div className="flex flex-wrap items-center gap-3 font-mono text-xs">
+        <span className="text-tn-green">{passed} passed</span>
+        {failed > 0 && <span className="text-tn-red">{failed} failed</span>}
+        {timedOut > 0 && <span className="text-tn-yellow">{timedOut} timed out</span>}
+        {skipped > 0 && <span className="text-tn-muted">{skipped} skipped</span>}
+        <span className="text-tn-muted">/ {total} total</span>
+      </div>
     </div>
   )
 }

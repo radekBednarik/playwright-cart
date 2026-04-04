@@ -11,31 +11,33 @@ export default function StatsBar({ runs }: Props) {
   const passRate = completed.length > 0 ? Math.round((passed / completed.length) * 100) : 0
 
   return (
-    <div className="mb-6 grid grid-cols-3 gap-4">
-      <StatCard label="Total runs" value={runs.length} />
-      <StatCard label="Pass rate" value={`${passRate}%`} valueClass="text-tn-green" />
-      <StatCard
-        label="Failed"
+    <div className="mb-6 flex items-baseline gap-0 divide-x divide-tn-border">
+      <Stat value={runs.length} label="runs" className="pr-6 text-tn-fg" />
+      <Stat value={`${passRate}%`} label="pass rate" className="px-6 text-tn-green" />
+      <Stat
         value={failed}
-        valueClass={failed > 0 ? 'text-tn-red' : 'text-tn-fg'}
+        label="failed"
+        className={`pl-6 ${failed > 0 ? 'text-tn-red' : 'text-tn-muted'}`}
       />
     </div>
   )
 }
 
-function StatCard({
-  label,
+function Stat({
   value,
-  valueClass = 'text-tn-fg',
+  label,
+  className,
 }: {
-  label: string
   value: string | number
-  valueClass?: string
+  label: string
+  className?: string
 }) {
   return (
-    <div className="rounded-lg border border-tn-border bg-tn-panel p-4 text-center">
-      <div className={`text-2xl font-bold ${valueClass}`}>{value}</div>
-      <div className="mt-1 text-sm text-tn-muted">{label}</div>
+    <div className="flex items-baseline gap-2">
+      <span className={`font-display text-3xl font-bold tabular-nums leading-none ${className}`}>
+        {value}
+      </span>
+      <span className="text-xs text-tn-muted">{label}</span>
     </div>
   )
 }

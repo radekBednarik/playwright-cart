@@ -11,17 +11,23 @@ export default function TestHeader({ test }: Props) {
 
   return (
     <div className="mb-6">
-      <div className="mb-2 flex items-start gap-3">
-        <div className="flex-1">
-          {suitePath && <div className="mb-1 text-xs text-tn-muted">{suitePath}</div>}
-          <h1 className="text-xl font-bold text-tn-fg">{test.title}</h1>
-        </div>
+      {suitePath && (
+        <div className="mb-1 font-mono text-xs tracking-wide text-tn-muted">{suitePath}</div>
+      )}
+      <div className="mb-3 flex items-start gap-3">
+        <h1 className="flex-1 font-display text-2xl font-bold text-tn-fg">{test.title}</h1>
         <StatusBadge status={test.status} />
       </div>
-      <div className="flex gap-4 text-sm text-tn-muted">
-        <span>Duration: {formatDuration(test.duration)}</span>
-        {test.retry > 0 && <span className="text-tn-yellow">Retry #{test.retry}</span>}
-        <span>
+      <div className="flex flex-wrap items-center gap-4">
+        <span className="inline-flex items-center gap-1.5 rounded-full bg-tn-highlight px-3 py-1 font-mono text-xs text-tn-muted">
+          {formatDuration(test.duration)}
+        </span>
+        {test.retry > 0 && (
+          <span className="inline-flex items-center gap-1.5 rounded-full bg-tn-yellow/10 px-3 py-1 font-mono text-xs text-tn-yellow">
+            Retry #{test.retry}
+          </span>
+        )}
+        <span className="font-mono text-xs text-tn-muted">
           {test.location.file}:{test.location.line}
         </span>
       </div>
