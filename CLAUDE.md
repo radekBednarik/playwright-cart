@@ -26,17 +26,24 @@ docker-compose up
 
 Individual package commands (from root with `--filter`):
 ```bash
-pnpm --filter @playwright-cart/server dev    # tsx watch mode
-pnpm --filter @playwright-cart/web dev       # Vite dev server
-pnpm --filter @playwright-cart/reporter dev  # tsc watch mode
+pnpm --filter @playwright-cart/server dev                        # tsx watch mode
+pnpm --filter @playwright-cart/web dev                           # Vite dev server
+pnpm --filter @radekbednarik/playwright-cart-reporter dev        # tsc watch mode
 ```
 
 Run tests (reporter and server both use Vitest):
 ```bash
-pnpm --filter @playwright-cart/reporter test       # run once
-pnpm --filter @playwright-cart/reporter test:watch # watch mode
+pnpm --filter @radekbednarik/playwright-cart-reporter test       # run once
+pnpm --filter @radekbednarik/playwright-cart-reporter test:watch # watch mode
 pnpm --filter @playwright-cart/server test
 pnpm --filter @playwright-cart/server test:watch
+```
+
+Publish reporter (triggered automatically on GitHub Release):
+```bash
+# Manual publish — requires NODE_AUTH_TOKEN with write:packages scope
+pnpm --filter @radekbednarik/playwright-cart-reporter build
+pnpm --filter @radekbednarik/playwright-cart-reporter publish --no-git-checks
 ```
 
 ## Architecture
@@ -56,12 +63,15 @@ A monorepo for collecting and viewing Playwright test reports in a centralized d
   export default defineConfig({
     reporter: [
       ['html'],
-      ['@playwright-cart/reporter', {
-        serverUrl: 'http://localhost:3001',
-        project: 'my-app',
-        branch: process.env.BRANCH,
-        commitSha: process.env.COMMIT_SHA,
-        apiKey: process.env.PLAYWRIGHT_CART_API_KEY, // optional: Bearer token for auth
+      ['@radekbednarik/playwright-cart-reporter', {
+        serverUrl: 'http://localhost:3001',              // required
+        project: 'my-app',                               // required
+        branch: process.env.BRANCH,                      // optional
+        commitSha: process.env.COMMIT_SHA,               // optional
+        apiKey: process.env.PLAYWRIGHT_CART_API_KEY,     // optional: Bearer token for auth
+        uploadConcurrency: 3,                            // optional: max parallel test uploads, default: 3
+        retries: 3,                                      // optional: upload retry attempts, default: 3
+        retryDelay: 500,                                 // optional: initial retry backoff ms, doubles each attempt, default: 500
       }],
     ],
   })

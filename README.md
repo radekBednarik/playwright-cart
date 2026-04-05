@@ -15,7 +15,7 @@ A self-hosted dashboard for collecting and viewing Playwright test reports from 
 ```
 playwright tests
       │
-      │  @playwright-cart/reporter (npm package)
+      │  @radekbednarik/playwright-cart-reporter (npm package)
       │  streams results during test run
       ▼
 ┌─────────────┐        ┌─────────────┐
@@ -82,22 +82,37 @@ API keys are hashed with SHA256 before storage and can be revoked at any time.
 If your playwright-cart instance requires authentication, pass the API key in the reporter config:
 
 ```ts
-['@playwright-cart/reporter', {
+['@radekbednarik/playwright-cart-reporter', {
   serverUrl: 'http://your-instance:3001',
   project: 'my-app',
-  apiKey: process.env.PLAYWRIGHT_CART_API_KEY,
+  apiKey: process.env.PLAYWRIGHT_CART_API_KEY, // Bearer token
 }]
 ```
 
 ## Reporter Setup
 
-Install the reporter in your Playwright project:
+The reporter is published to GitHub Packages under `@radekbednarik/playwright-cart-reporter`.
+
+### 1. Configure registry auth
+
+Create or update `.npmrc` in your project root to route the `@radekbednarik` scope to GitHub Packages:
+
+```ini
+@radekbednarik:registry=https://npm.pkg.github.com
+//npm.pkg.github.com/:_authToken=${NPM_TOKEN}
+```
+
+Set `NPM_TOKEN` to a GitHub PAT (classic) with `read:packages` scope, or a fine-grained token with package read access. In CI, add it as a repository secret.
+
+### 2. Install
 
 ```bash
-npm install --save-dev @playwright-cart/reporter
+npm install --save-dev @radekbednarik/playwright-cart-reporter
 # or
-pnpm add -D @playwright-cart/reporter
+pnpm add -D @radekbednarik/playwright-cart-reporter
 ```
+
+### 3. Configure
 
 Add it to `playwright.config.ts` alongside the HTML reporter:
 
@@ -107,11 +122,15 @@ import { defineConfig } from '@playwright/test'
 export default defineConfig({
   reporter: [
     ['html'],
-    ['@playwright-cart/reporter', {
-      serverUrl: 'http://localhost:3001', // URL of the playwright-cart server
-      project: 'my-app',                 // logical project name
-      branch: process.env.BRANCH,        // optional: branch name
-      commitSha: process.env.COMMIT_SHA, // optional: commit SHA
+    ['@radekbednarik/playwright-cart-reporter', {
+      serverUrl: 'http://localhost:3001',              // URL of the playwright-cart server (required)
+      project: 'my-app',                               // logical project name (required)
+      branch: process.env.BRANCH,                      // git branch name (optional)
+      commitSha: process.env.COMMIT_SHA,               // git commit SHA (optional)
+      apiKey: process.env.PLAYWRIGHT_CART_API_KEY,     // Bearer token for auth (optional)
+      uploadConcurrency: 3,                            // max parallel test uploads, default: 3 (optional)
+      retries: 3,                                      // upload retry attempts, default: 3 (optional)
+      retryDelay: 500,                                 // initial retry backoff in ms, doubles each attempt, default: 500 (optional)
     }],
   ],
 })
@@ -141,6 +160,24 @@ Copy `.env.example` to `.env` to customise:
 cp .env.example .env
 ```
 
+## Publishing the Reporter
+
+Publishing is automated via GitHub Actions (`.github/workflows/publish-reporter.yml`). To release a new version:
+
+1. Bump the version in `packages/reporter/package.json`
+2. Commit and push
+3. Create a GitHub Release — the workflow triggers automatically and publishes to GitHub Packages
+
+The workflow uses the built-in `GITHUB_TOKEN` (no extra secrets required). The package is published as `@radekbednarik/playwright-cart-reporter` to `https://npm.pkg.github.com`.
+
+To publish manually:
+
+```bash
+export NODE_AUTH_TOKEN=<github-pat-with-write:packages>
+pnpm --filter @radekbednarik/playwright-cart-reporter build
+pnpm --filter @radekbednarik/playwright-cart-reporter publish --no-git-checks
+```
+
 ## Development
 
 **Prerequisites:** Node.js ≥ 20, pnpm
@@ -158,9 +195,9 @@ The web dev server runs on `http://localhost:5173` and proxies `/api` and `/repo
 Individual packages:
 
 ```bash
-pnpm --filter @playwright-cart/server dev    # tsx watch — server on :3001
-pnpm --filter @playwright-cart/web dev       # Vite dev server on :5173
-pnpm --filter @playwright-cart/reporter dev  # tsc watch
+pnpm --filter @playwright-cart/server dev                        # tsx watch — server on :3001
+pnpm --filter @playwright-cart/web dev                           # Vite dev server on :5173
+pnpm --filter @radekbednarik/playwright-cart-reporter dev        # tsc watch
 ```
 
 Build all:
@@ -186,8 +223,8 @@ pnpm typecheck
 
 ```bash
 # Reporter
-pnpm --filter @playwright-cart/reporter test
-pnpm --filter @playwright-cart/reporter test:watch
+pnpm --filter @radekbednarik/playwright-cart-reporter test
+pnpm --filter @radekbednarik/playwright-cart-reporter test:watch
 
 # Server
 pnpm --filter @playwright-cart/server test
@@ -196,7 +233,7 @@ pnpm --filter @playwright-cart/server test:watch
 
 ## Manual E2E Testing
 
-A self-contained E2E test suite lives in `packages/e2e`. It uses `@playwright-cart/reporter` directly from the monorepo (no npm publish needed) and runs Playwright tests against a tiny static Todo demo app. Use this to manually verify the full reporter → server → dashboard pipeline.
+A self-contained E2E test suite lives in `packages/e2e`. It uses `@radekbednarik/playwright-cart-reporter` directly from the monorepo via `workspace:*` (no npm publish needed) and runs Playwright tests against a tiny static Todo demo app. Use this to manually verify the full reporter → server → dashboard pipeline.
 
 ### Prerequisites
 
