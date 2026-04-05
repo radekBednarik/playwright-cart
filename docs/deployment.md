@@ -1,14 +1,27 @@
-# Deployment Guide: GitHub Packages + Hetzner Cloud + Coolify
+# Deployment Guide: Reporter Distribution + Hetzner Cloud + Coolify
 
 > **Purpose:** Reference guide for distributing the `@playwright-cart/reporter` package via GitHub Packages, and for deploying the full playwright-cart stack (server + web + PostgreSQL + file storage) on Hetzner Cloud managed by Coolify.
 
 ---
 
-## Part 1 — Distributing the Reporter via GitHub Packages
+## Part 1 — Distributing the Reporter Package
+
+Two options are available. Choose based on your access model:
+
+| | Option A: GitHub Packages | Option B: npm pack + Release Asset |
+|---|---|---|
+| Auth required to install | Yes — PAT with `read:packages` | No (public repos) |
+| `.npmrc` config | Yes | No |
+| Package name constraint | Must match GitHub username scope | Any name |
+| Best for | Internal teams already using GitHub tokens | Zero-friction distribution |
+
+---
+
+### Option A: GitHub Packages (Private npm Registry)
 
 GitHub Packages hosts a private npm registry scoped to your GitHub account. Consumers install the package exactly like any other npm package — no public npm registry involved.
 
-### 1.1 Prepare the Reporter Package
+### 1.A.1 Prepare the Reporter Package
 
 **File:** `packages/reporter/package.json`
 
@@ -40,7 +53,7 @@ Make three changes:
 }
 ```
 
-### 1.2 Add `.npmrc` in the Reporter Package
+### 1.A.2 Add `.npmrc` in the Reporter Package
 
 **File:** `packages/reporter/.npmrc`
 
@@ -50,7 +63,7 @@ Make three changes:
 
 This tells pnpm/npm that all `@radekbednarik/` scoped packages resolve from GitHub Packages.
 
-### 1.3 GitHub Actions Workflow for Automated Publishing
+### 1.A.3 GitHub Actions Workflow for Automated Publishing
 
 Create a workflow triggered on GitHub Release creation.
 
@@ -99,7 +112,7 @@ jobs:
 
 `GITHUB_TOKEN` is provided automatically by GitHub Actions — no extra secrets needed. The `setup-node` action generates a temporary `.npmrc` with credentials scoped to the publish step.
 
-### 1.4 Publishing Manually (First Time or Ad-hoc)
+### 1.A.4 Publishing Manually (First Time or Ad-hoc)
 
 ```bash
 # Create a Personal Access Token (classic) at:
@@ -115,7 +128,7 @@ pnpm --filter @radekbednarik/playwright-cart-reporter build
 cd packages/reporter && pnpm publish --no-git-checks
 ```
 
-### 1.5 Consumer Setup (e2e Test Project)
+### 1.A.5 Consumer Setup (e2e Test Project)
 
 In the project consuming the reporter, add `.npmrc` at the project root:
 
@@ -154,6 +167,170 @@ export default defineConfig({
   ],
 })
 ```
+
+---
+
+### Option B: npm pack + GitHub Release Asset
+
+This option produces a `.tgz` tarball using `npm pack` and uploads it as a binary asset attached to a GitHub Release. Consumers install directly from the download URL — no registry, no `.npmrc`, no authentication token needed (for public repos).
+
+**How `npm pack` works:**
+`npm pack` bundles the compiled package into a self-contained tarball. The `"private": true` flag in `package.json` does **not** block `npm pack` — it only blocks `npm publish` to a registry. No changes to `package.json` are required to use this option.
+
+**Tarball filename convention:**
+npm derives the filename from the package name by stripping the `@` and replacing `/` with `-`:
+
+```
+@playwright-cart/reporter  →  playwright-cart-reporter-0.1.0.tgz
+```
+
+### 1.B.1 (Recommended) Add a `files` Field to Trim the Tarball
+
+Without a `files` field, `npm pack` includes source files, test files, TypeScript config, and Turbo cache artifacts. Add this to `packages/reporter/package.json` to ship only the compiled output:
+
+```json
+"files": ["dist"]
+```
+
+This is optional but strongly recommended — it keeps the tarball small and avoids shipping test code to consumers.
+
+### 1.B.2 GitHub Actions Workflow for Automated Release
+
+Create the following file. The workflow triggers whenever a GitHub Release is published, builds the reporter, packs it, and uploads the `.tgz` as a release asset.
+
+**File:** `.github/workflows/release-reporter.yml`
+
+```yaml
+name: Release Reporter Tarball
+
+on:
+  release:
+    types: [published]
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write   # required to upload release assets
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 9
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Build reporter
+        run: pnpm --filter @playwright-cart/reporter build
+
+      - name: Pack reporter
+        id: pack
+        working-directory: packages/reporter
+        run: |
+          FILENAME=$(npm pack --json | jq -r '.[0].filename')
+          echo "filename=$FILENAME" >> "$GITHUB_OUTPUT"
+
+      - name: Upload release asset
+        uses: softprops/action-gh-release@v2
+        with:
+          files: packages/reporter/${{ steps.pack.outputs.filename }}
+```
+
+**Key notes:**
+- `permissions: contents: write` is the only permission needed — no `packages: write` required.
+- `GITHUB_TOKEN` is provided automatically by GitHub Actions — no extra secrets needed.
+- `jq` is pre-installed on `ubuntu-latest` GitHub-hosted runners.
+- `npm pack --json` outputs a JSON array; `.[0].filename` extracts the tarball name. This is necessary because npm derives the filename from the scoped package name using a non-obvious transformation, making it unsafe to hardcode.
+- `softprops/action-gh-release@v2` discovers the release from `GITHUB_REF` automatically — the asset attaches to the correct release without extra configuration.
+
+### 1.B.3 Publishing Manually (Ad-hoc)
+
+```bash
+# From the repo root — build the reporter
+pnpm --filter @playwright-cart/reporter build
+
+# Pack it (run from the reporter package directory)
+cd packages/reporter
+npm pack
+# Produces: playwright-cart-reporter-0.1.0.tgz in the current directory
+
+# Verify contents
+tar -tzf playwright-cart-reporter-0.1.0.tgz
+
+# Attach to an existing release using the GitHub CLI:
+gh release upload <tag> playwright-cart-reporter-0.1.0.tgz
+```
+
+### 1.B.4 Consumer Setup (e2e Test Project)
+
+No `.npmrc`, no registry configuration, and no authentication token are required.
+
+**Install URL pattern:**
+
+```
+https://github.com/radekBednarik/playwright-cart/releases/download/<tag>/playwright-cart-reporter-<version>.tgz
+```
+
+Example for release tag `v0.1.0`:
+
+```bash
+npm install https://github.com/radekBednarik/playwright-cart/releases/download/v0.1.0/playwright-cart-reporter-0.1.0.tgz
+# or with pnpm
+pnpm add https://github.com/radekBednarik/playwright-cart/releases/download/v0.1.0/playwright-cart-reporter-0.1.0.tgz
+```
+
+**To pin to a specific release in `package.json`:**
+
+```json
+{
+  "dependencies": {
+    "@playwright-cart/reporter": "https://github.com/radekBednarik/playwright-cart/releases/download/v0.1.0/playwright-cart-reporter-0.1.0.tgz"
+  }
+}
+```
+
+The package installs under the name declared inside the tarball (`@playwright-cart/reporter`), regardless of the key used in `dependencies`.
+
+**Configure in `playwright.config.ts`:**
+
+```ts
+import { defineConfig } from '@playwright/test'
+
+export default defineConfig({
+  reporter: [
+    ['html'],
+    ['@playwright-cart/reporter', {
+      serverUrl: 'https://your-domain.example.com',
+      project: 'my-app',
+      branch: process.env.BRANCH,
+      commitSha: process.env.COMMIT_SHA,
+      apiKey: process.env.PLAYWRIGHT_CART_API_KEY,
+    }],
+  ],
+})
+```
+
+> **No `.npmrc` needed.** The package is installed from a direct URL, not a registry — npm/pnpm resolve it without any auth config. The `@playwright-cart/reporter` name in `playwright.config.ts` comes from the `name` field inside the tarball itself.
+
+**Using the reporter in a GitHub Actions CI workflow (consumer side):**
+
+```yaml
+- name: Install dependencies
+  run: npm install
+  # No GITHUB_TOKEN or NODE_AUTH_TOKEN needed.
+  # GitHub release assets on public repos are publicly accessible.
+```
+
+> **Note on repository visibility:** If the `playwright-cart` repository is **private**, release asset URLs are not publicly accessible. A GitHub token with `repo` scope is required, but no `.npmrc` registry config is needed — still simpler than Option A.
 
 ---
 
@@ -442,11 +619,18 @@ services:
 
 ## Summary Checklist
 
-### GitHub Packages (Reporter)
+### Reporter — Option A: GitHub Packages
 - [ ] Update `packages/reporter/package.json`: remove `"private": true`, rename to `@radekbednarik/playwright-cart-reporter`, add `publishConfig` + `repository`
 - [ ] Create `packages/reporter/.npmrc`
 - [ ] Create `.github/workflows/publish-reporter.yml`
 - [ ] Push changes, create a GitHub Release → verify package appears under GitHub profile → Packages
+
+### Reporter — Option B: npm pack + GitHub Release Asset
+- [ ] (Recommended) Add `"files": ["dist"]` to `packages/reporter/package.json`
+- [ ] Create `.github/workflows/release-reporter.yml`
+- [ ] Create a GitHub Release → workflow runs automatically → verify `.tgz` appears in the release Assets section
+- [ ] Test consumer install: `npm install https://github.com/radekBednarik/playwright-cart/releases/download/<tag>/playwright-cart-reporter-<version>.tgz`
+- [ ] Configure `playwright.config.ts` with `'@playwright-cart/reporter'`
 
 ### Hetzner + Coolify (Server)
 - [ ] Create Hetzner CX22 with Ubuntu 24.04 + SSH key + firewall (22, 80, 443, 8000) + Volume (20 GB, ext4)
@@ -462,4 +646,4 @@ services:
 
 ---
 
-*Sources: [GitHub Packages npm docs](https://docs.github.com/en/packages/working-with-a-github-packages-registry/working-with-the-npm-registry), [GitHub Actions: Publishing Node.js packages](https://docs.github.com/en/actions/use-cases-and-examples/publishing-packages/publishing-nodejs-packages), [Coolify Installation](https://coolify.io/docs/get-started/installation), [Coolify Docker Compose](https://coolify.io/docs/applications/build-packs/docker-compose), [Coolify Traefik overview](https://coolify.io/docs/knowledge-base/proxy/traefik/overview), [Docker Compose multiple files](https://docs.docker.com/compose/how-tos/multiple-compose-files/merge/), [Hetzner Volume mounting](https://docs.hetzner.com/cloud/volumes/getting-started/creating-a-volume/)*
+*Sources: [GitHub Packages npm docs](https://docs.github.com/en/packages/working-with-a-github-packages-registry/working-with-the-npm-registry), [GitHub Actions: Publishing Node.js packages](https://docs.github.com/en/actions/use-cases-and-examples/publishing-packages/publishing-nodejs-packages), [softprops/action-gh-release](https://github.com/softprops/action-gh-release), [Coolify Installation](https://coolify.io/docs/get-started/installation), [Coolify Docker Compose](https://coolify.io/docs/applications/build-packs/docker-compose), [Coolify Traefik overview](https://coolify.io/docs/knowledge-base/proxy/traefik/overview), [Docker Compose multiple files](https://docs.docker.com/compose/how-tos/multiple-compose-files/merge/), [Hetzner Volume mounting](https://docs.hetzner.com/cloud/volumes/getting-started/creating-a-volume/)*
