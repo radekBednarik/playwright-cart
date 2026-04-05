@@ -139,7 +139,7 @@ In the project consuming the reporter, add `.npmrc` at the project root:
 //npm.pkg.github.com/:_authToken=${GITHUB_TOKEN}
 ```
 
-Set `GITHUB_TOKEN` to a PAT with `read:packages` scope. In GitHub Actions this is available automatically as `${{ secrets.GITHUB_TOKEN }}`.
+Set `GITHUB_TOKEN` to a PAT created in **the consumer's own GitHub account** (`Settings → Developer settings → Personal access tokens → Tokens (classic)`) with `read:packages` scope. The package author's credentials are not shared — GitHub authenticates the consumer's own identity to read from the registry. In GitHub Actions this is available automatically as `${{ secrets.GITHUB_TOKEN }}`.
 
 Install the package:
 
