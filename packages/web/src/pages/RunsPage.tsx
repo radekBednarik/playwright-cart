@@ -88,6 +88,12 @@ reporter: [
   ['@playwright-cart/reporter', {
     serverUrl: 'http://localhost:3001',
     project: 'my-app',
+    apiKey: 'your api-key',
+    uploadConcurrency: 'optional: default is 3',
+    retries: 'optional: default is 3',
+    retryDelay: 'optional: default is 500ms, doubles each attempt',
+    branch: 'optional: git branch name',
+    commitSha: 'optional: git commit SHA',
   }],
 ]`}
       </pre>
