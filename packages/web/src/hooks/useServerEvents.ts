@@ -7,6 +7,10 @@ export function useServerEvents() {
   useEffect(() => {
     const es = new EventSource('/api/events')
 
+    es.addEventListener('error', () => {
+      es.close()
+    })
+
     es.addEventListener('run:created', () => {
       queryClient.invalidateQueries({ queryKey: ['runs'] })
     })

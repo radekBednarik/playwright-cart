@@ -64,7 +64,7 @@ export default function TopNav() {
   async function handleLogout() {
     setIsOpen(false)
     await logout()
-    queryClient.invalidateQueries({ queryKey: ['me'] })
+    queryClient.setQueryData(['me'], null)
     navigate('/login')
   }
 
