@@ -10,7 +10,7 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
-    "@radekBednarik/playwright-cart-reporter": "workspace:*"
+    "@radekbednarik/playwright-cart-reporter": "workspace:*"
   },
   "devDependencies": {
     "@playwright/test": "^1.49.0",
