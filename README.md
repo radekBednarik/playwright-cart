@@ -79,7 +79,7 @@ API keys are hashed with SHA256 before storage and can be revoked at any time.
 
 ### Reporter authentication
 
-If your playwright-cart instance requires authentication, pass the API key in the reporter config:
+Playwright cart instance requires authentication, pass the API key, that you will be provided by admin in the reporter config:
 
 ```ts
 ['@radekbednarik/playwright-cart-reporter', {
@@ -102,7 +102,7 @@ Create or update `.npmrc` in your project root to route the `@radekbednarik` sco
 //npm.pkg.github.com/:_authToken=${NPM_TOKEN}
 ```
 
-Set `NPM_TOKEN` to a GitHub PAT (classic) with `read:packages` scope, or a fine-grained token with package read access. In CI, add it as a repository secret.
+Set `NPM_TOKEN` to a GitHub PAT (classic) with `read:packages` scope. In CI, add it as a repository secret.
 
 ### 2. Install
 
