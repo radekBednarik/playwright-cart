@@ -14,21 +14,21 @@
     "db:migrate": "drizzle-kit migrate"
   },
   "dependencies": {
-    "@hono/node-server": "^1.13.7",
+    "@hono/node-server": "^1.19.12",
     "adm-zip": "^0.5.17",
     "bcrypt": "^6.0.0",
-    "drizzle-orm": "^0.36.0",
-    "hono": "^4.6.20",
-    "pg": "^8.11.0"
+    "drizzle-orm": "^0.45.2",
+    "hono": "^4.12.10",
+    "pg": "^8.20.0"
   },
   "devDependencies": {
     "@types/adm-zip": "^0.5.8",
     "@types/bcrypt": "^6.0.0",
-    "@types/node": "^22.0.0",
-    "@types/pg": "^8.10.0",
-    "drizzle-kit": "^0.27.0",
-    "tsx": "^4.19.2",
-    "typescript": "^5.7.3",
+    "@types/node": "^25.5.2",
+    "@types/pg": "^8.20.0",
+    "drizzle-kit": "^0.31.10",
+    "tsx": "^4.21.0",
+    "typescript": "^6.0.2",
     "vitest": "^4.1.2"
   }
 }
