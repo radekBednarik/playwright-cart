@@ -449,6 +449,20 @@ Internet
                 └─ /* ──────────► static SPA files
 ```
 
+**Important — Nginx must listen on both IPv4 and IPv6:**
+
+Alpine Linux (used as the nginx base image) resolves `localhost` to `::1` (IPv6) in newer Docker environments. The nginx default image patches this automatically, but only for the packaged default config. A custom `nginx.conf` must explicitly declare both:
+
+```nginx
+server {
+  listen 80;        # IPv4
+  listen [::]:80;   # IPv6 — required for health checks using localhost
+  ...
+}
+```
+
+Without `listen [::]:80;`, Docker health checks using `http://localhost/` will fail with "Connection refused" even though nginx is running. This causes Traefik v3 to return `503 no available server` (it excludes unhealthy containers from routing). Use `http://127.0.0.1/` in health checks as an explicit IPv4 target to avoid resolver ambiguity.
+
 ### 2.6 The Production Docker Compose File
 
 The file `docker-compose.prod.yml` at the repo root is ready to use. See [Part 3](#part-3--docker-composeprodymll-ready-to-use) for the full content.
@@ -498,10 +512,22 @@ These are injected at deploy time into the `${VAR}` placeholders in `docker-comp
 
 In the Coolify application settings → **Domains** tab:
 
-1. Add your domain (e.g., `playwright-cart.example.com`)
-2. Point the domain to the `web` service on internal port `80`
-3. Ensure your domain's DNS `A` record points to the Hetzner server IP
-4. Coolify automatically provisions and renews Let's Encrypt SSL — no manual cert work needed
+1. Add your domain **without a port suffix** (e.g., `https://dashboard.example.com` — not `https://dashboard.example.com:80`). The domain field is the public hostname Traefik matches on; the container port is set separately and defaults to the value in `EXPOSE`.
+2. Assign the domain to the `web` service only. The `server` and `postgres` services are internal — leave their domain fields blank.
+3. Ensure your DNS `A` record points to the Hetzner server IP.
+4. Coolify automatically provisions and renews Let's Encrypt SSL via Traefik — no manual cert work needed.
+
+**If using Cloudflare as a DNS proxy (orange cloud):**
+
+Cloudflare's SSL/TLS mode must be set to **"Full"** (not Flexible, not Full Strict) under your domain's SSL/TLS settings in the Cloudflare dashboard.
+
+- **Flexible** (the default) causes Cloudflare to connect to the origin over HTTP even when the URL says HTTPS. Traefik's `redirect-to-https` middleware on port 80 then issues a 301 redirect back to HTTPS, creating an infinite redirect loop that surfaces as a 404 or Cloudflare error.
+- **Full** tells Cloudflare to connect to the origin over HTTPS while accepting Traefik's Let's Encrypt certificate.
+- **Full (Strict)** works once the Let's Encrypt cert is issued and valid, but may break during the first deployment before the cert exists.
+
+Let's Encrypt HTTP-01 certificate issuance works correctly with Cloudflare in proxy mode — Cloudflare forwards the `.well-known/acme-challenge/` request to Hetzner, and Traefik handles it at the entrypoint level before any redirect middleware fires.
+
+**Hetzner firewall:** Ports `80` and `443` must be open inbound so Let's Encrypt can reach the server for HTTP-01 validation.
 
 ### 2.10 Deploy
 
@@ -534,6 +560,52 @@ No downtime required:
    resize2fs /dev/disk/by-id/scsi-0HC_Volume_<ID>
    df -h /mnt/data  # verify new size
    ```
+
+### 2.14 Troubleshooting
+
+#### 503 "no available server" from Traefik
+
+Traefik v3 excludes containers from routing if they are marked **unhealthy** by Docker. Before investigating networking, check container health first:
+
+```bash
+# Find current container names
+docker ps --format 'table {{.Names}}\t{{.Status}}' | grep -E 'web|server'
+
+# Check health status
+docker inspect <web-container-name> --format '{{.State.Health.Status}}'
+
+# View health check output and nginx logs
+docker logs <web-container-name>
+
+# Manually run the health check inside the container
+docker exec <web-container-name> wget -qO- http://127.0.0.1/ 2>&1; echo "exit: $?"
+```
+
+Common cause: health check uses `http://localhost/` in an Alpine container. Alpine resolves `localhost` to `::1` (IPv6), but nginx only listens on `0.0.0.0:80` (IPv4) unless `listen [::]:80;` is in nginx.conf. Fix: use `http://127.0.0.1/` in health checks and add `listen [::]:80;` to nginx.conf.
+
+#### 404 "not found" after visiting the domain
+
+Usually a Cloudflare SSL mode mismatch. Set Cloudflare SSL/TLS → **Full** (not Flexible). With Flexible, Cloudflare connects to the origin over HTTP, Traefik redirects that to HTTPS, and the loop produces a 404 or Cloudflare 1000-series error.
+
+#### Let's Encrypt certificate not issuing (ACME errors in Traefik logs)
+
+```bash
+docker logs coolify-proxy --tail 30 | grep -E 'ACME|certificate|domain'
+```
+
+Check for:
+- `NXDOMAIN` — the DNS record doesn't exist or hasn't propagated. Verify the A record in Cloudflare.
+- Wrong domain with a dot instead of a dash (e.g., `my-app.example.work` vs `my-app-example.work`) — a typo entered in a previous Coolify domain configuration. Old containers are removed on redeploy, so stale Traefik router entries disappear automatically.
+- Hetzner firewall blocking port 80 — Let's Encrypt HTTP-01 requires inbound port 80 to be open.
+
+#### Proxy can't reach the web container (network check)
+
+Coolify's `coolify-proxy` (Traefik) is automatically added to each project's Docker network. You do **not** need to manually add services to the `coolify` network in `docker-compose.prod.yml`. To confirm:
+
+```bash
+docker inspect coolify-proxy --format '{{range $k, $v := .NetworkSettings.Networks}}{{$k}} {{end}}'
+# Should include both `coolify` and the project network UUID
+```
 
 ---
 
@@ -605,7 +677,7 @@ services:
       server:
         condition: service_healthy
     healthcheck:
-      test: ["CMD", "wget", "-qO-", "http://localhost/"]
+      test: ["CMD", "wget", "-qO-", "http://127.0.0.1/"]
       interval: 10s
       timeout: 5s
       retries: 3
@@ -639,8 +711,11 @@ services:
 - [ ] Confirm `docker-compose.prod.yml` is committed to repo root
 - [ ] In Coolify: New Project → New Application → GitHub source → Docker Compose → `docker-compose.prod.yml`
 - [ ] Add env vars in Coolify UI: `JWT_SECRET` (openssl rand -hex 32), `ADMIN_USERNAME`, `ADMIN_PASSWORD`
-- [ ] Add domain in Coolify → point `web` service to internal port 80 → DNS A record → SSL auto-provisioned
-- [ ] Click Deploy → verify `GET https://your-domain/api/health` returns 200
+- [ ] Add domain in Coolify → assign to `web` service only (no port suffix in domain field, leave `server`/`postgres` domain blank)
+- [ ] DNS: A record for domain → Hetzner server IP; ports 80 + 443 open in Hetzner firewall
+- [ ] If using Cloudflare: set SSL/TLS mode to **Full** (not Flexible)
+- [ ] Click Deploy → confirm web container shows `Healthy` in deployment logs
+- [ ] Verify: `curl https://your-domain/api/health` → `{"status":"ok"}`
 
 ---
 
