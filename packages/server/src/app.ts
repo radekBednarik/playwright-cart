@@ -31,8 +31,14 @@ app.get('/api/events', (c) =>
       stream.writeSSE({ event: event.type, data: JSON.stringify(event) })
     }
     runEmitter.on('event', send)
+
+    const heartbeat = setInterval(() => {
+      stream.write(': keepalive\n\n')
+    }, 15000)
+
     return new Promise<void>((resolve) => {
       stream.onAbort(() => {
+        clearInterval(heartbeat)
         runEmitter.off('event', send)
         resolve()
       })
