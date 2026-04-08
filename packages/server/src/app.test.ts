@@ -27,7 +27,8 @@ describe('GET /api/events', () => {
 
   it('streams a run:created event to the client', async () => {
     const res = await app.request('/api/events')
-    const reader = res.body!.getReader()
+    if (!res.body) throw new Error('Response has no body')
+    const reader = res.body.getReader()
 
     const textPromise = readNextChunk(reader)
 
@@ -45,7 +46,8 @@ describe('GET /api/events', () => {
 
   it('streams a run:updated event to the client', async () => {
     const res = await app.request('/api/events')
-    const reader = res.body!.getReader()
+    if (!res.body) throw new Error('Response has no body')
+    const reader = res.body.getReader()
 
     const textPromise = readNextChunk(reader)
 

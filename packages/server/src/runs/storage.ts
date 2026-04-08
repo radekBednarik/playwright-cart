@@ -1,6 +1,6 @@
 import { mkdirSync, rmSync } from 'node:fs'
 import { join } from 'node:path'
-import { and, desc, eq, inArray, lt } from 'drizzle-orm'
+import { and, desc, eq, inArray } from 'drizzle-orm'
 import { db } from '../db/client.js'
 import { runs, testAnnotations, testAttachments, testErrors, tests } from '../db/schema.js'
 

@@ -15,7 +15,7 @@ export async function signToken(payload: { userId: number }): Promise<string> {
 
 export async function verifyToken(token: string): Promise<{ userId: number; exp: number } | null> {
   try {
-    const payload = await verify(token, getJwtSecret(), 'HS256') as Record<string, unknown>
+    const payload = (await verify(token, getJwtSecret(), 'HS256')) as Record<string, unknown>
     const userId = payload.userId
     const exp = payload.exp
     if (typeof userId !== 'number') return null

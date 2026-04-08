@@ -6,7 +6,5 @@ import { db } from './client.js'
  * Call in beforeEach to get a clean slate between tests.
  */
 export async function resetDb(): Promise<void> {
-  await db.execute(
-    sql`TRUNCATE TABLE runs RESTART IDENTITY CASCADE`,
-  )
+  await db.execute(sql`TRUNCATE TABLE runs RESTART IDENTITY CASCADE`)
 }

@@ -1,7 +1,7 @@
 import { Link, useParams } from 'react-router-dom'
-import SuiteGroup, { type SuiteTreeNode } from '../components/SuiteGroup.js'
 import RunHeader from '../components/RunHeader.js'
 import RunStats from '../components/RunStats.js'
+import SuiteGroup, { type SuiteTreeNode } from '../components/SuiteGroup.js'
 import { useRun } from '../hooks/useRun.js'
 import type { TestRecord } from '../lib/api.js'
 
@@ -72,14 +72,13 @@ function buildSuiteTree(tests: TestRecord[]): Map<string, SuiteTreeNode> {
   return root
 }
 
-function insertIntoTree(
-  map: Map<string, SuiteTreeNode>,
-  path: string[],
-  test: TestRecord,
-) {
+function insertIntoTree(map: Map<string, SuiteTreeNode>, path: string[], test: TestRecord) {
   const [head, ...rest] = path
-  if (!map.has(head)) map.set(head, { children: new Map(), tests: [] })
-  const node = map.get(head)!
+  let node = map.get(head)
+  if (!node) {
+    node = { children: new Map(), tests: [] }
+    map.set(head, node)
+  }
   if (rest.length === 0) {
     node.tests.push(test)
   } else {

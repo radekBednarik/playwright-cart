@@ -1,5 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
-import { NotFoundError, fetchRun, fetchRuns, fetchTest } from './api.js'
+import { fetchRun, fetchRuns, fetchTest, NotFoundError } from './api.js'
 
 beforeEach(() => {
   vi.stubGlobal('fetch', vi.fn())

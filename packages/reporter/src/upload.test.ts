@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from 'vitest'
-import { Semaphore, buildTestId, uploadWithRetry } from './upload.js'
+import { buildTestId, Semaphore, uploadWithRetry } from './upload.js'
 
 describe('buildTestId', () => {
   it('joins titlePath with -- and slugifies', () => {

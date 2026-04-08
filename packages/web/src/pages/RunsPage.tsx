@@ -1,5 +1,5 @@
 import { useSearchParams } from 'react-router-dom'
-import { FilterBar, applyFilters } from '../components/FilterBar.js'
+import { applyFilters, FilterBar } from '../components/FilterBar.js'
 import RunsTable from '../components/RunsTable.js'
 import StatsBar from '../components/StatsBar.js'
 import { useCurrentUser } from '../hooks/useCurrentUser.js'
@@ -49,7 +49,12 @@ export default function RunsPage() {
       <StatsBar runs={runs} />
 
       {/* Table */}
-      <RunsTable runs={filtered} isAdmin={isAdmin} retentionDays={retentionDays} onDeleteSuccess={() => refetch()} />
+      <RunsTable
+        runs={filtered}
+        isAdmin={isAdmin}
+        retentionDays={retentionDays}
+        onDeleteSuccess={() => refetch()}
+      />
     </div>
   )
 }

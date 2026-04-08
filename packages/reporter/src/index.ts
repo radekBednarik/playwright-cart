@@ -1,6 +1,5 @@
 import { existsSync, readFileSync } from 'node:fs'
-import { basename, join, resolve } from 'node:path'
-import stripAnsi from 'strip-ansi'
+import { basename, resolve } from 'node:path'
 import type {
   FullConfig,
   FullResult,
@@ -9,7 +8,8 @@ import type {
   TestCase,
   TestResult,
 } from '@playwright/test/reporter'
-import { Semaphore, buildTestId, uploadWithRetry, zipDirectory } from './upload.js'
+import stripAnsi from 'strip-ansi'
+import { buildTestId, Semaphore, uploadWithRetry, zipDirectory } from './upload.js'
 
 export interface PlaywrightCartReporterOptions {
   /** Base URL of the playwright-cart server, e.g. http://localhost:3001 */

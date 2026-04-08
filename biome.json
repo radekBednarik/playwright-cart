@@ -24,5 +24,10 @@
       "quoteStyle": "single",
       "trailingCommas": "all"
     }
+  },
+  "css": {
+    "parser": {
+      "tailwindDirectives": true
+    }
   }
 }

@@ -189,7 +189,12 @@ describe('POST /api/runs/:runId/tests', () => {
   })
 
   it('emits run:updated after saving a test', async () => {
-    await storage.createRun({ runId: 'run-1', project: 'p', startedAt: '2026-04-04T10:00:00.000Z', status: 'running' })
+    await storage.createRun({
+      runId: 'run-1',
+      project: 'p',
+      startedAt: '2026-04-04T10:00:00.000Z',
+      status: 'running',
+    })
     const spy = vi.spyOn(runEmitter, 'emit')
     const metadata: storage.TestRecord = {
       testId: 'suite--my-test',
@@ -245,7 +250,12 @@ describe('POST /api/runs/:runId/report', () => {
 
   it('emits run:updated after uploading a report', async () => {
     const AdmZip = (await import('adm-zip')).default
-    await storage.createRun({ runId: 'run-1', project: 'p', startedAt: '2026-04-04T10:00:00.000Z', status: 'running' })
+    await storage.createRun({
+      runId: 'run-1',
+      project: 'p',
+      startedAt: '2026-04-04T10:00:00.000Z',
+      status: 'running',
+    })
     const spy = vi.spyOn(runEmitter, 'emit')
 
     const zip = new AdmZip()
@@ -281,7 +291,12 @@ describe('POST /api/runs/:runId/complete', () => {
   })
 
   it('emits run:updated after completing a run', async () => {
-    await storage.createRun({ runId: 'run-1', project: 'p', startedAt: '2026-04-04T10:00:00.000Z', status: 'running' })
+    await storage.createRun({
+      runId: 'run-1',
+      project: 'p',
+      startedAt: '2026-04-04T10:00:00.000Z',
+      status: 'running',
+    })
     const spy = vi.spyOn(runEmitter, 'emit')
     await runs.request('/run-1/complete', {
       method: 'POST',
