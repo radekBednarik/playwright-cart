@@ -4,11 +4,14 @@ import RunsTable from '../components/RunsTable.js'
 import StatsBar from '../components/StatsBar.js'
 import { useCurrentUser } from '../hooks/useCurrentUser.js'
 import { useRuns } from '../hooks/useRuns.js'
+import { useSettings } from '../hooks/useSettings.js'
 
 export default function RunsPage() {
   const [params] = useSearchParams()
   const { data: runs, isLoading, error, refetch } = useRuns()
   const { isAdmin } = useCurrentUser()
+  const { data: settings } = useSettings()
+  const retentionDays = settings?.data_retention_days ?? 90
 
   if (isLoading) return <Skeleton />
 
@@ -46,7 +49,7 @@ export default function RunsPage() {
       <StatsBar runs={runs} />
 
       {/* Table */}
-      <RunsTable runs={filtered} isAdmin={isAdmin} onDeleteSuccess={() => refetch()} />
+      <RunsTable runs={filtered} isAdmin={isAdmin} retentionDays={retentionDays} onDeleteSuccess={() => refetch()} />
     </div>
   )
 }
