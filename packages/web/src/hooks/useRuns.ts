@@ -6,5 +6,6 @@ export function useRuns() {
     queryKey: ['runs'],
     queryFn: fetchRuns,
     staleTime: 30_000,
+    refetchInterval: 60_000,
   })
 }
