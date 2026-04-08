@@ -1,10 +1,10 @@
 import { useQueryClient } from '@tanstack/react-query'
 import { useEffect, useRef, useState } from 'react'
 import { useCurrentUser } from '../hooks/useCurrentUser.js'
+import { useTheme } from '../hooks/useTheme.js'
 import {
   type ApiKeyRecord,
   type CreatedApiKey,
-  type UserRecord,
   createApiKey,
   createUser,
   deleteApiKey,
@@ -12,13 +12,13 @@ import {
   fetchApiKeys,
   fetchSettings,
   fetchUsers,
+  type UserRecord,
   updateMe,
   updateSettings,
   updateUserRole,
 } from '../lib/api.js'
-import { applyTheme } from '../lib/theme.js'
 import type { Theme } from '../lib/theme.js'
-import { useTheme } from '../hooks/useTheme.js'
+import { applyTheme } from '../lib/theme.js'
 
 type Tab = 'account' | 'admin'
 
@@ -79,9 +79,7 @@ function AccountTab({ user }: { user: { id: number; username: string; theme: The
         onSuccess={() => queryClient.invalidateQueries({ queryKey: ['me'] })}
       />
       <ChangePasswordForm />
-      <ThemeSelector
-        onThemeChange={() => queryClient.invalidateQueries({ queryKey: ['me'] })}
-      />
+      <ThemeSelector onThemeChange={() => queryClient.invalidateQueries({ queryKey: ['me'] })} />
     </div>
   )
 }
@@ -656,6 +654,7 @@ function ApiKeysSection() {
 }
 
 function DataRetentionSection() {
+  const queryClient = useQueryClient()
   const [days, setDays] = useState<number>(30)
   const [loading, setLoading] = useState(true)
   const [status, setStatus] = useState<'idle' | 'saving' | 'ok' | 'err'>('idle')
@@ -678,6 +677,7 @@ function DataRetentionSection() {
     setErrMsg('')
     try {
       const updated = await updateSettings({ data_retention_days: days })
+      queryClient.setQueryData(['settings'], updated)
       setDays(updated.data_retention_days)
       setStatus('ok')
     } catch (err) {
