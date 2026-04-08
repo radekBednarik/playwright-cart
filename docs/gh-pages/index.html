@@ -2,6 +2,7 @@
 <html lang="en" data-theme="dark">
 <head>
   <meta charset="UTF-8" />
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>&#x1F6D2;</text></svg>" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 
   <!-- Anti-FOUC: apply saved theme before paint -->
@@ -26,6 +27,8 @@
   <meta property="og:title" content="playwright-cart — Centralized Playwright Test Reports" />
   <meta property="og:description" content="Self-hosted dashboard for collecting Playwright test runs, screenshots, traces, and HTML reports from every CI/CD pipeline. Own your data." />
   <meta property="og:site_name" content="playwright-cart" />
+  <meta property="og:image" content="https://opengraph.githubassets.com/1/radekBednarik/playwright-cart" />
+  <meta name="twitter:image" content="https://opengraph.githubassets.com/1/radekBednarik/playwright-cart" />
 
   <!-- Twitter Card -->
   <meta name="twitter:card" content="summary_large_image" />
@@ -56,6 +59,12 @@
   <style>
     /* ── RESET & BASE ── */
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :focus-visible {
+      outline: 2px solid var(--accent-blue);
+      outline-offset: 2px;
+      border-radius: 3px;
+    }
 
     /* ── THEME VARIABLES ── */
     :root[data-theme="dark"] {
@@ -112,6 +121,10 @@
 
     /* ── BASE ── */
     html { scroll-behavior: smooth; }
+
+    @media (prefers-reduced-motion: reduce) {
+      html { scroll-behavior: auto; }
+    }
 
     body {
       font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
@@ -303,12 +316,24 @@
       font-size: 20px; line-height: 1;
     }
 
-    .icon-blue  { background: color-mix(in srgb, var(--accent-blue) 15%, transparent);
-                  border: 1px solid color-mix(in srgb, var(--accent-blue) 30%, transparent); }
-    .icon-green { background: color-mix(in srgb, var(--accent-green) 15%, transparent);
-                  border: 1px solid color-mix(in srgb, var(--accent-green) 30%, transparent); }
-    .icon-yellow{ background: color-mix(in srgb, var(--accent-yellow) 15%, transparent);
-                  border: 1px solid color-mix(in srgb, var(--accent-yellow) 30%, transparent); }
+    .icon-blue  {
+      background: rgba(88, 166, 255, 0.15);
+      background: color-mix(in srgb, var(--accent-blue) 15%, transparent);
+      border: 1px solid rgba(88, 166, 255, 0.30);
+      border: 1px solid color-mix(in srgb, var(--accent-blue) 30%, transparent);
+    }
+    .icon-green {
+      background: rgba(63, 185, 80, 0.15);
+      background: color-mix(in srgb, var(--accent-green) 15%, transparent);
+      border: 1px solid rgba(63, 185, 80, 0.30);
+      border: 1px solid color-mix(in srgb, var(--accent-green) 30%, transparent);
+    }
+    .icon-yellow {
+      background: rgba(210, 153, 34, 0.15);
+      background: color-mix(in srgb, var(--accent-yellow) 15%, transparent);
+      border: 1px solid rgba(210, 153, 34, 0.30);
+      border: 1px solid color-mix(in srgb, var(--accent-yellow) 30%, transparent);
+    }
 
     .feature-card h3 {
       font-size: 15px; font-weight: 600; color: var(--text); margin-bottom: 10px;
@@ -455,18 +480,20 @@
       <a href="https://github.com/radekBednarik/playwright-cart/blob/main/docs/api.md">API</a>
       <a href="https://github.com/radekBednarik/playwright-cart" target="_blank" rel="noopener">GitHub&nbsp;&#x2197;</a>
       <a href="https://github.com/radekBednarik/playwright-cart#quick-start" class="btn-primary" style="margin-left:8px;">Get started</a>
-      <button class="theme-toggle" id="themeToggle" aria-label="Toggle theme" title="Toggle theme">&#x1F319;</button>
+      <button type="button" class="theme-toggle" id="themeToggle" aria-label="Toggle theme" title="Toggle theme">&#x1F319;</button>
     </div>
   </nav>
 
+  <main>
+
   <!-- HERO -->
-  <section class="hero">
+  <section class="hero" aria-labelledby="hero-heading">
     <div class="hero-glow" aria-hidden="true"></div>
     <div class="badge">
       <span class="badge-dot" aria-hidden="true"></span>
       Open Source &middot; Self-Hosted &middot; Free
     </div>
-    <h1>Playwright test reports,<br><span class="accent">centralized &amp; yours</span></h1>
+    <h1 id="hero-heading">Playwright test reports,<br><span class="accent">centralized &amp; yours</span></h1>
     <p class="hero-sub">Stop losing test results in ephemeral CI logs. playwright-cart collects every run, screenshot, trace, and HTML report into one persistent, self-hosted dashboard.</p>
     <div class="hero-buttons">
       <a href="https://github.com/radekBednarik/playwright-cart/blob/main/docs/deployment.md" class="btn-primary btn-lg">
@@ -519,7 +546,7 @@
     <div class="install-strip">
       <span class="install-prompt" aria-hidden="true">$</span>
       <code>pnpm add @radekbednarik/playwright-cart-reporter</code>
-      <button class="copy-btn" data-copy="pnpm add @radekbednarik/playwright-cart-reporter" aria-label="Copy install command">copy</button>
+      <button type="button" class="copy-btn" data-copy="pnpm add @radekbednarik/playwright-cart-reporter" aria-label="Copy install command">copy</button>
     </div>
 
     <div class="code-block" role="region" aria-label="playwright.config.ts example">
@@ -530,7 +557,7 @@
           <span class="dot dot-g"></span>
         </div>
         <span class="code-filename">playwright.config.ts</span>
-        <button class="copy-btn" id="copyConfig" aria-label="Copy config snippet">copy</button>
+        <button type="button" class="copy-btn" id="copyConfig" aria-label="Copy config snippet">copy</button>
       </div>
       <pre><code id="configSnippet"><span class="kw">import</span> { <span class="fn">defineConfig</span> } <span class="kw">from</span> <span class="str">'@playwright/test'</span>
 
@@ -567,6 +594,8 @@
     </div>
   </section>
 
+  </main>
+
   <!-- FOOTER -->
   <footer>
     <span class="footer-copy">playwright-cart &middot; <a href="https://opensource.org/licenses/MIT">MIT License</a></span>
@@ -574,7 +603,7 @@
       <a href="https://github.com/radekBednarik/playwright-cart/blob/main/docs/deployment.md">Docs</a>
       <a href="https://github.com/radekBednarik/playwright-cart/blob/main/docs/api.md">API Reference</a>
       <a href="https://github.com/radekBednarik/playwright-cart" target="_blank" rel="noopener">GitHub</a>
-      <a href="https://github.com/radekBednarik/playwright-cart/packages" target="_blank" rel="noopener">npm</a>
+      <a href="https://www.npmjs.com/package/@radekbednarik/playwright-cart-reporter" target="_blank" rel="noopener">npm</a>
     </nav>
   </footer>
 
@@ -615,10 +644,25 @@
         var text = btn.dataset.copy;
         if (!text) {
           var pre = btn.closest('.code-block');
-          if (pre) text = pre.querySelector('code').innerText;
+          if (pre) text = pre.querySelector('code').textContent;
         }
         if (!text) return;
         navigator.clipboard.writeText(text).then(function () {
+          var orig = btn.textContent;
+          btn.textContent = 'copied!';
+          btn.classList.add('copied');
+          setTimeout(function () {
+            btn.textContent = orig;
+            btn.classList.remove('copied');
+          }, 2000);
+        }).catch(function () {
+          var ta = document.createElement('textarea');
+          ta.value = text;
+          ta.style.cssText = 'position:fixed;opacity:0;pointer-events:none';
+          document.body.appendChild(ta);
+          ta.select();
+          try { document.execCommand('copy'); } catch (e) { /* ignore */ }
+          document.body.removeChild(ta);
           var orig = btn.textContent;
           btn.textContent = 'copied!';
           btn.classList.add('copied');
