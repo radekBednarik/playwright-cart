@@ -1,6 +1,7 @@
 {
   "name": "playwright-cart",
   "private": true,
+  "license": "MIT",
   "scripts": {
     "dev": "turbo run dev",
     "build": "turbo run build",

@@ -1,1385 +1,1937 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
-<head>
-  <meta charset="UTF-8" />
-  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90' fill='%2300d4aa'>&#x1F6D2;</text></svg>" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <head>
+    <meta charset="UTF-8" />
+    <link
+      rel="icon"
+      href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90' fill='%2300d4aa'>&#x1F6D2;</text></svg>"
+    />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 
-  <title>playwright-cart — Centralized Playwright Test Reports</title>
-  <meta name="description" content="Self-hosted dashboard for collecting Playwright test runs, screenshots, traces, and HTML reports from every CI/CD pipeline. Own your data." />
-  <meta name="robots" content="index, follow" />
-  <link rel="canonical" href="https://radekbednarik.github.io/playwright-cart/" />
+    <title>playwright-cart — Centralized Playwright Test Reports</title>
+    <meta
+      name="description"
+      content="Self-hosted dashboard for collecting Playwright test runs, screenshots, traces, and HTML reports from every CI/CD pipeline. Own your data."
+    />
+    <meta name="robots" content="index, follow" />
+    <link
+      rel="canonical"
+      href="https://radekbednarik.github.io/playwright-cart/"
+    />
 
-  <!-- Open Graph -->
-  <meta property="og:type" content="website" />
-  <meta property="og:url" content="https://radekbednarik.github.io/playwright-cart/" />
-  <meta property="og:title" content="playwright-cart — Centralized Playwright Test Reports" />
-  <meta property="og:description" content="Self-hosted dashboard for collecting Playwright test runs, screenshots, traces, and HTML reports from every CI/CD pipeline. Own your data." />
-  <meta property="og:site_name" content="playwright-cart" />
-  <meta property="og:image" content="https://opengraph.githubassets.com/1/radekBednarik/playwright-cart" />
-  <meta name="twitter:image" content="https://opengraph.githubassets.com/1/radekBednarik/playwright-cart" />
+    <!-- Open Graph -->
+    <meta property="og:type" content="website" />
+    <meta
+      property="og:url"
+      content="https://radekbednarik.github.io/playwright-cart/"
+    />
+    <meta
+      property="og:title"
+      content="playwright-cart — Centralized Playwright Test Reports"
+    />
+    <meta
+      property="og:description"
+      content="Self-hosted dashboard for collecting Playwright test runs, screenshots, traces, and HTML reports from every CI/CD pipeline. Own your data."
+    />
+    <meta property="og:site_name" content="playwright-cart" />
+    <meta
+      property="og:image"
+      content="https://opengraph.githubassets.com/1/radekBednarik/playwright-cart"
+    />
+    <meta
+      name="twitter:image"
+      content="https://opengraph.githubassets.com/1/radekBednarik/playwright-cart"
+    />
 
-  <!-- Twitter Card -->
-  <meta name="twitter:card" content="summary_large_image" />
-  <meta name="twitter:title" content="playwright-cart — Centralized Playwright Test Reports" />
-  <meta name="twitter:description" content="Self-hosted dashboard for collecting Playwright test runs, screenshots, traces, and HTML reports from every CI/CD pipeline." />
+    <!-- Twitter Card -->
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta
+      name="twitter:title"
+      content="playwright-cart — Centralized Playwright Test Reports"
+    />
+    <meta
+      name="twitter:description"
+      content="Self-hosted dashboard for collecting Playwright test runs, screenshots, traces, and HTML reports from every CI/CD pipeline."
+    />
 
-  <!-- JSON-LD Structured Data -->
-  <script type="application/ld+json">
-  {
-    "@context": "https://schema.org",
-    "@type": "SoftwareApplication",
-    "name": "playwright-cart",
-    "alternateName": "Playwright Cart",
-    "description": "Self-hosted dashboard for collecting Playwright test runs, screenshots, traces, and HTML reports from every CI/CD pipeline. Own your data.",
-    "url": "https://radekbednarik.github.io/playwright-cart/",
-    "applicationCategory": "DeveloperApplication",
-    "applicationSubCategory": "Test Management",
-    "operatingSystem": "Linux, macOS, Windows",
-    "runtimePlatform": "Node.js",
-    "license": "https://opensource.org/licenses/MIT",
-    "codeRepository": "https://github.com/radekBednarik/playwright-cart",
-    "installUrl": "https://github.com/radekBednarik/playwright-cart/blob/main/docs/deployment.md",
-    "releaseNotes": "https://github.com/radekBednarik/playwright-cart/releases",
-    "programmingLanguage": [
-      { "@type": "ComputerLanguage", "name": "TypeScript" },
-      { "@type": "ComputerLanguage", "name": "JavaScript" }
-    ],
-    "screenshot": [
-      "https://radekbednarik.github.io/playwright-cart/assets/dashboard.webp",
-      "https://radekbednarik.github.io/playwright-cart/assets/run.webp",
-      "https://radekbednarik.github.io/playwright-cart/assets/failed_test.webp"
-    ],
-    "featureList": [
-      "Centralized test run dashboard",
-      "Screenshot and trace artifact storage",
-      "Playwright HTML report viewer",
-      "JWT browser authentication",
-      "API key management for CI/CD (admin)",
-      "Role-based access control (admin/user)",
-      "Docker Compose deployment",
-      "PostgreSQL persistence with data retention"
-    ],
-    "offers": {
-      "@type": "Offer",
-      "price": "0",
-      "priceCurrency": "USD"
-    },
-    "author": {
-      "@type": "Person",
-      "name": "Radek Bednarik",
-      "url": "https://github.com/radekBednarik"
-    },
-    "maintainer": {
-      "@type": "Person",
-      "name": "Radek Bednarik",
-      "url": "https://github.com/radekBednarik"
-    },
-    "audience": {
-      "@type": "Audience",
-      "audienceType": "Software developers, QA engineers, DevOps engineers"
-    }
-  }
-  </script>
-
-  <!-- Fonts -->
-  <link rel="preconnect" href="https://fonts.googleapis.com" />
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,700;0,900;1,700;1,900&family=Geist+Mono:wght@300;400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
-
-  <style>
-    /* ── RESET ── */
-    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-    html { scroll-behavior: smooth; font-size: 16px; }
-    img, video { max-width: 100%; display: block; }
-    button { font: inherit; cursor: pointer; }
-    a { color: inherit; text-decoration: none; }
-
-    /* ── DESIGN TOKENS ── */
-    :root {
-      --bg:           #080b12;
-      --surface:      #0e1420;
-      --surface-2:    #131c2e;
-      --border:       #1e2a3d;
-      --border-hover: #2a3d5c;
-
-      --green:        #00d4aa;
-      --green-dim:    rgba(0, 212, 170, 0.10);
-      --green-glow:   rgba(0, 212, 170, 0.25);
-      --green-border: rgba(0, 212, 170, 0.35);
-
-      --amber:        #e8a740;
-      --amber-dim:    rgba(232, 167, 64, 0.10);
-      --amber-glow:   rgba(232, 167, 64, 0.22);
-      --amber-border: rgba(232, 167, 64, 0.35);
-
-      --text:         #d4cfc9;
-      --text-muted:   #7a8699;
-      --text-subtle:  #6b7f99;
-
-      --font-display: 'Playfair Display', Georgia, 'Times New Roman', serif;
-      --font-mono:    'Geist Mono', 'SF Mono', Consolas, monospace;
-      --font-code:    'JetBrains Mono', 'Fira Code', Consolas, monospace;
-
-      --max-w:        1100px;
-      --r-sm:         4px;
-      --r-md:         8px;
-      --r-lg:         14px;
-      --transition:   0.2s ease;
-    }
-
-    /* ── BASE ── */
-    body {
-      background: var(--bg);
-      color: var(--text);
-      font-family: var(--font-mono);
-      font-size: 0.9rem;
-      line-height: 1.7;
-      -webkit-font-smoothing: antialiased;
-    }
-
-    :focus-visible {
-      outline: 2px solid var(--green);
-      outline-offset: 3px;
-      border-radius: var(--r-sm);
-    }
-
-    @media (prefers-reduced-motion: reduce) {
-      html { scroll-behavior: auto; }
-      *, *::before, *::after {
-        animation-duration: 0.01ms !important;
-        animation-iteration-count: 1 !important;
-        transition-duration: 0.01ms !important;
+    <!-- JSON-LD Structured Data -->
+    <script type="application/ld+json">
+      {
+        "@context": "https://schema.org",
+        "@type": "SoftwareApplication",
+        "name": "playwright-cart",
+        "alternateName": "Playwright Cart",
+        "description": "Self-hosted dashboard for collecting Playwright test runs, screenshots, traces, and HTML reports from every CI/CD pipeline. Own your data.",
+        "url": "https://radekbednarik.github.io/playwright-cart/",
+        "applicationCategory": "DeveloperApplication",
+        "applicationSubCategory": "Test Management",
+        "operatingSystem": "Linux, macOS, Windows",
+        "runtimePlatform": "Node.js",
+        "license": "https://opensource.org/licenses/MIT",
+        "codeRepository": "https://github.com/radekBednarik/playwright-cart",
+        "installUrl": "https://github.com/radekBednarik/playwright-cart/blob/main/docs/deployment.md",
+        "releaseNotes": "https://github.com/radekBednarik/playwright-cart/releases",
+        "programmingLanguage": [
+          { "@type": "ComputerLanguage", "name": "TypeScript" },
+          { "@type": "ComputerLanguage", "name": "JavaScript" }
+        ],
+        "screenshot": [
+          "https://radekbednarik.github.io/playwright-cart/assets/dashboard.webp",
+          "https://radekbednarik.github.io/playwright-cart/assets/run.webp",
+          "https://radekbednarik.github.io/playwright-cart/assets/failed_test.webp"
+        ],
+        "featureList": [
+          "Centralized test run dashboard",
+          "Screenshot and trace artifact storage",
+          "Playwright HTML report viewer",
+          "JWT browser authentication",
+          "API key management for CI/CD (admin)",
+          "Role-based access control (admin/user)",
+          "Docker Compose deployment",
+          "PostgreSQL persistence with data retention"
+        ],
+        "offers": {
+          "@type": "Offer",
+          "price": "0",
+          "priceCurrency": "USD"
+        },
+        "author": {
+          "@type": "Person",
+          "name": "Radek Bednarik",
+          "url": "https://github.com/radekBednarik"
+        },
+        "maintainer": {
+          "@type": "Person",
+          "name": "Radek Bednarik",
+          "url": "https://github.com/radekBednarik"
+        },
+        "audience": {
+          "@type": "Audience",
+          "audienceType": "Software developers, QA engineers, DevOps engineers"
+        }
       }
-    }
+    </script>
 
-    /* ── NAV ── */
-    nav {
-      position: sticky;
-      top: 0;
-      z-index: 100;
-      height: 52px;
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      padding: 0 max(clamp(16px, 4vw, 48px), calc((100% - var(--max-w)) / 2));
-      background: rgba(8, 11, 18, 0.88);
-      backdrop-filter: blur(16px);
-      -webkit-backdrop-filter: blur(16px);
-      border-bottom: 1px solid var(--border);
-    }
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,700;0,900;1,700;1,900&family=Geist+Mono:wght@300;400;500;600&family=JetBrains+Mono:wght@400;500&display=swap"
+      rel="stylesheet"
+    />
 
-    .nav-logo {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-      font-family: var(--font-display);
-      font-style: italic;
-      font-weight: 700;
-      font-size: 1.05rem;
-      color: var(--text);
-      letter-spacing: -0.01em;
-    }
-
-    .nav-logo-icon {
-      width: 28px;
-      height: 28px;
-      background: var(--green-dim);
-      border: 1px solid var(--green-border);
-      border-radius: var(--r-sm);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 15px;
-      line-height: 1;
-    }
-
-    .nav-links {
-      display: flex;
-      align-items: center;
-      gap: 2px;
-    }
-
-    .nav-links a {
-      font-family: var(--font-mono);
-      font-size: 0.95rem;
-      letter-spacing: 0.02em;
-      color: var(--text-muted);
-      padding: 5px 10px;
-      border-radius: var(--r-sm);
-      transition: color var(--transition), background var(--transition);
-    }
-
-    .nav-links a:hover { color: var(--green); background: var(--green-dim); }
-
-    .nav-gh {
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      width: 36px;
-      height: 36px;
-      color: var(--text-muted);
-      border-radius: var(--r-sm);
-      transition: color var(--transition), background var(--transition);
-    }
-
-    .nav-gh:hover { color: var(--text); background: var(--surface); }
-
-    /* ── HERO ── */
-    #hero {
-      position: relative;
-      min-height: 100svh;
-      display: flex;
-      flex-direction: column;
-      align-items: flex-start;
-      justify-content: center;
-      /* Horizontal padding expands to center content within --max-w on wide screens */
-      padding: clamp(80px, 14vw, 140px)
-               max(clamp(16px, 4vw, 48px), calc((100% - var(--max-w)) / 2))
-               clamp(60px, 8vw, 100px);
-      overflow: hidden;
-    }
-
-    /* Grain texture */
-    #hero::before {
-      content: '';
-      position: absolute;
-      inset: -100%;
-      width: 300%;
-      height: 300%;
-      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='300' height='300'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.75' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='300' height='300' filter='url(%23n)' opacity='1'/%3E%3C/svg%3E");
-      opacity: 0.035;
-      pointer-events: none;
-      z-index: 0;
-      animation: grain 0.4s steps(1) infinite;
-    }
-
-    @keyframes grain {
-      0%   { transform: translate(0, 0); }
-      12%  { transform: translate(-2%, -3%); }
-      25%  { transform: translate(3%, 1%); }
-      37%  { transform: translate(-1%, 4%); }
-      50%  { transform: translate(2%, -2%); }
-      62%  { transform: translate(-3%, 2%); }
-      75%  { transform: translate(1%, 3%); }
-      87%  { transform: translate(-2%, -1%); }
-      100% { transform: translate(3%, 0); }
-    }
-
-    .hero-glow {
-      position: absolute;
-      top: 5%;
-      left: -5%;
-      width: 65%;
-      height: 65%;
-      background: radial-gradient(ellipse at 30% 40%,
-        rgba(0, 212, 170, 0.07) 0%,
-        rgba(0, 212, 170, 0.03) 45%,
-        transparent 70%
-      );
-      pointer-events: none;
-      z-index: 0;
-      animation: glow-pulse 9s ease-in-out infinite alternate;
-    }
-
-    @keyframes glow-pulse {
-      from { opacity: 0.5; transform: scale(1); }
-      to   { opacity: 1;   transform: scale(1.1); }
-    }
-
-    #hero > * { position: relative; z-index: 1; }
-
-    .hero-badge {
-      display: inline-flex;
-      align-items: center;
-      gap: 8px;
-      font-family: var(--font-mono);
-      font-size: 0.82rem;
-      letter-spacing: 0.08em;
-      color: var(--text-muted);
-      background: var(--surface);
-      border: 1px solid var(--border);
-      border-radius: 20px;
-      padding: 4px 14px;
-      margin-bottom: 28px;
-    }
-
-    .badge-dot {
-      width: 6px;
-      height: 6px;
-      background: var(--green);
-      border-radius: 50%;
-      display: inline-block;
-      box-shadow: 0 0 6px var(--green);
-      animation: dot-pulse 2.5s ease-in-out infinite;
-    }
-
-    @keyframes dot-pulse {
-      0%, 100% { opacity: 1; box-shadow: 0 0 6px var(--green); }
-      50%       { opacity: 0.5; box-shadow: 0 0 2px var(--green); }
-    }
-
-    .hero-title {
-      font-family: var(--font-display);
-      font-style: italic;
-      font-weight: 900;
-      font-size: clamp(3.2rem, 9.5vw, 7.5rem);
-      line-height: 0.93;
-      letter-spacing: -0.025em;
-      color: var(--text);
-      margin-bottom: 28px;
-      max-width: 14ch;
-    }
-
-    .hero-subtitle {
-      font-family: var(--font-mono);
-      font-size: clamp(0.8rem, 1.8vw, 1rem);
-      color: var(--text-muted);
-      margin-bottom: 40px;
-      height: 1.7em;
-      overflow: hidden;
-      position: relative;
-    }
-
-    .tw-phrase {
-      position: absolute;
-      left: 0;
-      top: 0;
-      white-space: nowrap;
-      opacity: 0;
-    }
-
-    .tw-phrase:nth-child(1) { animation: phrase-cycle 12s 0s   infinite; }
-    .tw-phrase:nth-child(2) { animation: phrase-cycle 12s 3s   infinite; }
-    .tw-phrase:nth-child(3) { animation: phrase-cycle 12s 6s   infinite; }
-    .tw-phrase:nth-child(4) { animation: phrase-cycle 12s 9s   infinite; }
-
-    @keyframes phrase-cycle {
-      0%   { opacity: 0; transform: translateY(5px); }
-      6%   { opacity: 1; transform: translateY(0);   }
-      22%  { opacity: 1; transform: translateY(0);   }
-      28%  { opacity: 0; transform: translateY(-5px);}
-      100% { opacity: 0; }
-    }
-
-    .hero-subtitle::after {
-      content: '█';
-      color: var(--green);
-      font-size: 0.7em;
-      animation: cursor-blink 0.9s step-end infinite;
-      margin-left: 3px;
-      position: relative;
-      z-index: 2;
-    }
-
-    @keyframes cursor-blink {
-      0%, 100% { opacity: 1; }
-      50%       { opacity: 0; }
-    }
-
-    .hero-cta {
-      display: flex;
-      gap: 14px;
-      flex-wrap: wrap;
-      margin-bottom: 56px;
-    }
-
-    .btn-primary {
-      display: inline-flex;
-      align-items: center;
-      gap: 8px;
-      font-family: var(--font-mono);
-      font-size: 0.78rem;
-      font-weight: 500;
-      letter-spacing: 0.04em;
-      color: var(--bg);
-      background: var(--green);
-      border: 1px solid var(--green);
-      border-radius: var(--r-md);
-      padding: 11px 22px;
-      transition: background var(--transition), box-shadow var(--transition);
-    }
-
-    .btn-primary:hover {
-      background: #00efc0;
-      box-shadow: 0 0 20px var(--green-glow);
-    }
-
-    .btn-secondary {
-      display: inline-flex;
-      align-items: center;
-      gap: 8px;
-      font-family: var(--font-mono);
-      font-size: 0.78rem;
-      font-weight: 400;
-      letter-spacing: 0.04em;
-      color: var(--text-muted);
-      background: transparent;
-      border: 1px solid var(--border);
-      border-radius: var(--r-md);
-      padding: 11px 22px;
-      transition: color var(--transition), border-color var(--transition), background var(--transition);
-    }
-
-    .btn-secondary:hover {
-      color: var(--text);
-      border-color: var(--border-hover);
-      background: var(--surface);
-    }
-
-    /* Browser chrome frame */
-    .hero-browser {
-      width: 100%;
-      max-width: 960px;
-      border-radius: var(--r-lg);
-      border: 1px solid var(--border);
-      overflow: hidden;
-      box-shadow:
-        0 0 0 1px rgba(0, 212, 170, 0.08),
-        0 0 60px -10px var(--green-glow),
-        0 40px 80px -20px rgba(0, 0, 0, 0.7);
-    }
-
-    .browser-chrome {
-      display: flex;
-      align-items: center;
-      gap: 12px;
-      padding: 10px 16px;
-      background: var(--surface);
-      border-bottom: 1px solid var(--border);
-    }
-
-    .chrome-dots {
-      display: flex;
-      gap: 6px;
-    }
-
-    .dot-r { width: 10px; height: 10px; border-radius: 50%; background: #ff5f57; display: inline-block; }
-    .dot-y { width: 10px; height: 10px; border-radius: 50%; background: #febc2e; display: inline-block; }
-    .dot-g { width: 10px; height: 10px; border-radius: 50%; background: #28c840; display: inline-block; }
-
-    .chrome-address {
-      flex: 1;
-      display: flex;
-      align-items: center;
-      gap: 6px;
-      background: var(--surface-2);
-      border: 1px solid var(--border);
-      border-radius: var(--r-sm);
-      padding: 3px 10px;
-      font-family: var(--font-mono);
-      font-size: 0.68rem;
-      color: var(--text-subtle);
-    }
-
-    .browser-viewport {
-      position: relative;
-      line-height: 0;
-      background: var(--surface);
-    }
-
-    /* Scanline overlay */
-    .browser-viewport::after {
-      content: '';
-      position: absolute;
-      inset: 0;
-      background: repeating-linear-gradient(
-        0deg,
-        transparent 0px,
-        transparent 2px,
-        rgba(0, 0, 0, 0.055) 2px,
-        rgba(0, 0, 0, 0.055) 3px
-      );
-      pointer-events: none;
-      z-index: 2;
-    }
-
-    .browser-viewport img {
-      width: 100%;
-      height: auto;
-      display: block;
-    }
-
-    /* ── GALLERY ── */
-    #gallery {
-      padding: clamp(64px, 10vw, 120px)
-               max(clamp(16px, 4vw, 48px), calc((100% - var(--max-w)) / 2));
-    }
-
-    .section-eyebrow {
-      font-family: var(--font-mono);
-      font-size: 0.82rem;
-      letter-spacing: 0.1em;
-      color: var(--green);
-      margin-bottom: 12px;
-      width: 100%;
-      max-width: var(--max-w);
-      margin-inline: auto;
-    }
-
-    .section-title {
-      font-family: var(--font-display);
-      font-style: italic;
-      font-weight: 700;
-      font-size: clamp(2rem, 5vw, 3.4rem);
-      line-height: 1.05;
-      color: var(--text);
-      margin-bottom: 48px;
-      width: 100%;
-      max-width: var(--max-w);
-      margin-inline: auto;
-    }
-
-    .bento-grid {
-      display: grid;
-      grid-template-columns: repeat(6, 1fr);
-      grid-template-rows: 260px 260px 200px;
-      gap: 12px;
-      width: 100%;
-      max-width: var(--max-w);
-      margin-inline: auto;
-    }
-
-    .bento-panel {
-      position: relative;
-      overflow: hidden;
-      border-radius: var(--r-md);
-      border: 1px solid var(--border);
-      background: var(--surface);
-      padding: 0;
-      appearance: none;
-      -webkit-appearance: none;
-      transition:
-        transform var(--transition),
-        border-color var(--transition),
-        box-shadow var(--transition);
-    }
-
-    .bento-panel:nth-child(1) { grid-column: 1 / 5; grid-row: 1 / 2; }
-    .bento-panel:nth-child(2) { grid-column: 5 / 7; grid-row: 1 / 3; }
-    .bento-panel:nth-child(3) { grid-column: 1 / 3; grid-row: 2 / 3; }
-    .bento-panel:nth-child(4) { grid-column: 3 / 5; grid-row: 2 / 3; }
-    .bento-panel:nth-child(5) { grid-column: 1 / 4; grid-row: 3 / 4; }
-    .bento-panel:nth-child(6) { grid-column: 4 / 7; grid-row: 3 / 4; }
-
-    .bento-panel:hover {
-      transform: translateY(-3px);
-      border-color: var(--green);
-      box-shadow:
-        0 0 0 1px var(--green-border),
-        0 6px 28px 0 var(--green-glow),
-        0 20px 48px -8px rgba(0, 0, 0, 0.55);
-    }
-
-    .bento-panel img {
-      width: 100%;
-      height: 100%;
-      object-fit: cover;
-      object-position: top left;
-      display: block;
-      transition: transform 0.35s ease;
-    }
-
-    .bento-panel:hover img { transform: scale(1.04); }
-
-    .bento-label {
-      position: absolute;
-      bottom: 10px;
-      left: 10px;
-      font-family: var(--font-mono);
-      font-size: 0.75rem;
-      letter-spacing: 0.06em;
-      color: var(--green);
-      background: rgba(8, 11, 18, 0.85);
-      border: 1px solid var(--border);
-      border-radius: var(--r-sm);
-      padding: 2px 9px;
-      backdrop-filter: blur(4px);
-      -webkit-backdrop-filter: blur(4px);
-      pointer-events: none;
-    }
-
-    /* Scroll-driven entrance — progressive enhancement */
-    @supports (animation-timeline: scroll()) {
-      .bento-panel {
-        animation: card-enter linear both;
-        animation-timeline: view();
-        animation-range: entry 0% entry 25%;
+    <style>
+      /* ── RESET ── */
+      *,
+      *::before,
+      *::after {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
       }
-      @keyframes card-enter {
-        from { opacity: 0.4; transform: translateY(12px); }
-        to   { opacity: 1;   transform: translateY(0); }
+      html {
+        scroll-behavior: smooth;
+        font-size: 16px;
       }
-    }
+      img,
+      video {
+        max-width: 100%;
+        display: block;
+      }
+      button {
+        font: inherit;
+        cursor: pointer;
+      }
+      a {
+        color: inherit;
+        text-decoration: none;
+      }
 
-    /* ── HOW IT WORKS ── */
-    #how-it-works {
-      padding: clamp(64px, 10vw, 120px)
-               max(clamp(16px, 4vw, 48px), calc((100% - var(--max-w)) / 2));
-      border-top: 1px solid var(--border);
-    }
+      /* ── DESIGN TOKENS ── */
+      :root {
+        --bg: #080b12;
+        --surface: #0e1420;
+        --surface-2: #131c2e;
+        --border: #1e2a3d;
+        --border-hover: #2a3d5c;
 
-    .steps-grid {
-      display: grid;
-      grid-template-columns: repeat(3, 1fr);
-      gap: 2px;
-      max-width: var(--max-w);
-      margin-inline: auto;
-      border: 1px solid var(--border);
-      border-radius: var(--r-lg);
-      overflow: hidden;
-    }
+        --green: #00d4aa;
+        --green-dim: rgba(0, 212, 170, 0.1);
+        --green-glow: rgba(0, 212, 170, 0.25);
+        --green-border: rgba(0, 212, 170, 0.35);
 
-    .step {
-      padding: 40px 36px;
-      background: var(--surface);
-      border-right: 1px solid var(--border);
-      transition: background var(--transition);
-    }
+        --amber: #e8a740;
+        --amber-dim: rgba(232, 167, 64, 0.1);
+        --amber-glow: rgba(232, 167, 64, 0.22);
+        --amber-border: rgba(232, 167, 64, 0.35);
 
-    .step:last-child { border-right: none; }
-    .step:hover { background: var(--surface-2); }
+        --text: #d4cfc9;
+        --text-muted: #7a8699;
+        --text-subtle: #6b7f99;
 
-    .step-number {
-      font-family: var(--font-display);
-      font-style: italic;
-      font-weight: 900;
-      font-size: 4rem;
-      line-height: 1;
-      color: var(--text-subtle);
-      margin-bottom: 20px;
-      letter-spacing: -0.04em;
-    }
+        --font-display: "Playfair Display", Georgia, "Times New Roman", serif;
+        --font-mono: "Geist Mono", "SF Mono", Consolas, monospace;
+        --font-code: "JetBrains Mono", "Fira Code", Consolas, monospace;
 
-    .step h3 {
-      font-family: var(--font-display);
-      font-style: italic;
-      font-weight: 700;
-      font-size: 1.15rem;
-      color: var(--text);
-      margin-bottom: 12px;
-    }
+        --max-w: 1100px;
+        --r-sm: 4px;
+        --r-md: 8px;
+        --r-lg: 14px;
+        --transition: 0.2s ease;
+      }
 
-    .step p {
-      font-family: var(--font-mono);
-      font-size: 0.78rem;
-      color: var(--text-muted);
-      line-height: 1.75;
-      margin-bottom: 18px;
-    }
+      /* ── BASE ── */
+      body {
+        background: var(--bg);
+        color: var(--text);
+        font-family: var(--font-mono);
+        font-size: 0.9rem;
+        line-height: 1.7;
+        -webkit-font-smoothing: antialiased;
+      }
 
-    .step p code {
-      font-family: var(--font-code);
-      color: var(--amber);
-      background: var(--amber-dim);
-      border-radius: 3px;
-      padding: 1px 5px;
-      font-size: 0.9em;
-    }
+      :focus-visible {
+        outline: 2px solid var(--green);
+        outline-offset: 3px;
+        border-radius: var(--r-sm);
+      }
 
-    .step-tag {
-      font-family: var(--font-mono);
-      font-size: 0.8rem;
-      letter-spacing: 0.04em;
-      color: var(--text-muted);
-    }
+      @media (prefers-reduced-motion: reduce) {
+        html {
+          scroll-behavior: auto;
+        }
+        *,
+        *::before,
+        *::after {
+          animation-duration: 0.01ms !important;
+          animation-iteration-count: 1 !important;
+          transition-duration: 0.01ms !important;
+        }
+      }
 
-    /* ── FEATURES ── */
-    #features {
-      padding: clamp(64px, 10vw, 120px)
-               max(clamp(16px, 4vw, 48px), calc((100% - var(--max-w)) / 2));
-      border-top: 1px solid var(--border);
-    }
+      /* ── NAV ── */
+      nav {
+        position: sticky;
+        top: 0;
+        z-index: 100;
+        height: 52px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 0 max(clamp(16px, 4vw, 48px), calc((100% - var(--max-w)) / 2));
+        background: rgba(8, 11, 18, 0.88);
+        backdrop-filter: blur(16px);
+        -webkit-backdrop-filter: blur(16px);
+        border-bottom: 1px solid var(--border);
+      }
 
-    .features-grid {
-      display: grid;
-      grid-template-columns: repeat(4, 1fr);
-      gap: 12px;
-      max-width: var(--max-w);
-      margin-inline: auto;
-    }
+      .nav-logo {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        font-family: var(--font-display);
+        font-style: italic;
+        font-weight: 700;
+        font-size: 1.05rem;
+        color: var(--text);
+        letter-spacing: -0.01em;
+      }
 
-    .feature-card {
-      background: var(--surface);
-      border: 1px solid var(--border);
-      border-radius: var(--r-lg);
-      padding: 32px 28px;
-      transition: border-color var(--transition), transform var(--transition);
-    }
+      .nav-logo-icon {
+        width: 28px;
+        height: 28px;
+        background: var(--green-dim);
+        border: 1px solid var(--green-border);
+        border-radius: var(--r-sm);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 15px;
+        line-height: 1;
+      }
 
-    .feature-card:hover { transform: translateY(-2px); }
+      .nav-links {
+        display: flex;
+        align-items: center;
+        gap: 2px;
+      }
 
-    .feature-card:nth-child(1) { grid-column: span 2; }
-    .feature-card:nth-child(2) { grid-column: span 2; }
-    .feature-card:nth-child(3) { grid-column: span 2; }
-    .feature-card:nth-child(4) { grid-column: span 2; }
-    .feature-card.feature-full { grid-column: span 4; }
+      .nav-links a {
+        font-family: var(--font-mono);
+        font-size: 0.95rem;
+        letter-spacing: 0.02em;
+        color: var(--text-muted);
+        padding: 5px 10px;
+        border-radius: var(--r-sm);
+        transition:
+          color var(--transition),
+          background var(--transition);
+      }
 
-    .feature-card.green-accent { border-top: 2px solid var(--green); }
-    .feature-card.green-accent:hover { border-color: var(--green); box-shadow: 0 4px 24px var(--green-dim); }
+      .nav-links a:hover {
+        color: var(--green);
+        background: var(--green-dim);
+      }
 
-    .feature-card.amber-accent { border-top: 2px solid var(--amber); }
-    .feature-card.amber-accent:hover { border-color: var(--amber); box-shadow: 0 4px 24px var(--amber-dim); }
+      .nav-gh {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        width: 36px;
+        height: 36px;
+        color: var(--text-muted);
+        border-radius: var(--r-sm);
+        transition:
+          color var(--transition),
+          background var(--transition);
+      }
 
-    .feature-icon {
-      width: 36px;
-      height: 36px;
-      margin-bottom: 18px;
-    }
+      .nav-gh:hover {
+        color: var(--text);
+        background: var(--surface);
+      }
 
-    .feature-card h3 {
-      font-family: var(--font-display);
-      font-style: italic;
-      font-weight: 700;
-      font-size: 1.05rem;
-      color: var(--text);
-      margin-bottom: 10px;
-    }
+      /* ── HERO ── */
+      #hero {
+        position: relative;
+        min-height: 100svh;
+        display: flex;
+        flex-direction: column;
+        align-items: flex-start;
+        justify-content: center;
+        /* Horizontal padding expands to center content within --max-w on wide screens */
+        padding: clamp(80px, 14vw, 140px)
+          max(clamp(16px, 4vw, 48px), calc((100% - var(--max-w)) / 2))
+          clamp(60px, 8vw, 100px);
+        overflow: hidden;
+      }
 
-    .feature-card p {
-      font-family: var(--font-mono);
-      font-size: 0.77rem;
-      color: var(--text-muted);
-      line-height: 1.75;
-      margin-bottom: 18px;
-    }
+      /* Grain texture */
+      #hero::before {
+        content: "";
+        position: absolute;
+        inset: -100%;
+        width: 300%;
+        height: 300%;
+        background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='300' height='300'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.75' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='300' height='300' filter='url(%23n)' opacity='1'/%3E%3C/svg%3E");
+        opacity: 0.035;
+        pointer-events: none;
+        z-index: 0;
+        animation: grain 0.4s steps(1) infinite;
+      }
 
-    .feature-tag {
-      font-family: var(--font-mono);
-      font-size: 0.8rem;
-      letter-spacing: 0.04em;
-      color: var(--text-muted);
-    }
+      @keyframes grain {
+        0% {
+          transform: translate(0, 0);
+        }
+        12% {
+          transform: translate(-2%, -3%);
+        }
+        25% {
+          transform: translate(3%, 1%);
+        }
+        37% {
+          transform: translate(-1%, 4%);
+        }
+        50% {
+          transform: translate(2%, -2%);
+        }
+        62% {
+          transform: translate(-3%, 2%);
+        }
+        75% {
+          transform: translate(1%, 3%);
+        }
+        87% {
+          transform: translate(-2%, -1%);
+        }
+        100% {
+          transform: translate(3%, 0);
+        }
+      }
 
-    /* Wide feature card layout */
-    .feature-card.feature-full {
-      display: grid;
-      grid-template-columns: auto 1fr;
-      grid-template-rows: auto auto;
-      column-gap: 28px;
-      align-items: start;
-    }
+      .hero-glow {
+        position: absolute;
+        top: 5%;
+        left: -5%;
+        width: 65%;
+        height: 65%;
+        background: radial-gradient(
+          ellipse at 30% 40%,
+          rgba(0, 212, 170, 0.07) 0%,
+          rgba(0, 212, 170, 0.03) 45%,
+          transparent 70%
+        );
+        pointer-events: none;
+        z-index: 0;
+        animation: glow-pulse 9s ease-in-out infinite alternate;
+      }
 
-    .feature-card.feature-full .feature-icon { grid-row: 1; grid-column: 1; margin-bottom: 0; margin-top: 4px; }
-    .feature-card.feature-full h3 { grid-row: 1; grid-column: 2; }
-    .feature-card.feature-full p { grid-row: 2; grid-column: 2; }
-    .feature-card.feature-full .feature-tag { grid-row: 3; grid-column: 2; }
+      @keyframes glow-pulse {
+        from {
+          opacity: 0.5;
+          transform: scale(1);
+        }
+        to {
+          opacity: 1;
+          transform: scale(1.1);
+        }
+      }
 
-    /* ── INTEGRATION ── */
-    #integration {
-      padding: clamp(64px, 10vw, 120px)
-               max(clamp(16px, 4vw, 48px), calc((100% - var(--max-w)) / 2));
-      border-top: 1px solid var(--border);
-    }
+      #hero > * {
+        position: relative;
+        z-index: 1;
+      }
 
-    .section-sub {
-      font-family: var(--font-mono);
-      font-size: 0.8rem;
-      color: var(--text-muted);
-      margin-top: -28px;
-      margin-bottom: 48px;
-      max-width: var(--max-w);
-      margin-inline: auto;
-      width: 100%;
-    }
+      .hero-badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        font-family: var(--font-mono);
+        font-size: 0.82rem;
+        letter-spacing: 0.08em;
+        color: var(--text-muted);
+        background: var(--surface);
+        border: 1px solid var(--border);
+        border-radius: 20px;
+        padding: 4px 14px;
+        margin-bottom: 28px;
+      }
 
-    .section-sub strong { color: var(--text); font-weight: 500; }
+      .badge-dot {
+        width: 6px;
+        height: 6px;
+        background: var(--green);
+        border-radius: 50%;
+        display: inline-block;
+        box-shadow: 0 0 6px var(--green);
+        animation: dot-pulse 2.5s ease-in-out infinite;
+      }
 
-    .integration-steps {
-      max-width: var(--max-w);
-      margin-inline: auto;
-      display: flex;
-      flex-direction: column;
-      gap: 32px;
-    }
+      @keyframes dot-pulse {
+        0%,
+        100% {
+          opacity: 1;
+          box-shadow: 0 0 6px var(--green);
+        }
+        50% {
+          opacity: 0.5;
+          box-shadow: 0 0 2px var(--green);
+        }
+      }
 
-    .int-step-label {
-      font-family: var(--font-mono);
-      font-size: 0.85rem;
-      letter-spacing: 0.05em;
-      color: var(--text-muted);
-      margin-bottom: 10px;
-    }
+      .hero-title {
+        font-family: var(--font-display);
+        font-style: italic;
+        font-weight: 900;
+        font-size: clamp(3.2rem, 9.5vw, 7.5rem);
+        line-height: 0.93;
+        letter-spacing: -0.025em;
+        color: var(--text);
+        margin-bottom: 28px;
+        max-width: 14ch;
+      }
 
-    .code-block {
-      background: var(--surface);
-      border: 1px solid var(--border);
-      border-radius: var(--r-md);
-      overflow: hidden;
-    }
+      .hero-subtitle {
+        font-family: var(--font-mono);
+        font-size: clamp(0.8rem, 1.8vw, 1rem);
+        color: var(--text-muted);
+        margin-bottom: 40px;
+        height: 1.7em;
+        overflow: hidden;
+        position: relative;
+      }
 
-    .code-header {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-      padding: 9px 14px;
-      border-bottom: 1px solid var(--border);
-      background: var(--surface-2);
-    }
+      .tw-phrase {
+        position: absolute;
+        left: 0;
+        top: 0;
+        white-space: nowrap;
+        opacity: 0;
+      }
 
-    .code-dots { display: flex; gap: 6px; }
+      .tw-phrase:nth-child(1) {
+        animation: phrase-cycle 12s 0s infinite;
+      }
+      .tw-phrase:nth-child(2) {
+        animation: phrase-cycle 12s 3s infinite;
+      }
+      .tw-phrase:nth-child(3) {
+        animation: phrase-cycle 12s 6s infinite;
+      }
+      .tw-phrase:nth-child(4) {
+        animation: phrase-cycle 12s 9s infinite;
+      }
 
-    .code-filename {
-      font-family: var(--font-code);
-      font-size: 0.85rem;
-      color: var(--text-muted);
-      flex: 1;
-    }
+      @keyframes phrase-cycle {
+        0% {
+          opacity: 0;
+          transform: translateY(5px);
+        }
+        6% {
+          opacity: 1;
+          transform: translateY(0);
+        }
+        22% {
+          opacity: 1;
+          transform: translateY(0);
+        }
+        28% {
+          opacity: 0;
+          transform: translateY(-5px);
+        }
+        100% {
+          opacity: 0;
+        }
+      }
 
-    pre {
-      padding: 20px 22px;
-      overflow-x: auto;
-      font-family: var(--font-code);
-      font-size: 0.78rem;
-      line-height: 1.8;
-      color: var(--text);
-      tab-size: 2;
-    }
+      .hero-subtitle::after {
+        content: "█";
+        color: var(--green);
+        font-size: 0.7em;
+        animation: cursor-blink 0.9s step-end infinite;
+        margin-left: 3px;
+        position: relative;
+        z-index: 2;
+      }
 
-    pre code { background: none; padding: 0; }
+      @keyframes cursor-blink {
+        0%,
+        100% {
+          opacity: 1;
+        }
+        50% {
+          opacity: 0;
+        }
+      }
 
-    .install-strip {
-      display: flex;
-      align-items: center;
-      gap: 12px;
-      background: var(--surface);
-      border: 1px solid var(--border);
-      border-radius: var(--r-md);
-      padding: 12px 18px;
-      font-family: var(--font-code);
-      font-size: 0.78rem;
-    }
+      .hero-cta {
+        display: flex;
+        gap: 14px;
+        flex-wrap: wrap;
+        margin-bottom: 56px;
+      }
 
-    .install-prompt {
-      color: var(--green);
-      font-weight: 600;
-      user-select: none;
-    }
+      .btn-primary {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        font-family: var(--font-mono);
+        font-size: 0.78rem;
+        font-weight: 500;
+        letter-spacing: 0.04em;
+        color: var(--bg);
+        background: var(--green);
+        border: 1px solid var(--green);
+        border-radius: var(--r-md);
+        padding: 11px 22px;
+        transition:
+          background var(--transition),
+          box-shadow var(--transition);
+      }
 
-    .install-strip code { color: var(--text); flex: 1; }
+      .btn-primary:hover {
+        background: #00efc0;
+        box-shadow: 0 0 20px var(--green-glow);
+      }
 
-    .copy-btn {
-      background: none;
-      border: 1px solid var(--border);
-      color: var(--amber);
-      border-radius: var(--r-sm);
-      padding: 3px 10px;
-      font-family: var(--font-mono);
-      font-size: 0.78rem;
-      letter-spacing: 0.03em;
-      transition: background var(--transition), border-color var(--transition), color var(--transition);
-      white-space: nowrap;
-    }
+      .btn-secondary {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        font-family: var(--font-mono);
+        font-size: 0.78rem;
+        font-weight: 400;
+        letter-spacing: 0.04em;
+        color: var(--text-muted);
+        background: transparent;
+        border: 1px solid var(--border);
+        border-radius: var(--r-md);
+        padding: 11px 22px;
+        transition:
+          color var(--transition),
+          border-color var(--transition),
+          background var(--transition);
+      }
 
-    .copy-btn:hover { background: var(--amber-dim); border-color: var(--amber-border); }
-    .copy-btn.copied { color: var(--green); border-color: var(--green-border); }
+      .btn-secondary:hover {
+        color: var(--text);
+        border-color: var(--border-hover);
+        background: var(--surface);
+      }
 
-    /* Syntax tokens */
-    .kw   { color: #cf8ef4; }
-    .fn   { color: #00d4aa; }
-    .str  { color: #e8a740; }
-    .cm   { color: var(--text-muted); font-style: italic; }
-    .prop { color: #7ec8e3; }
+      /* Browser chrome frame */
+      .hero-browser {
+        width: 100%;
+        max-width: 960px;
+        border-radius: var(--r-lg);
+        border: 1px solid var(--border);
+        overflow: hidden;
+        box-shadow:
+          0 0 0 1px rgba(0, 212, 170, 0.08),
+          0 0 60px -10px var(--green-glow),
+          0 40px 80px -20px rgba(0, 0, 0, 0.7);
+      }
 
-    /* ── CTA ── */
-    #cta {
-      padding: clamp(64px, 10vw, 120px)
-               max(clamp(16px, 4vw, 48px), calc((100% - var(--max-w)) / 2));
-      border-top: 1px solid var(--border);
-    }
+      .browser-chrome {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        padding: 10px 16px;
+        background: var(--surface);
+        border-bottom: 1px solid var(--border);
+      }
 
-    .cta-box {
-      max-width: var(--max-w);
-      margin-inline: auto;
-      background: linear-gradient(135deg, var(--surface) 0%, var(--surface-2) 100%);
-      border: 1px solid var(--border);
-      border-top: 1px solid rgba(0, 212, 170, 0.2);
-      border-radius: var(--r-lg);
-      padding: clamp(40px, 6vw, 64px) clamp(28px, 5vw, 56px);
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      gap: 32px;
-      flex-wrap: wrap;
-    }
+      .chrome-dots {
+        display: flex;
+        gap: 6px;
+      }
 
-    .cta-box h2 {
-      font-family: var(--font-display);
-      font-style: italic;
-      font-weight: 700;
-      font-size: clamp(1.5rem, 3.5vw, 2.2rem);
-      color: var(--text);
-      margin-bottom: 8px;
-    }
+      .dot-r {
+        width: 10px;
+        height: 10px;
+        border-radius: 50%;
+        background: #ff5f57;
+        display: inline-block;
+      }
+      .dot-y {
+        width: 10px;
+        height: 10px;
+        border-radius: 50%;
+        background: #febc2e;
+        display: inline-block;
+      }
+      .dot-g {
+        width: 10px;
+        height: 10px;
+        border-radius: 50%;
+        background: #28c840;
+        display: inline-block;
+      }
 
-    .cta-box p {
-      font-family: var(--font-mono);
-      font-size: 0.8rem;
-      color: var(--text-muted);
-    }
+      .chrome-address {
+        flex: 1;
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        background: var(--surface-2);
+        border: 1px solid var(--border);
+        border-radius: var(--r-sm);
+        padding: 3px 10px;
+        font-family: var(--font-mono);
+        font-size: 0.68rem;
+        color: var(--text-subtle);
+      }
 
-    .cta-buttons {
-      display: flex;
-      gap: 12px;
-      flex-wrap: wrap;
-      flex-shrink: 0;
-    }
+      .browser-viewport {
+        position: relative;
+        line-height: 0;
+        background: var(--surface);
+      }
 
-    /* ── FOOTER ── */
-    footer {
-      border-top: 1px solid var(--border);
-      padding: 24px clamp(16px, 4vw, 48px);
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      flex-wrap: wrap;
-      gap: 16px;
-      max-width: var(--max-w);
-      margin-inline: auto;
-    }
+      /* Scanline overlay */
+      .browser-viewport::after {
+        content: "";
+        position: absolute;
+        inset: 0;
+        background: repeating-linear-gradient(
+          0deg,
+          transparent 0px,
+          transparent 2px,
+          rgba(0, 0, 0, 0.055) 2px,
+          rgba(0, 0, 0, 0.055) 3px
+        );
+        pointer-events: none;
+        z-index: 2;
+      }
 
-    .footer-left {
-      display: flex;
-      align-items: center;
-      gap: 12px;
-    }
+      .browser-viewport img {
+        width: 100%;
+        height: auto;
+        display: block;
+      }
 
-    .footer-logo {
-      font-family: var(--font-display);
-      font-style: italic;
-      font-weight: 700;
-      font-size: 1.1rem;
-      color: var(--text-muted);
-    }
+      /* ── GALLERY ── */
+      #gallery {
+        padding: clamp(64px, 10vw, 120px)
+          max(clamp(16px, 4vw, 48px), calc((100% - var(--max-w)) / 2));
+      }
 
-    .footer-sep {
-      color: var(--text-subtle);
-      font-size: 0.85rem;
-    }
+      .section-eyebrow {
+        font-family: var(--font-mono);
+        font-size: 0.82rem;
+        letter-spacing: 0.1em;
+        color: var(--green);
+        margin-bottom: 12px;
+        width: 100%;
+        max-width: var(--max-w);
+        margin-inline: auto;
+      }
 
-    .footer-license {
-      font-family: var(--font-mono);
-      font-size: 0.85rem;
-      color: var(--text-muted);
-    }
-
-    .footer-links {
-      display: flex;
-      align-items: center;
-      gap: 24px;
-    }
-
-    .footer-links a {
-      font-family: var(--font-mono);
-      font-size: 0.85rem;
-      color: var(--text-muted);
-      letter-spacing: 0.02em;
-      transition: color var(--transition);
-    }
-
-    .footer-links a:hover { color: var(--green); }
-
-    /* ── LIGHTBOX ── */
-    #lightbox {
-      position: fixed;
-      inset: 0;
-      z-index: 200;
-      background: rgba(8, 11, 18, 0.94);
-      backdrop-filter: blur(12px);
-      -webkit-backdrop-filter: blur(12px);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      padding: 24px;
-    }
-
-    #lightbox[hidden] { display: none; }
-
-    .lightbox-inner {
-      position: relative;
-      max-width: 1100px;
-      width: 100%;
-    }
-
-    #lightbox-close {
-      position: absolute;
-      top: -44px;
-      right: 0;
-      background: none;
-      border: 1px solid var(--border);
-      color: var(--text-muted);
-      border-radius: var(--r-sm);
-      width: 32px;
-      height: 32px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 0.9rem;
-      transition: color var(--transition), border-color var(--transition);
-    }
-
-    #lightbox-close:hover { color: var(--text); border-color: var(--border-hover); }
-
-    #lightbox-img {
-      width: 100%;
-      height: auto;
-      border-radius: var(--r-md);
-      border: 1px solid var(--border);
-      box-shadow: 0 0 60px rgba(0, 0, 0, 0.6);
-    }
-
-    #lightbox-caption {
-      display: block;
-      margin-top: 14px;
-      font-family: var(--font-mono);
-      font-size: 0.88rem;
-      color: var(--text-muted);
-      text-align: center;
-      letter-spacing: 0.02em;
-    }
-
-    /* ── EXTERNAL LINK ICON ── */
-    a[target="_blank"]:not(.nav-gh)::after {
-      content: '';
-      display: inline-block;
-      width: 0.65em;
-      height: 0.65em;
-      margin-left: 0.28em;
-      vertical-align: middle;
-      background-color: currentColor;
-      opacity: 0.85;
-      flex-shrink: 0;
-      -webkit-mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath fill='black' d='M14 5a1 1 0 1 1 0-2h6a1 1 0 0 1 1 1v6a1 1 0 1 1-2 0V6.414l-9.293 9.293a1 1 0 0 1-1.414-1.414L17.586 5H14zM3 7a2 2 0 0 1 2-2h4a1 1 0 0 1 0 2H5v12h12v-4a1 1 0 1 1 2 0v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V7z'/%3E%3C/svg%3E");
-      mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath fill='black' d='M14 5a1 1 0 1 1 0-2h6a1 1 0 0 1 1 1v6a1 1 0 1 1-2 0V6.414l-9.293 9.293a1 1 0 0 1-1.414-1.414L17.586 5H14zM3 7a2 2 0 0 1 2-2h4a1 1 0 0 1 0 2H5v12h12v-4a1 1 0 1 1 2 0v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V7z'/%3E%3C/svg%3E");
-      -webkit-mask-repeat: no-repeat;
-      mask-repeat: no-repeat;
-      -webkit-mask-size: contain;
-      mask-size: contain;
-    }
-
-    /* ── RESPONSIVE ── */
-    @media (max-width: 768px) {
-      .nav-links a:not(.nav-gh) { display: none; }
+      .section-title {
+        font-family: var(--font-display);
+        font-style: italic;
+        font-weight: 700;
+        font-size: clamp(2rem, 5vw, 3.4rem);
+        line-height: 1.05;
+        color: var(--text);
+        margin-bottom: 48px;
+        width: 100%;
+        max-width: var(--max-w);
+        margin-inline: auto;
+      }
 
       .bento-grid {
-        grid-template-columns: 1fr 1fr;
-        grid-template-rows: 200px 200px 180px 180px;
+        display: grid;
+        grid-template-columns: repeat(6, 1fr);
+        grid-template-rows: 260px 260px 200px;
+        gap: 12px;
+        width: 100%;
+        max-width: var(--max-w);
+        margin-inline: auto;
       }
-      .bento-panel:nth-child(1) { grid-column: 1 / 3; grid-row: 1; }
-      .bento-panel:nth-child(2) { grid-column: 1 / 3; grid-row: 2; }
-      .bento-panel:nth-child(3) { grid-column: 1;     grid-row: 3; }
-      .bento-panel:nth-child(4) { grid-column: 2;     grid-row: 3; }
-      .bento-panel:nth-child(5) { grid-column: 1;     grid-row: 4; }
-      .bento-panel:nth-child(6) { grid-column: 2;     grid-row: 4; }
 
-      .steps-grid { grid-template-columns: 1fr; }
-      .step { border-right: none; border-bottom: 1px solid var(--border); }
-      .step:last-child { border-bottom: none; }
+      .bento-panel {
+        position: relative;
+        overflow: hidden;
+        border-radius: var(--r-md);
+        border: 1px solid var(--border);
+        background: var(--surface);
+        padding: 0;
+        appearance: none;
+        -webkit-appearance: none;
+        transition:
+          transform var(--transition),
+          border-color var(--transition),
+          box-shadow var(--transition);
+      }
 
-      .features-grid { grid-template-columns: 1fr 1fr; }
-      .feature-card:nth-child(1),
-      .feature-card:nth-child(2),
-      .feature-card:nth-child(3),
-      .feature-card:nth-child(4) { grid-column: span 1; }
-      .feature-card.feature-full { grid-column: span 2; display: block; }
+      .bento-panel:nth-child(1) {
+        grid-column: 1 / 5;
+        grid-row: 1 / 2;
+      }
+      .bento-panel:nth-child(2) {
+        grid-column: 5 / 7;
+        grid-row: 1 / 3;
+      }
+      .bento-panel:nth-child(3) {
+        grid-column: 1 / 3;
+        grid-row: 2 / 3;
+      }
+      .bento-panel:nth-child(4) {
+        grid-column: 3 / 5;
+        grid-row: 2 / 3;
+      }
+      .bento-panel:nth-child(5) {
+        grid-column: 1 / 4;
+        grid-row: 3 / 4;
+      }
+      .bento-panel:nth-child(6) {
+        grid-column: 4 / 7;
+        grid-row: 3 / 4;
+      }
 
-      .cta-box { flex-direction: column; align-items: flex-start; }
+      .bento-panel:hover {
+        transform: translateY(-3px);
+        border-color: var(--green);
+        box-shadow:
+          0 0 0 1px var(--green-border),
+          0 6px 28px 0 var(--green-glow),
+          0 20px 48px -8px rgba(0, 0, 0, 0.55);
+      }
 
-      footer { flex-direction: column; align-items: flex-start; }
-    }
+      .bento-panel img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        object-position: top left;
+        display: block;
+        transition: transform 0.35s ease;
+      }
 
-    @media (max-width: 480px) {
-      .hero-cta { flex-direction: column; align-items: flex-start; }
-      .features-grid { grid-template-columns: 1fr; }
-      .feature-card:nth-child(n) { grid-column: span 1; }
-      .feature-card.feature-full { grid-column: span 1; }
-    }
-  </style>
-</head>
-<body>
+      .bento-panel:hover img {
+        transform: scale(1.04);
+      }
 
-  <!-- NAV -->
-  <nav>
-    <a href="#" class="nav-logo" aria-label="playwright-cart home">
-      <span class="nav-logo-icon" aria-hidden="true">
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#00d4aa" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-          <circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/>
-          <path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/>
-        </svg>
-      </span>
-      playwright-cart
-    </a>
-    <div class="nav-links">
-      <a href="#gallery">gallery</a>
-      <a href="#how-it-works">how&nbsp;it&nbsp;works</a>
-      <a href="#integration">integrate</a>
-      <a href="https://github.com/radekBednarik/playwright-cart/blob/main/docs/api.md" target="_blank" rel="noopener noreferrer">api&nbsp;docs</a>
-      <a href="https://github.com/radekBednarik/playwright-cart" target="_blank" rel="noopener noreferrer" class="nav-gh" aria-label="View playwright-cart on GitHub">
-        <svg width="26" height="26" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
-          <path d="M12 2C6.477 2 2 6.484 2 12.017c0 4.425 2.865 8.18 6.839 9.504.5.092.682-.217.682-.483 0-.237-.008-.868-.013-1.703-2.782.605-3.369-1.343-3.369-1.343-.454-1.158-1.11-1.466-1.11-1.466-.908-.62.069-.608.069-.608 1.003.07 1.531 1.032 1.531 1.032.892 1.53 2.341 1.088 2.91.832.092-.647.35-1.088.636-1.338-2.22-.253-4.555-1.113-4.555-4.951 0-1.093.39-1.988 1.029-2.688-.103-.253-.446-1.272.098-2.65 0 0 .84-.27 2.75 1.026A9.564 9.564 0 0 1 12 6.844a9.59 9.59 0 0 1 2.504.337c1.909-1.296 2.747-1.027 2.747-1.027.546 1.379.202 2.398.1 2.651.64.7 1.028 1.595 1.028 2.688 0 3.848-2.339 4.695-4.566 4.943.359.309.678.92.678 1.855 0 1.338-.012 2.419-.012 2.747 0 .268.18.58.688.482A10.02 10.02 0 0 0 22 12.017C22 6.484 17.522 2 12 2z"/>
-        </svg>
+      .bento-label {
+        position: absolute;
+        bottom: 10px;
+        left: 10px;
+        font-family: var(--font-mono);
+        font-size: 0.75rem;
+        letter-spacing: 0.06em;
+        color: var(--green);
+        background: rgba(8, 11, 18, 0.85);
+        border: 1px solid var(--border);
+        border-radius: var(--r-sm);
+        padding: 2px 9px;
+        backdrop-filter: blur(4px);
+        -webkit-backdrop-filter: blur(4px);
+        pointer-events: none;
+      }
+
+      /* Scroll-driven entrance — progressive enhancement */
+      @supports (animation-timeline: scroll()) {
+        .bento-panel {
+          animation: card-enter linear both;
+          animation-timeline: view();
+          animation-range: entry 0% entry 25%;
+        }
+        @keyframes card-enter {
+          from {
+            opacity: 0.4;
+            transform: translateY(12px);
+          }
+          to {
+            opacity: 1;
+            transform: translateY(0);
+          }
+        }
+      }
+
+      /* ── HOW IT WORKS ── */
+      #how-it-works {
+        padding: clamp(64px, 10vw, 120px)
+          max(clamp(16px, 4vw, 48px), calc((100% - var(--max-w)) / 2));
+        border-top: 1px solid var(--border);
+      }
+
+      .steps-grid {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 2px;
+        max-width: var(--max-w);
+        margin-inline: auto;
+        border: 1px solid var(--border);
+        border-radius: var(--r-lg);
+        overflow: hidden;
+      }
+
+      .step {
+        padding: 40px 36px;
+        background: var(--surface);
+        border-right: 1px solid var(--border);
+        transition: background var(--transition);
+      }
+
+      .step:last-child {
+        border-right: none;
+      }
+      .step:hover {
+        background: var(--surface-2);
+      }
+
+      .step-number {
+        font-family: var(--font-display);
+        font-style: italic;
+        font-weight: 900;
+        font-size: 4rem;
+        line-height: 1;
+        color: var(--text-subtle);
+        margin-bottom: 20px;
+        letter-spacing: -0.04em;
+      }
+
+      .step h3 {
+        font-family: var(--font-display);
+        font-style: italic;
+        font-weight: 700;
+        font-size: 1.15rem;
+        color: var(--text);
+        margin-bottom: 12px;
+      }
+
+      .step p {
+        font-family: var(--font-mono);
+        font-size: 0.78rem;
+        color: var(--text-muted);
+        line-height: 1.75;
+        margin-bottom: 18px;
+      }
+
+      .step p code {
+        font-family: var(--font-code);
+        color: var(--amber);
+        background: var(--amber-dim);
+        border-radius: 3px;
+        padding: 1px 5px;
+        font-size: 0.9em;
+      }
+
+      .step-tag {
+        font-family: var(--font-mono);
+        font-size: 0.8rem;
+        letter-spacing: 0.04em;
+        color: var(--text-muted);
+      }
+
+      /* ── FEATURES ── */
+      #features {
+        padding: clamp(64px, 10vw, 120px)
+          max(clamp(16px, 4vw, 48px), calc((100% - var(--max-w)) / 2));
+        border-top: 1px solid var(--border);
+      }
+
+      .features-grid {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 12px;
+        max-width: var(--max-w);
+        margin-inline: auto;
+      }
+
+      .feature-card {
+        background: var(--surface);
+        border: 1px solid var(--border);
+        border-radius: var(--r-lg);
+        padding: 32px 28px;
+        transition:
+          border-color var(--transition),
+          transform var(--transition);
+      }
+
+      .feature-card:hover {
+        transform: translateY(-2px);
+      }
+
+      .feature-card:nth-child(1) {
+        grid-column: span 2;
+      }
+      .feature-card:nth-child(2) {
+        grid-column: span 2;
+      }
+      .feature-card:nth-child(3) {
+        grid-column: span 2;
+      }
+      .feature-card:nth-child(4) {
+        grid-column: span 2;
+      }
+      .feature-card.feature-full {
+        grid-column: span 4;
+      }
+
+      .feature-card.green-accent {
+        border-top: 2px solid var(--green);
+      }
+      .feature-card.green-accent:hover {
+        border-color: var(--green);
+        box-shadow: 0 4px 24px var(--green-dim);
+      }
+
+      .feature-card.amber-accent {
+        border-top: 2px solid var(--amber);
+      }
+      .feature-card.amber-accent:hover {
+        border-color: var(--amber);
+        box-shadow: 0 4px 24px var(--amber-dim);
+      }
+
+      .feature-icon {
+        width: 36px;
+        height: 36px;
+        margin-bottom: 18px;
+      }
+
+      .feature-card h3 {
+        font-family: var(--font-display);
+        font-style: italic;
+        font-weight: 700;
+        font-size: 1.05rem;
+        color: var(--text);
+        margin-bottom: 10px;
+      }
+
+      .feature-card p {
+        font-family: var(--font-mono);
+        font-size: 0.77rem;
+        color: var(--text-muted);
+        line-height: 1.75;
+        margin-bottom: 18px;
+      }
+
+      .feature-tag {
+        font-family: var(--font-mono);
+        font-size: 0.8rem;
+        letter-spacing: 0.04em;
+        color: var(--text-muted);
+      }
+
+      /* Wide feature card layout */
+      .feature-card.feature-full {
+        display: grid;
+        grid-template-columns: auto 1fr;
+        grid-template-rows: auto auto;
+        column-gap: 28px;
+        align-items: start;
+      }
+
+      .feature-card.feature-full .feature-icon {
+        grid-row: 1;
+        grid-column: 1;
+        margin-bottom: 0;
+        margin-top: 4px;
+      }
+      .feature-card.feature-full h3 {
+        grid-row: 1;
+        grid-column: 2;
+      }
+      .feature-card.feature-full p {
+        grid-row: 2;
+        grid-column: 2;
+      }
+      .feature-card.feature-full .feature-tag {
+        grid-row: 3;
+        grid-column: 2;
+      }
+
+      /* ── INTEGRATION ── */
+      #integration {
+        padding: clamp(64px, 10vw, 120px)
+          max(clamp(16px, 4vw, 48px), calc((100% - var(--max-w)) / 2));
+        border-top: 1px solid var(--border);
+      }
+
+      .section-sub {
+        font-family: var(--font-mono);
+        font-size: 0.8rem;
+        color: var(--text-muted);
+        margin-top: -28px;
+        margin-bottom: 48px;
+        max-width: var(--max-w);
+        margin-inline: auto;
+        width: 100%;
+      }
+
+      .section-sub strong {
+        color: var(--text);
+        font-weight: 500;
+      }
+
+      .integration-steps {
+        max-width: var(--max-w);
+        margin-inline: auto;
+        display: flex;
+        flex-direction: column;
+        gap: 32px;
+      }
+
+      .int-step-label {
+        font-family: var(--font-mono);
+        font-size: 0.85rem;
+        letter-spacing: 0.05em;
+        color: var(--text-muted);
+        margin-bottom: 10px;
+      }
+
+      .code-block {
+        background: var(--surface);
+        border: 1px solid var(--border);
+        border-radius: var(--r-md);
+        overflow: hidden;
+      }
+
+      .code-header {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        padding: 9px 14px;
+        border-bottom: 1px solid var(--border);
+        background: var(--surface-2);
+      }
+
+      .code-dots {
+        display: flex;
+        gap: 6px;
+      }
+
+      .code-filename {
+        font-family: var(--font-code);
+        font-size: 0.85rem;
+        color: var(--text-muted);
+        flex: 1;
+      }
+
+      pre {
+        padding: 20px 22px;
+        overflow-x: auto;
+        font-family: var(--font-code);
+        font-size: 0.78rem;
+        line-height: 1.8;
+        color: var(--text);
+        tab-size: 2;
+      }
+
+      pre code {
+        background: none;
+        padding: 0;
+      }
+
+      .install-strip {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        background: var(--surface);
+        border: 1px solid var(--border);
+        border-radius: var(--r-md);
+        padding: 12px 18px;
+        font-family: var(--font-code);
+        font-size: 0.78rem;
+      }
+
+      .install-prompt {
+        color: var(--green);
+        font-weight: 600;
+        user-select: none;
+      }
+
+      .install-strip code {
+        color: var(--text);
+        flex: 1;
+      }
+
+      .copy-btn {
+        background: none;
+        border: 1px solid var(--border);
+        color: var(--amber);
+        border-radius: var(--r-sm);
+        padding: 3px 10px;
+        font-family: var(--font-mono);
+        font-size: 0.78rem;
+        letter-spacing: 0.03em;
+        transition:
+          background var(--transition),
+          border-color var(--transition),
+          color var(--transition);
+        white-space: nowrap;
+      }
+
+      .copy-btn:hover {
+        background: var(--amber-dim);
+        border-color: var(--amber-border);
+      }
+      .copy-btn.copied {
+        color: var(--green);
+        border-color: var(--green-border);
+      }
+
+      /* Syntax tokens */
+      .kw {
+        color: #cf8ef4;
+      }
+      .fn {
+        color: #00d4aa;
+      }
+      .str {
+        color: #e8a740;
+      }
+      .cm {
+        color: var(--text-muted);
+        font-style: italic;
+      }
+      .prop {
+        color: #7ec8e3;
+      }
+
+      /* ── CTA ── */
+      #cta {
+        padding: clamp(64px, 10vw, 120px)
+          max(clamp(16px, 4vw, 48px), calc((100% - var(--max-w)) / 2));
+        border-top: 1px solid var(--border);
+      }
+
+      .cta-box {
+        max-width: var(--max-w);
+        margin-inline: auto;
+        background: linear-gradient(
+          135deg,
+          var(--surface) 0%,
+          var(--surface-2) 100%
+        );
+        border: 1px solid var(--border);
+        border-top: 1px solid rgba(0, 212, 170, 0.2);
+        border-radius: var(--r-lg);
+        padding: clamp(40px, 6vw, 64px) clamp(28px, 5vw, 56px);
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 32px;
+        flex-wrap: wrap;
+      }
+
+      .cta-box h2 {
+        font-family: var(--font-display);
+        font-style: italic;
+        font-weight: 700;
+        font-size: clamp(1.5rem, 3.5vw, 2.2rem);
+        color: var(--text);
+        margin-bottom: 8px;
+      }
+
+      .cta-box p {
+        font-family: var(--font-mono);
+        font-size: 0.8rem;
+        color: var(--text-muted);
+      }
+
+      .cta-buttons {
+        display: flex;
+        gap: 12px;
+        flex-wrap: wrap;
+        flex-shrink: 0;
+      }
+
+      /* ── FOOTER ── */
+      footer {
+        border-top: 1px solid var(--border);
+        padding: 24px clamp(16px, 4vw, 48px);
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        flex-wrap: wrap;
+        gap: 16px;
+        max-width: var(--max-w);
+        margin-inline: auto;
+      }
+
+      .footer-left {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+      }
+
+      .footer-logo {
+        font-family: var(--font-display);
+        font-style: italic;
+        font-weight: 700;
+        font-size: 1.1rem;
+        color: var(--text-muted);
+      }
+
+      .footer-sep {
+        color: var(--text-subtle);
+        font-size: 0.85rem;
+      }
+
+      .footer-license {
+        font-family: var(--font-mono);
+        font-size: 0.85rem;
+        color: var(--text-muted);
+      }
+
+      .footer-links {
+        display: flex;
+        align-items: center;
+        gap: 24px;
+      }
+
+      .footer-links a {
+        font-family: var(--font-mono);
+        font-size: 0.85rem;
+        color: var(--text-muted);
+        letter-spacing: 0.02em;
+        transition: color var(--transition);
+      }
+
+      .footer-links a:hover {
+        color: var(--green);
+      }
+
+      /* ── LIGHTBOX ── */
+      #lightbox {
+        position: fixed;
+        inset: 0;
+        z-index: 200;
+        background: rgba(8, 11, 18, 0.94);
+        backdrop-filter: blur(12px);
+        -webkit-backdrop-filter: blur(12px);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 24px;
+      }
+
+      #lightbox[hidden] {
+        display: none;
+      }
+
+      .lightbox-inner {
+        position: relative;
+        max-width: 1100px;
+        width: 100%;
+      }
+
+      #lightbox-close {
+        position: absolute;
+        top: -44px;
+        right: 0;
+        background: none;
+        border: 1px solid var(--border);
+        color: var(--text-muted);
+        border-radius: var(--r-sm);
+        width: 32px;
+        height: 32px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 0.9rem;
+        transition:
+          color var(--transition),
+          border-color var(--transition);
+      }
+
+      #lightbox-close:hover {
+        color: var(--text);
+        border-color: var(--border-hover);
+      }
+
+      #lightbox-img {
+        width: 100%;
+        height: auto;
+        border-radius: var(--r-md);
+        border: 1px solid var(--border);
+        box-shadow: 0 0 60px rgba(0, 0, 0, 0.6);
+      }
+
+      #lightbox-caption {
+        display: block;
+        margin-top: 14px;
+        font-family: var(--font-mono);
+        font-size: 0.88rem;
+        color: var(--text-muted);
+        text-align: center;
+        letter-spacing: 0.02em;
+      }
+
+      /* ── EXTERNAL LINK ICON ── */
+      a[target="_blank"]:not(.nav-gh)::after {
+        content: "";
+        display: inline-block;
+        width: 0.65em;
+        height: 0.65em;
+        margin-left: 0.28em;
+        vertical-align: middle;
+        background-color: currentColor;
+        opacity: 0.85;
+        flex-shrink: 0;
+        -webkit-mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath fill='black' d='M14 5a1 1 0 1 1 0-2h6a1 1 0 0 1 1 1v6a1 1 0 1 1-2 0V6.414l-9.293 9.293a1 1 0 0 1-1.414-1.414L17.586 5H14zM3 7a2 2 0 0 1 2-2h4a1 1 0 0 1 0 2H5v12h12v-4a1 1 0 1 1 2 0v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V7z'/%3E%3C/svg%3E");
+        mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath fill='black' d='M14 5a1 1 0 1 1 0-2h6a1 1 0 0 1 1 1v6a1 1 0 1 1-2 0V6.414l-9.293 9.293a1 1 0 0 1-1.414-1.414L17.586 5H14zM3 7a2 2 0 0 1 2-2h4a1 1 0 0 1 0 2H5v12h12v-4a1 1 0 1 1 2 0v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V7z'/%3E%3C/svg%3E");
+        -webkit-mask-repeat: no-repeat;
+        mask-repeat: no-repeat;
+        -webkit-mask-size: contain;
+        mask-size: contain;
+      }
+
+      /* ── RESPONSIVE ── */
+      @media (max-width: 768px) {
+        .nav-links a:not(.nav-gh) {
+          display: none;
+        }
+
+        .bento-grid {
+          grid-template-columns: 1fr 1fr;
+          grid-template-rows: 200px 200px 180px 180px;
+        }
+        .bento-panel:nth-child(1) {
+          grid-column: 1 / 3;
+          grid-row: 1;
+        }
+        .bento-panel:nth-child(2) {
+          grid-column: 1 / 3;
+          grid-row: 2;
+        }
+        .bento-panel:nth-child(3) {
+          grid-column: 1;
+          grid-row: 3;
+        }
+        .bento-panel:nth-child(4) {
+          grid-column: 2;
+          grid-row: 3;
+        }
+        .bento-panel:nth-child(5) {
+          grid-column: 1;
+          grid-row: 4;
+        }
+        .bento-panel:nth-child(6) {
+          grid-column: 2;
+          grid-row: 4;
+        }
+
+        .steps-grid {
+          grid-template-columns: 1fr;
+        }
+        .step {
+          border-right: none;
+          border-bottom: 1px solid var(--border);
+        }
+        .step:last-child {
+          border-bottom: none;
+        }
+
+        .features-grid {
+          grid-template-columns: 1fr 1fr;
+        }
+        .feature-card:nth-child(1),
+        .feature-card:nth-child(2),
+        .feature-card:nth-child(3),
+        .feature-card:nth-child(4) {
+          grid-column: span 1;
+        }
+        .feature-card.feature-full {
+          grid-column: span 2;
+          display: block;
+        }
+
+        .cta-box {
+          flex-direction: column;
+          align-items: flex-start;
+        }
+
+        footer {
+          flex-direction: column;
+          align-items: flex-start;
+        }
+      }
+
+      @media (max-width: 480px) {
+        .hero-cta {
+          flex-direction: column;
+          align-items: flex-start;
+        }
+        .features-grid {
+          grid-template-columns: 1fr;
+        }
+        .feature-card:nth-child(n) {
+          grid-column: span 1;
+        }
+        .feature-card.feature-full {
+          grid-column: span 1;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <!-- NAV -->
+    <nav>
+      <a href="#" class="nav-logo" aria-label="playwright-cart home">
+        <span class="nav-logo-icon" aria-hidden="true">
+          <svg
+            width="14"
+            height="14"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="#00d4aa"
+            stroke-width="2"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            aria-hidden="true"
+          >
+            <circle cx="9" cy="21" r="1" />
+            <circle cx="20" cy="21" r="1" />
+            <path
+              d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"
+            />
+          </svg>
+        </span>
+        playwright-cart
       </a>
-    </div>
-  </nav>
-
-  <main>
-
-  <!-- HERO -->
-  <section id="hero" aria-labelledby="hero-heading">
-    <div class="hero-glow" aria-hidden="true"></div>
-
-    <div class="hero-badge">
-      <span class="badge-dot" aria-hidden="true"></span>
-      SELF-HOSTED &nbsp;·&nbsp; OPEN SOURCE &nbsp;·&nbsp; FREE
-    </div>
-
-    <h1 id="hero-heading" class="hero-title">playwright&#8209;cart</h1>
-
-    <p class="hero-subtitle" aria-live="polite" aria-label="Collects every test run, screenshot, trace, and HTML report from your CI/CD pipelines.">
-      <span class="tw-phrase">collect every test run.</span>
-      <span class="tw-phrase">own your test data.</span>
-      <span class="tw-phrase">never lose a trace again.</span>
-      <span class="tw-phrase">ship with confidence.</span>
-    </p>
-
-    <div class="hero-cta">
-      <a href="https://github.com/radekBednarik/playwright-cart/blob/main/docs/deployment.md" target="_blank" rel="noopener noreferrer" class="btn-primary">
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M13.983 11.078h2.119a.186.186 0 0 0 .186-.185V9.006a.186.186 0 0 0-.386 0v1.681H13.98a.186.186 0 0 0 0 .371zm-1.6-5.31c-.065 0-.127.027-.174.072a.245.245 0 0 0-.069.176v4.296c0 .132.109.24.243.24.135 0 .243-.108.243-.24V5.817a.245.245 0 0 0-.069-.176.243.243 0 0 0-.174-.072zm-1.558 2.937a.243.243 0 0 0-.243.24v2.36c0 .133.108.24.243.24s.243-.107.243-.24V8.946a.243.243 0 0 0-.243-.24zm6.855 2.55a2.75 2.75 0 0 0-2.752-2.75H9.076a2.75 2.75 0 0 0-2.752 2.75v2.75a2.75 2.75 0 0 0 2.752 2.75h5.856a2.75 2.75 0 0 0 2.752-2.75v-2.75zm-5.03-4.826a.186.186 0 0 0-.186.186v2.274a.186.186 0 0 0 .186.186h2.024a.186.186 0 0 0 .186-.186v-2.274a.186.186 0 0 0-.186-.186h-2.024z"/></svg>
-        Deploy with Docker
-      </a>
-      <a href="https://github.com/radekBednarik/playwright-cart" target="_blank" rel="noopener noreferrer" class="btn-secondary">
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 2C6.477 2 2 6.484 2 12.017c0 4.425 2.865 8.18 6.839 9.504.5.092.682-.217.682-.483 0-.237-.008-.868-.013-1.703-2.782.605-3.369-1.343-3.369-1.343-.454-1.158-1.11-1.466-1.11-1.466-.908-.62.069-.608.069-.608 1.003.07 1.531 1.032 1.531 1.032.892 1.53 2.341 1.088 2.91.832.092-.647.35-1.088.636-1.338-2.22-.253-4.555-1.113-4.555-4.951 0-1.093.39-1.988 1.029-2.688-.103-.253-.446-1.272.098-2.65 0 0 .84-.27 2.75 1.026A9.564 9.564 0 0 1 12 6.844a9.59 9.59 0 0 1 2.504.337c1.909-1.296 2.747-1.027 2.747-1.027.546 1.379.202 2.398.1 2.651.64.7 1.028 1.595 1.028 2.688 0 3.848-2.339 4.695-4.566 4.943.359.309.678.92.678 1.855 0 1.338-.012 2.419-.012 2.747 0 .268.18.58.688.482A10.02 10.02 0 0 0 22 12.017C22 6.484 17.522 2 12 2z"/></svg>
-        View on GitHub
-      </a>
-    </div>
-
-    <div class="hero-browser" aria-label="playwright-cart dashboard preview">
-      <div class="browser-chrome" aria-hidden="true">
-        <div class="chrome-dots">
-          <span class="dot-r"></span>
-          <span class="dot-y"></span>
-          <span class="dot-g"></span>
-        </div>
-        <div class="chrome-address">
-          <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
-          your-server.example.com/dashboard
-        </div>
+      <div class="nav-links">
+        <a href="#gallery">gallery</a>
+        <a href="#how-it-works">how&nbsp;it&nbsp;works</a>
+        <a href="#integration">integrate</a>
+        <a
+          href="https://github.com/radekBednarik/playwright-cart/blob/main/docs/api.md"
+          target="_blank"
+          rel="noopener noreferrer"
+          >api&nbsp;docs</a
+        >
+        <a
+          href="https://github.com/radekBednarik/playwright-cart"
+          target="_blank"
+          rel="noopener noreferrer"
+          class="nav-gh"
+          aria-label="View playwright-cart on GitHub"
+        >
+          <svg
+            width="26"
+            height="26"
+            viewBox="0 0 24 24"
+            fill="currentColor"
+            aria-hidden="true"
+          >
+            <path
+              d="M12 2C6.477 2 2 6.484 2 12.017c0 4.425 2.865 8.18 6.839 9.504.5.092.682-.217.682-.483 0-.237-.008-.868-.013-1.703-2.782.605-3.369-1.343-3.369-1.343-.454-1.158-1.11-1.466-1.11-1.466-.908-.62.069-.608.069-.608 1.003.07 1.531 1.032 1.531 1.032.892 1.53 2.341 1.088 2.91.832.092-.647.35-1.088.636-1.338-2.22-.253-4.555-1.113-4.555-4.951 0-1.093.39-1.988 1.029-2.688-.103-.253-.446-1.272.098-2.65 0 0 .84-.27 2.75 1.026A9.564 9.564 0 0 1 12 6.844a9.59 9.59 0 0 1 2.504.337c1.909-1.296 2.747-1.027 2.747-1.027.546 1.379.202 2.398.1 2.651.64.7 1.028 1.595 1.028 2.688 0 3.848-2.339 4.695-4.566 4.943.359.309.678.92.678 1.855 0 1.338-.012 2.419-.012 2.747 0 .268.18.58.688.482A10.02 10.02 0 0 0 22 12.017C22 6.484 17.522 2 12 2z"
+            />
+          </svg>
+        </a>
       </div>
-      <div class="browser-viewport">
-        <img
-          src="assets/dashboard.webp"
-          alt="playwright-cart main dashboard showing test runs grouped by project and branch with pass/fail status indicators"
-          width="1280"
-          height="800"
-          loading="eager"
-          decoding="async"
-        />
-      </div>
-    </div>
-  </section>
+    </nav>
 
-  <!-- GALLERY -->
-  <section id="gallery" aria-labelledby="gallery-heading">
-    <p class="section-eyebrow">[ see it in action ]</p>
-    <h2 id="gallery-heading" class="section-title">Every screen,<br>documented.</h2>
+    <main>
+      <!-- HERO -->
+      <section id="hero" aria-labelledby="hero-heading">
+        <div class="hero-glow" aria-hidden="true"></div>
 
-    <div class="bento-grid" role="list">
-
-      <button type="button" class="bento-panel" role="listitem"
-              aria-label="Open dashboard screenshot in fullscreen"
-              data-src="assets/dashboard.webp"
-              data-caption="Main dashboard — test runs grouped by project and branch">
-        <img src="assets/dashboard.webp"
-             alt="Dashboard view showing test run history, project filters, and statistics"
-             loading="lazy" decoding="async" />
-        <div class="bento-label" aria-hidden="true">[dashboard]</div>
-      </button>
-
-      <button type="button" class="bento-panel" role="listitem"
-              aria-label="Open failed test detail screenshot in fullscreen"
-              data-src="assets/failed_test.webp"
-              data-caption="Failed test detail — stack trace, error message, and screenshot evidence">
-        <img src="assets/failed_test.webp"
-             alt="Failed test detail page showing error stack trace, failure message, and associated screenshots"
-             loading="lazy" decoding="async" />
-        <div class="bento-label" aria-hidden="true">[failed&nbsp;test]</div>
-      </button>
-
-      <button type="button" class="bento-panel" role="listitem"
-              aria-label="Open test run screenshot in fullscreen"
-              data-src="assets/run.webp"
-              data-caption="Test run view — all tests in a single CI pipeline run">
-        <img src="assets/run.webp"
-             alt="Test run view listing all tests in a single CI run with pass/fail/skip status per test"
-             loading="lazy" decoding="async" />
-        <div class="bento-label" aria-hidden="true">[test&nbsp;run]</div>
-      </button>
-
-      <button type="button" class="bento-panel" role="listitem"
-              aria-label="Open login screen screenshot in fullscreen"
-              data-src="assets/login.webp"
-              data-caption="Login screen — JWT-secured session authentication">
-        <img src="assets/login.webp"
-             alt="Login screen with username and password fields for JWT session authentication"
-             loading="lazy" decoding="async" />
-        <div class="bento-label" aria-hidden="true">[login]</div>
-      </button>
-
-      <button type="button" class="bento-panel" role="listitem"
-              aria-label="Open account settings screenshot in fullscreen"
-              data-src="assets/settings_account.webp"
-              data-caption="Account settings — personal API key management and user preferences">
-        <img src="assets/settings_account.webp"
-             alt="Account settings page showing API key generation, user preferences and theme selection"
-             loading="lazy" decoding="async" />
-        <div class="bento-label" aria-hidden="true">[settings]</div>
-      </button>
-
-      <button type="button" class="bento-panel" role="listitem"
-              aria-label="Open admin panel screenshot in fullscreen"
-              data-src="assets/settings_admin.webp"
-              data-caption="Admin panel — user management, role assignment, and data retention settings">
-        <img src="assets/settings_admin.webp"
-             alt="Admin settings page showing user management, role-based access control and data retention configuration"
-             loading="lazy" decoding="async" />
-        <div class="bento-label" aria-hidden="true">[admin]</div>
-      </button>
-
-    </div>
-  </section>
-
-  <!-- HOW IT WORKS -->
-  <section id="how-it-works" aria-labelledby="how-heading">
-    <p class="section-eyebrow">[ workflow ]</p>
-    <h2 id="how-heading" class="section-title">Three steps<br>to connected.</h2>
-
-    <div class="steps-grid">
-
-      <article class="step">
-        <div class="step-number" aria-hidden="true">01</div>
-        <h3>Deploy the server</h3>
-        <p>Clone the repo, run <code>docker compose up --build</code>. PostgreSQL, the Node/Hono API, and the React dashboard start together. Expose it on your own infrastructure — Hetzner, Fly.io, bare metal, wherever.</p>
-        <span class="step-tag">docker &nbsp;·&nbsp; postgres &nbsp;·&nbsp; hono</span>
-      </article>
-
-      <article class="step">
-        <div class="step-number" aria-hidden="true">02</div>
-        <h3>Add the reporter</h3>
-        <p>Install <code>@radekbednarik/playwright-cart-reporter</code>, add it alongside the <code>html</code> reporter in your <code>playwright.config.ts</code>. Set your server URL and API key. That's two config lines.</p>
-        <span class="step-tag">npm &nbsp;·&nbsp; playwright &nbsp;·&nbsp; api-key</span>
-      </article>
-
-      <article class="step">
-        <div class="step-number" aria-hidden="true">03</div>
-        <h3>Run your tests</h3>
-        <p>Every CI run ships screenshots, traces, and the full Playwright HTML report to your dashboard automatically. Browse history, filter by branch or commit SHA, inspect failures. Your data, your server, your rules.</p>
-        <span class="step-tag">ci/cd &nbsp;·&nbsp; artifacts &nbsp;·&nbsp; history</span>
-      </article>
-
-    </div>
-  </section>
-
-  <!-- FEATURES -->
-  <section id="features" aria-labelledby="features-heading">
-    <p class="section-eyebrow">[ capabilities ]</p>
-    <h2 id="features-heading" class="section-title">Built for<br>engineering teams.</h2>
-
-    <div class="features-grid">
-
-      <article class="feature-card green-accent">
-        <div class="feature-icon" aria-hidden="true">
-          <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="#00d4aa" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
-            <rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M9 21V9"/>
-          </svg>
+        <div class="hero-badge">
+          <span class="badge-dot" aria-hidden="true"></span>
+          SELF-HOSTED &nbsp;·&nbsp; OPEN SOURCE &nbsp;·&nbsp; FREE
         </div>
-        <h3>Centralized runs</h3>
-        <p>Every project, every branch, every pipeline. One persistent place for all test history. Filter by project, branch, or commit SHA. Never lose a result to ephemeral CI logs again.</p>
-        <span class="feature-tag">runs &nbsp;·&nbsp; history &nbsp;·&nbsp; projects</span>
-      </article>
 
-      <article class="feature-card amber-accent">
-        <div class="feature-icon" aria-hidden="true">
-          <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="#e8a740" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
-            <rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/>
-          </svg>
+        <h1 id="hero-heading" class="hero-title">playwright&#8209;cart</h1>
+
+        <p
+          class="hero-subtitle"
+          aria-live="polite"
+          aria-label="Collects every test run, screenshot, trace, and HTML report from your CI/CD pipelines."
+        >
+          <span class="tw-phrase">collect every test run.</span>
+          <span class="tw-phrase">own your test data.</span>
+          <span class="tw-phrase">never lose a trace again.</span>
+          <span class="tw-phrase">ship with confidence.</span>
+        </p>
+
+        <div class="hero-cta">
+          <a
+            href="https://github.com/radekBednarik/playwright-cart/blob/main/docs/deployment.md"
+            target="_blank"
+            rel="noopener noreferrer"
+            class="btn-primary"
+          >
+            <svg
+              width="14"
+              height="14"
+              viewBox="0 0 24 24"
+              fill="currentColor"
+              aria-hidden="true"
+            >
+              <path
+                d="M13.983 11.078h2.119a.186.186 0 0 0 .186-.185V9.006a.186.186 0 0 0-.386 0v1.681H13.98a.186.186 0 0 0 0 .371zm-1.6-5.31c-.065 0-.127.027-.174.072a.245.245 0 0 0-.069.176v4.296c0 .132.109.24.243.24.135 0 .243-.108.243-.24V5.817a.245.245 0 0 0-.069-.176.243.243 0 0 0-.174-.072zm-1.558 2.937a.243.243 0 0 0-.243.24v2.36c0 .133.108.24.243.24s.243-.107.243-.24V8.946a.243.243 0 0 0-.243-.24zm6.855 2.55a2.75 2.75 0 0 0-2.752-2.75H9.076a2.75 2.75 0 0 0-2.752 2.75v2.75a2.75 2.75 0 0 0 2.752 2.75h5.856a2.75 2.75 0 0 0 2.752-2.75v-2.75zm-5.03-4.826a.186.186 0 0 0-.186.186v2.274a.186.186 0 0 0 .186.186h2.024a.186.186 0 0 0 .186-.186v-2.274a.186.186 0 0 0-.186-.186h-2.024z"
+              />
+            </svg>
+            Deploy with Docker
+          </a>
+          <a
+            href="https://github.com/radekBednarik/playwright-cart"
+            target="_blank"
+            rel="noopener noreferrer"
+            class="btn-secondary"
+          >
+            <svg
+              width="14"
+              height="14"
+              viewBox="0 0 24 24"
+              fill="currentColor"
+              aria-hidden="true"
+            >
+              <path
+                d="M12 2C6.477 2 2 6.484 2 12.017c0 4.425 2.865 8.18 6.839 9.504.5.092.682-.217.682-.483 0-.237-.008-.868-.013-1.703-2.782.605-3.369-1.343-3.369-1.343-.454-1.158-1.11-1.466-1.11-1.466-.908-.62.069-.608.069-.608 1.003.07 1.531 1.032 1.531 1.032.892 1.53 2.341 1.088 2.91.832.092-.647.35-1.088.636-1.338-2.22-.253-4.555-1.113-4.555-4.951 0-1.093.39-1.988 1.029-2.688-.103-.253-.446-1.272.098-2.65 0 0 .84-.27 2.75 1.026A9.564 9.564 0 0 1 12 6.844a9.59 9.59 0 0 1 2.504.337c1.909-1.296 2.747-1.027 2.747-1.027.546 1.379.202 2.398.1 2.651.64.7 1.028 1.595 1.028 2.688 0 3.848-2.339 4.695-4.566 4.943.359.309.678.92.678 1.855 0 1.338-.012 2.419-.012 2.747 0 .268.18.58.688.482A10.02 10.02 0 0 0 22 12.017C22 6.484 17.522 2 12 2z"
+              />
+            </svg>
+            View on GitHub
+          </a>
         </div>
-        <h3>Rich artifacts</h3>
-        <p>Screenshots, Playwright traces (.zip), and full HTML reports uploaded automatically and stored permanently on your infrastructure. View them directly in the dashboard.</p>
-        <span class="feature-tag">screenshots &nbsp;·&nbsp; traces &nbsp;·&nbsp; html</span>
-      </article>
 
-      <article class="feature-card green-accent">
-        <div class="feature-icon" aria-hidden="true">
-          <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="#00d4aa" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
-            <path d="M21 2l-2 2m-7.61 7.61a5.5 5.5 0 1 1-7.778 7.778 5.5 5.5 0 0 1 7.777-7.777zm0 0L15.5 7.5m0 0l3 3L22 7l-3-3m-3.5 3.5L19 4"/>
-          </svg>
-        </div>
-        <h3>Auth &amp; roles</h3>
-        <p>JWT sessions for humans, API keys for CI/CD pipelines. Role-based access control — admin users manage the system, regular users manage their username, password, and UI theme.</p>
-        <span class="feature-tag">jwt &nbsp;·&nbsp; api-keys</span>
-      </article>
-
-      <article class="feature-card amber-accent">
-        <div class="feature-icon" aria-hidden="true">
-          <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="#e8a740" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
-            <ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3"/><path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"/>
-          </svg>
-        </div>
-        <h3>Truly self-hosted</h3>
-        <p>No SaaS, no data leaving your network. Deploy with Docker Compose. PostgreSQL persistence with configurable data retention. You own the infrastructure, the backups, and the access.</p>
-        <span class="feature-tag">docker &nbsp;·&nbsp; postgres &nbsp;·&nbsp; self-hosted</span>
-      </article>
-
-    </div>
-  </section>
-
-  <!-- INTEGRATION -->
-  <section id="integration" aria-labelledby="integration-heading">
-    <p class="section-eyebrow">[ integrate ]</p>
-    <h2 id="integration-heading" class="section-title">Add to your<br>project in 3 steps.</h2>
-    <p class="section-sub">Published on <strong>GitHub Packages</strong> — registry auth required before install.</p>
-
-    <div class="integration-steps">
-
-      <div class="int-step">
-        <p class="int-step-label">// 01 — configure registry</p>
-        <div class="code-block" role="region" aria-label=".npmrc configuration">
-          <div class="code-header">
-            <div class="code-dots" aria-hidden="true">
+        <div
+          class="hero-browser"
+          aria-label="playwright-cart dashboard preview"
+        >
+          <div class="browser-chrome" aria-hidden="true">
+            <div class="chrome-dots">
               <span class="dot-r"></span>
               <span class="dot-y"></span>
               <span class="dot-g"></span>
             </div>
-            <span class="code-filename">.npmrc</span>
-            <button type="button" class="copy-btn" data-copy="@radekbednarik:registry=https://npm.pkg.github.com&#10;//npm.pkg.github.com:_authToken=${GITHUB_TOKEN}" aria-label="Copy .npmrc content">copy</button>
+            <div class="chrome-address">
+              <svg
+                width="10"
+                height="10"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+                aria-hidden="true"
+              >
+                <rect x="3" y="11" width="18" height="11" rx="2" ry="2" />
+                <path d="M7 11V7a5 5 0 0 1 10 0v4" />
+              </svg>
+              your-server.example.com/dashboard
+            </div>
           </div>
-          <pre><code>@radekbednarik:registry=https://npm.pkg.github.com
+          <div class="browser-viewport">
+            <img
+              src="assets/dashboard.webp"
+              alt="playwright-cart main dashboard showing test runs grouped by project and branch with pass/fail status indicators"
+              width="1280"
+              height="800"
+              loading="eager"
+              decoding="async"
+            />
+          </div>
+        </div>
+      </section>
+
+      <!-- GALLERY -->
+      <section id="gallery" aria-labelledby="gallery-heading">
+        <p class="section-eyebrow">[ see it in action ]</p>
+        <h2 id="gallery-heading" class="section-title">
+          Simple, but powerful<br />interface.
+        </h2>
+
+        <div class="bento-grid" role="list">
+          <button
+            type="button"
+            class="bento-panel"
+            role="listitem"
+            aria-label="Open dashboard screenshot in fullscreen"
+            data-src="assets/dashboard.webp"
+            data-caption="Main dashboard — test runs grouped by project and branch"
+          >
+            <img
+              src="assets/dashboard.webp"
+              alt="Dashboard view showing test run history, project filters, and statistics"
+              loading="lazy"
+              decoding="async"
+            />
+            <div class="bento-label" aria-hidden="true">[dashboard]</div>
+          </button>
+
+          <button
+            type="button"
+            class="bento-panel"
+            role="listitem"
+            aria-label="Open failed test detail screenshot in fullscreen"
+            data-src="assets/failed_test.webp"
+            data-caption="Failed test detail — stack trace, error message, and screenshot evidence"
+          >
+            <img
+              src="assets/failed_test.webp"
+              alt="Failed test detail page showing error stack trace, failure message, and associated screenshots"
+              loading="lazy"
+              decoding="async"
+            />
+            <div class="bento-label" aria-hidden="true">[failed&nbsp;test]</div>
+          </button>
+
+          <button
+            type="button"
+            class="bento-panel"
+            role="listitem"
+            aria-label="Open test run screenshot in fullscreen"
+            data-src="assets/run.webp"
+            data-caption="Test run view — all tests in a single CI pipeline run"
+          >
+            <img
+              src="assets/run.webp"
+              alt="Test run view listing all tests in a single CI run with pass/fail/skip status per test"
+              loading="lazy"
+              decoding="async"
+            />
+            <div class="bento-label" aria-hidden="true">[test&nbsp;run]</div>
+          </button>
+
+          <button
+            type="button"
+            class="bento-panel"
+            role="listitem"
+            aria-label="Open login screen screenshot in fullscreen"
+            data-src="assets/login.webp"
+            data-caption="Login screen — JWT-secured session authentication"
+          >
+            <img
+              src="assets/login.webp"
+              alt="Login screen with username and password fields for JWT session authentication"
+              loading="lazy"
+              decoding="async"
+            />
+            <div class="bento-label" aria-hidden="true">[login]</div>
+          </button>
+
+          <button
+            type="button"
+            class="bento-panel"
+            role="listitem"
+            aria-label="Open account settings screenshot in fullscreen"
+            data-src="assets/settings_account.webp"
+            data-caption="Account settings — personal API key management and user preferences"
+          >
+            <img
+              src="assets/settings_account.webp"
+              alt="Account settings page showing API key generation, user preferences and theme selection"
+              loading="lazy"
+              decoding="async"
+            />
+            <div class="bento-label" aria-hidden="true">[settings]</div>
+          </button>
+
+          <button
+            type="button"
+            class="bento-panel"
+            role="listitem"
+            aria-label="Open admin panel screenshot in fullscreen"
+            data-src="assets/settings_admin.webp"
+            data-caption="Admin panel — user management, role assignment, and data retention settings"
+          >
+            <img
+              src="assets/settings_admin.webp"
+              alt="Admin settings page showing user management, role-based access control and data retention configuration"
+              loading="lazy"
+              decoding="async"
+            />
+            <div class="bento-label" aria-hidden="true">[admin]</div>
+          </button>
+        </div>
+      </section>
+
+      <!-- HOW IT WORKS -->
+      <section id="how-it-works" aria-labelledby="how-heading">
+        <p class="section-eyebrow">[ workflow ]</p>
+        <h2 id="how-heading" class="section-title">
+          Three steps<br />to start reporting.
+        </h2>
+
+        <div class="steps-grid">
+          <article class="step">
+            <div class="step-number" aria-hidden="true">01</div>
+            <h3>Deploy the server</h3>
+            <p>
+              Clone the repo, run <code>docker compose up --build</code>.
+              PostgreSQL, the Node/Hono API, and the React dashboard start
+              together. Expose it on your own infrastructure — Hetzner, Fly.io,
+              bare metal, wherever.
+            </p>
+            <span class="step-tag"
+              >docker &nbsp;·&nbsp; postgres &nbsp;·&nbsp; hono</span
+            >
+          </article>
+
+          <article class="step">
+            <div class="step-number" aria-hidden="true">02</div>
+            <h3>Add the reporter</h3>
+            <p>
+              Install <code>@radekbednarik/playwright-cart-reporter</code>, add
+              it alongside the <code>html</code> reporter in your
+              <code>playwright.config.ts</code>. Set your server URL and API
+              key. That's two config lines.
+            </p>
+            <span class="step-tag"
+              >npm &nbsp;·&nbsp; playwright &nbsp;·&nbsp; api-key</span
+            >
+          </article>
+
+          <article class="step">
+            <div class="step-number" aria-hidden="true">03</div>
+            <h3>Run your tests</h3>
+            <p>
+              Every CI run ships screenshots, traces, and the full Playwright
+              HTML report to your dashboard automatically. Browse history,
+              filter by branch or commit SHA, inspect failures. Your data, your
+              server, your rules.
+            </p>
+            <span class="step-tag"
+              >ci/cd &nbsp;·&nbsp; artifacts &nbsp;·&nbsp; history</span
+            >
+          </article>
+        </div>
+      </section>
+
+      <!-- FEATURES -->
+      <section id="features" aria-labelledby="features-heading">
+        <p class="section-eyebrow">[ capabilities ]</p>
+        <h2 id="features-heading" class="section-title">
+          Built for<br />engineering teams.
+        </h2>
+
+        <div class="features-grid">
+          <article class="feature-card green-accent">
+            <div class="feature-icon" aria-hidden="true">
+              <svg
+                width="36"
+                height="36"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="#00d4aa"
+                stroke-width="1.5"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              >
+                <rect x="3" y="3" width="18" height="18" rx="2" />
+                <path d="M3 9h18M9 21V9" />
+              </svg>
+            </div>
+            <h3>Centralized runs</h3>
+            <p>
+              Every project, every branch, every pipeline. One persistent place
+              for all test history. Filter by project, branch, or commit SHA.
+              Never lose a result to ephemeral CI logs again.
+            </p>
+            <span class="feature-tag"
+              >runs &nbsp;·&nbsp; history &nbsp;·&nbsp; projects</span
+            >
+          </article>
+
+          <article class="feature-card amber-accent">
+            <div class="feature-icon" aria-hidden="true">
+              <svg
+                width="36"
+                height="36"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="#e8a740"
+                stroke-width="1.5"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              >
+                <rect x="3" y="3" width="18" height="18" rx="2" ry="2" />
+                <circle cx="8.5" cy="8.5" r="1.5" />
+                <polyline points="21 15 16 10 5 21" />
+              </svg>
+            </div>
+            <h3>Rich artifacts</h3>
+            <p>
+              Screenshots, Playwright traces (.zip), and full HTML reports
+              uploaded automatically and stored permanently on your
+              infrastructure. View them directly in the dashboard.
+            </p>
+            <span class="feature-tag"
+              >screenshots &nbsp;·&nbsp; traces &nbsp;·&nbsp; html</span
+            >
+          </article>
+
+          <article class="feature-card green-accent">
+            <div class="feature-icon" aria-hidden="true">
+              <svg
+                width="36"
+                height="36"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="#00d4aa"
+                stroke-width="1.5"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              >
+                <path
+                  d="M21 2l-2 2m-7.61 7.61a5.5 5.5 0 1 1-7.778 7.778 5.5 5.5 0 0 1 7.777-7.777zm0 0L15.5 7.5m0 0l3 3L22 7l-3-3m-3.5 3.5L19 4"
+                />
+              </svg>
+            </div>
+            <h3>Auth &amp; roles</h3>
+            <p>
+              JWT sessions for humans, API keys for CI/CD pipelines. Role-based
+              access control — admin users manage the system, regular users
+              manage their username, password, and UI theme.
+            </p>
+            <span class="feature-tag">jwt &nbsp;·&nbsp; api-keys</span>
+          </article>
+
+          <article class="feature-card amber-accent">
+            <div class="feature-icon" aria-hidden="true">
+              <svg
+                width="36"
+                height="36"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="#e8a740"
+                stroke-width="1.5"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              >
+                <ellipse cx="12" cy="5" rx="9" ry="3" />
+                <path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3" />
+                <path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5" />
+              </svg>
+            </div>
+            <h3>Truly self-hosted</h3>
+            <p>
+              No SaaS, no data leaving your network. Deploy with Docker Compose.
+              PostgreSQL persistence with configurable data retention. You own
+              the infrastructure, the backups, and the access.
+            </p>
+            <span class="feature-tag"
+              >docker &nbsp;·&nbsp; postgres &nbsp;·&nbsp; self-hosted</span
+            >
+          </article>
+        </div>
+      </section>
+
+      <!-- INTEGRATION -->
+      <section id="integration" aria-labelledby="integration-heading">
+        <p class="section-eyebrow">[ integrate ]</p>
+        <h2 id="integration-heading" class="section-title">
+          Add to your<br />project in 3 steps.
+        </h2>
+        <p class="section-sub">
+          Published on <strong>GitHub Packages</strong> — registry auth required
+          before install.
+        </p>
+
+        <div class="integration-steps">
+          <div class="int-step">
+            <p class="int-step-label">// 01 — configure registry</p>
+            <div
+              class="code-block"
+              role="region"
+              aria-label=".npmrc configuration"
+            >
+              <div class="code-header">
+                <div class="code-dots" aria-hidden="true">
+                  <span class="dot-r"></span>
+                  <span class="dot-y"></span>
+                  <span class="dot-g"></span>
+                </div>
+                <span class="code-filename">.npmrc</span>
+                <button
+                  type="button"
+                  class="copy-btn"
+                  data-copy="@radekbednarik:registry=https://npm.pkg.github.com&#10;//npm.pkg.github.com:_authToken=${GITHUB_TOKEN}"
+                  aria-label="Copy .npmrc content"
+                >
+                  copy
+                </button>
+              </div>
+              <pre><code>@radekbednarik:registry=https://npm.pkg.github.com
 //npm.pkg.github.com:_authToken=${GITHUB_TOKEN}</code></pre>
-        </div>
-      </div>
-
-      <div class="int-step">
-        <p class="int-step-label">// 02 — install</p>
-        <div class="install-strip">
-          <span class="install-prompt" aria-hidden="true">$</span>
-          <code>pnpm add @radekbednarik/playwright-cart-reporter</code>
-          <button type="button" class="copy-btn" data-copy="pnpm add @radekbednarik/playwright-cart-reporter" aria-label="Copy install command">copy</button>
-        </div>
-      </div>
-
-      <div class="int-step">
-        <p class="int-step-label">// 03 — configure reporter</p>
-        <div class="code-block" role="region" aria-label="playwright.config.ts example">
-          <div class="code-header">
-            <div class="code-dots" aria-hidden="true">
-              <span class="dot-r"></span>
-              <span class="dot-y"></span>
-              <span class="dot-g"></span>
             </div>
-            <span class="code-filename">playwright.config.ts</span>
-            <button type="button" class="copy-btn" id="copyConfig" aria-label="Copy config snippet">copy</button>
           </div>
-          <pre><code id="configSnippet"><span class="kw">import</span> { <span class="fn">defineConfig</span> } <span class="kw">from</span> <span class="str">'@playwright/test'</span>
+
+          <div class="int-step">
+            <p class="int-step-label">// 02 — install</p>
+            <div class="install-strip">
+              <span class="install-prompt" aria-hidden="true">$</span>
+              <code>pnpm add @radekbednarik/playwright-cart-reporter</code>
+              <button
+                type="button"
+                class="copy-btn"
+                data-copy="pnpm add @radekbednarik/playwright-cart-reporter"
+                aria-label="Copy install command"
+              >
+                copy
+              </button>
+            </div>
+          </div>
+
+          <div class="int-step">
+            <p class="int-step-label">// 03 — configure reporter</p>
+            <div
+              class="code-block"
+              role="region"
+              aria-label="playwright.config.ts example"
+            >
+              <div class="code-header">
+                <div class="code-dots" aria-hidden="true">
+                  <span class="dot-r"></span>
+                  <span class="dot-y"></span>
+                  <span class="dot-g"></span>
+                </div>
+                <span class="code-filename">playwright.config.ts</span>
+                <button
+                  type="button"
+                  class="copy-btn"
+                  id="copyConfig"
+                  aria-label="Copy config snippet"
+                >
+                  copy
+                </button>
+              </div>
+              <pre><code id="configSnippet"><span class="kw">import</span> { <span class="fn">defineConfig</span> } <span class="kw">from</span> <span class="str">'@playwright/test'</span>
 
 <span class="kw">export default</span> <span class="fn">defineConfig</span>({
   reporter: [
@@ -1393,137 +1945,186 @@
     }],
   ],
 })</code></pre>
+            </div>
+          </div>
         </div>
+      </section>
+
+      <!-- CTA -->
+      <section id="cta" aria-labelledby="cta-heading">
+        <div class="cta-box">
+          <div>
+            <h2 id="cta-heading">Ready to own your<br />test reports?</h2>
+            <p>
+              Deploy in minutes with Docker Compose. No cloud account required.
+            </p>
+          </div>
+          <div class="cta-buttons">
+            <a
+              href="https://github.com/radekBednarik/playwright-cart/blob/main/docs/deployment.md"
+              target="_blank"
+              rel="noopener noreferrer"
+              class="btn-primary"
+            >
+              Read Deployment Guide
+            </a>
+            <a
+              href="https://github.com/radekBednarik/playwright-cart"
+              target="_blank"
+              rel="noopener noreferrer"
+              class="btn-secondary"
+            >
+              View on GitHub
+            </a>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <!-- FOOTER -->
+    <footer>
+      <div class="footer-left">
+        <span class="footer-logo">playwright-cart</span>
+        <span class="footer-sep">&middot;</span>
+        <a
+          href="https://opensource.org/licenses/MIT"
+          target="_blank"
+          rel="noopener noreferrer"
+          class="footer-license"
+          >MIT License</a
+        >
       </div>
+      <nav class="footer-links" aria-label="Footer navigation">
+        <a
+          href="https://github.com/radekBednarik/playwright-cart/blob/main/docs/api.md"
+          target="_blank"
+          rel="noopener noreferrer"
+          >API Reference</a
+        >
+        <a
+          href="https://github.com/radekBednarik/playwright-cart/blob/main/docs/deployment.md"
+          target="_blank"
+          rel="noopener noreferrer"
+          >Deployment Guide</a
+        >
+        <a
+          href="https://github.com/radekBednarik/playwright-cart"
+          target="_blank"
+          rel="noopener noreferrer"
+          >GitHub</a
+        >
+      </nav>
+    </footer>
 
-    </div>
-  </section>
-
-  <!-- CTA -->
-  <section id="cta" aria-labelledby="cta-heading">
-    <div class="cta-box">
-      <div>
-        <h2 id="cta-heading">Ready to own your<br>test reports?</h2>
-        <p>Deploy in minutes with Docker Compose. No cloud account required.</p>
+    <!-- LIGHTBOX -->
+    <div
+      id="lightbox"
+      role="dialog"
+      aria-modal="true"
+      aria-label="Screenshot preview"
+      hidden
+      tabindex="-1"
+    >
+      <div class="lightbox-inner">
+        <button type="button" id="lightbox-close" aria-label="Close preview">
+          &#x2715;
+        </button>
+        <img id="lightbox-img" src="" alt="" />
+        <span id="lightbox-caption"></span>
       </div>
-      <div class="cta-buttons">
-        <a href="https://github.com/radekBednarik/playwright-cart/blob/main/docs/deployment.md" target="_blank" rel="noopener noreferrer" class="btn-primary">
-          Read Deployment Guide
-        </a>
-        <a href="https://github.com/radekBednarik/playwright-cart" target="_blank" rel="noopener noreferrer" class="btn-secondary">
-          View on GitHub
-        </a>
-      </div>
     </div>
-  </section>
 
-  </main>
-
-  <!-- FOOTER -->
-  <footer>
-    <div class="footer-left">
-      <span class="footer-logo">playwright-cart</span>
-      <span class="footer-sep">&middot;</span>
-      <a href="https://opensource.org/licenses/MIT" target="_blank" rel="noopener noreferrer" class="footer-license">MIT License</a>
-    </div>
-    <nav class="footer-links" aria-label="Footer navigation">
-      <a href="https://github.com/radekBednarik/playwright-cart/blob/main/docs/api.md" target="_blank" rel="noopener noreferrer">API Reference</a>
-      <a href="https://github.com/radekBednarik/playwright-cart/blob/main/docs/deployment.md" target="_blank" rel="noopener noreferrer">Deployment Guide</a>
-      <a href="https://github.com/radekBednarik/playwright-cart" target="_blank" rel="noopener noreferrer">GitHub</a>
-    </nav>
-  </footer>
-
-  <!-- LIGHTBOX -->
-  <div id="lightbox" role="dialog" aria-modal="true" aria-label="Screenshot preview" hidden tabindex="-1">
-    <div class="lightbox-inner">
-      <button type="button" id="lightbox-close" aria-label="Close preview">&#x2715;</button>
-      <img id="lightbox-img" src="" alt="" />
-      <span id="lightbox-caption"></span>
-    </div>
-  </div>
-
-  <script>
-    // ── Copy buttons ──────────────────────────────────────────
-    document.querySelectorAll('.copy-btn').forEach(function (btn) {
-      btn.addEventListener('click', function () {
-        var text = btn.dataset.copy;
-        if (!text) {
-          var block = btn.closest('.code-block');
-          if (block) text = block.querySelector('code').textContent;
-        }
-        if (!text) return;
-        var orig = btn.textContent;
-        function onSuccess() {
-          btn.textContent = 'copied!';
-          btn.classList.add('copied');
-          setTimeout(function () {
-            btn.textContent = orig;
-            btn.classList.remove('copied');
-          }, 2000);
-        }
-        if (navigator.clipboard) {
-          navigator.clipboard.writeText(text).then(onSuccess).catch(function () { fallbackCopy(text, onSuccess); });
-        } else {
-          fallbackCopy(text, onSuccess);
-        }
+    <script>
+      // ── Copy buttons ──────────────────────────────────────────
+      document.querySelectorAll(".copy-btn").forEach(function (btn) {
+        btn.addEventListener("click", function () {
+          var text = btn.dataset.copy;
+          if (!text) {
+            var block = btn.closest(".code-block");
+            if (block) text = block.querySelector("code").textContent;
+          }
+          if (!text) return;
+          var orig = btn.textContent;
+          function onSuccess() {
+            btn.textContent = "copied!";
+            btn.classList.add("copied");
+            setTimeout(function () {
+              btn.textContent = orig;
+              btn.classList.remove("copied");
+            }, 2000);
+          }
+          if (navigator.clipboard) {
+            navigator.clipboard
+              .writeText(text)
+              .then(onSuccess)
+              .catch(function () {
+                fallbackCopy(text, onSuccess);
+              });
+          } else {
+            fallbackCopy(text, onSuccess);
+          }
+        });
       });
-    });
 
-    function fallbackCopy(text, cb) {
-      var ta = document.createElement('textarea');
-      ta.value = text;
-      ta.style.cssText = 'position:fixed;opacity:0;pointer-events:none';
-      document.body.appendChild(ta);
-      ta.select();
-      try { document.execCommand('copy'); } catch (e) { /* ignore */ }
-      document.body.removeChild(ta);
-      cb();
-    }
+      function fallbackCopy(text, cb) {
+        var ta = document.createElement("textarea");
+        ta.value = text;
+        ta.style.cssText = "position:fixed;opacity:0;pointer-events:none";
+        document.body.appendChild(ta);
+        ta.select();
+        try {
+          document.execCommand("copy");
+        } catch (e) {
+          /* ignore */
+        }
+        document.body.removeChild(ta);
+        cb();
+      }
 
-    // ── Lightbox ──────────────────────────────────────────────
-    var lightbox   = document.getElementById('lightbox');
-    var lbImg      = document.getElementById('lightbox-img');
-    var lbCaption  = document.getElementById('lightbox-caption');
-    var lbClose    = document.getElementById('lightbox-close');
-    var lastFocus  = null;
+      // ── Lightbox ──────────────────────────────────────────────
+      var lightbox = document.getElementById("lightbox");
+      var lbImg = document.getElementById("lightbox-img");
+      var lbCaption = document.getElementById("lightbox-caption");
+      var lbClose = document.getElementById("lightbox-close");
+      var lastFocus = null;
 
-    function openLightbox(src, alt, caption) {
-      lastFocus = document.activeElement;
-      lbImg.src = src;
-      lbImg.alt = alt;
-      lbCaption.textContent = caption;
-      lightbox.hidden = false;
-      document.body.style.overflow = 'hidden';
-      lbClose.focus();
-    }
-
-    function closeLightbox() {
-      lightbox.hidden = true;
-      lbImg.src = '';
-      document.body.style.overflow = '';
-      if (lastFocus) lastFocus.focus();
-    }
-
-    document.querySelectorAll('.bento-panel').forEach(function (panel) {
-      panel.addEventListener('click', function () {
-        var img = panel.querySelector('img');
-        openLightbox(panel.dataset.src, img.alt, panel.dataset.caption);
-      });
-    });
-
-    lbClose.addEventListener('click', closeLightbox);
-
-    lightbox.addEventListener('click', function (e) {
-      if (e.target === lightbox) closeLightbox();
-    });
-
-    document.addEventListener('keydown', function (e) {
-      if (e.key === 'Escape' && !lightbox.hidden) closeLightbox();
-      if (e.key === 'Tab' && !lightbox.hidden) {
-        e.preventDefault();
+      function openLightbox(src, alt, caption) {
+        lastFocus = document.activeElement;
+        lbImg.src = src;
+        lbImg.alt = alt;
+        lbCaption.textContent = caption;
+        lightbox.hidden = false;
+        document.body.style.overflow = "hidden";
         lbClose.focus();
       }
-    });
-  </script>
-</body>
+
+      function closeLightbox() {
+        lightbox.hidden = true;
+        lbImg.src = "";
+        document.body.style.overflow = "";
+        if (lastFocus) lastFocus.focus();
+      }
+
+      document.querySelectorAll(".bento-panel").forEach(function (panel) {
+        panel.addEventListener("click", function () {
+          var img = panel.querySelector("img");
+          openLightbox(panel.dataset.src, img.alt, panel.dataset.caption);
+        });
+      });
+
+      lbClose.addEventListener("click", closeLightbox);
+
+      lightbox.addEventListener("click", function (e) {
+        if (e.target === lightbox) closeLightbox();
+      });
+
+      document.addEventListener("keydown", function (e) {
+        if (e.key === "Escape" && !lightbox.hidden) closeLightbox();
+        if (e.key === "Tab" && !lightbox.hidden) {
+          e.preventDefault();
+          lbClose.focus();
+        }
+      });
+    </script>
+  </body>
 </html>
