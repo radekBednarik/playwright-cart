@@ -443,46 +443,7 @@
       }
 
       .tw-phrase {
-        position: absolute;
-        left: 0;
-        top: 0;
-        white-space: nowrap;
-        opacity: 0;
-      }
-
-      .tw-phrase:nth-child(1) {
-        animation: phrase-cycle 12s 0s infinite;
-      }
-      .tw-phrase:nth-child(2) {
-        animation: phrase-cycle 12s 3s infinite;
-      }
-      .tw-phrase:nth-child(3) {
-        animation: phrase-cycle 12s 6s infinite;
-      }
-      .tw-phrase:nth-child(4) {
-        animation: phrase-cycle 12s 9s infinite;
-      }
-
-      @keyframes phrase-cycle {
-        0% {
-          opacity: 0;
-          transform: translateY(5px);
-        }
-        6% {
-          opacity: 1;
-          transform: translateY(0);
-        }
-        22% {
-          opacity: 1;
-          transform: translateY(0);
-        }
-        28% {
-          opacity: 0;
-          transform: translateY(-5px);
-        }
-        100% {
-          opacity: 0;
-        }
+        display: none;
       }
 
       .hero-subtitle::after {
@@ -491,8 +452,6 @@
         font-size: 0.7em;
         animation: cursor-blink 0.9s step-end infinite;
         margin-left: 3px;
-        position: relative;
-        z-index: 2;
       }
 
       @keyframes cursor-blink {
@@ -2125,6 +2084,70 @@
           lbClose.focus();
         }
       });
+    </script>
+
+    <script>
+      (function () {
+        var subtitle = document.querySelector('.hero-subtitle');
+        if (!subtitle) return;
+
+        var phrases = Array.from(subtitle.querySelectorAll('.tw-phrase')).map(function (el) {
+          return el.textContent.trim();
+        });
+        if (!phrases.length) return;
+
+        // Respect reduced-motion preference — show first phrase statically
+        if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+          subtitle.insertBefore(document.createTextNode(phrases[0]), subtitle.firstChild);
+          return;
+        }
+
+        var textNode = document.createTextNode('');
+        subtitle.insertBefore(textNode, subtitle.firstChild);
+
+        var phraseIndex = 0;
+        var charIndex = 0;
+        var deleting = false;
+
+        var TYPE_SPEED = 65;      // ms per character when typing
+        var DELETE_SPEED = 35;    // ms per character when deleting
+        var PAUSE_AFTER_TYPE = 1800;  // ms pause when phrase is fully typed
+        var PAUSE_AFTER_DELETE = 400; // ms pause after fully deleted before next phrase
+
+        function tick() {
+          var current = phrases[phraseIndex];
+
+          if (!deleting) {
+            // Typing forward
+            charIndex++;
+            textNode.nodeValue = current.slice(0, charIndex);
+
+            if (charIndex === current.length) {
+              // Fully typed — pause then start deleting
+              deleting = true;
+              setTimeout(tick, PAUSE_AFTER_TYPE);
+              return;
+            }
+            setTimeout(tick, TYPE_SPEED);
+          } else {
+            // Deleting backward
+            charIndex--;
+            textNode.nodeValue = current.slice(0, charIndex);
+
+            if (charIndex === 0) {
+              // Fully deleted — move to next phrase
+              deleting = false;
+              phraseIndex = (phraseIndex + 1) % phrases.length;
+              setTimeout(tick, PAUSE_AFTER_DELETE);
+              return;
+            }
+            setTimeout(tick, DELETE_SPEED);
+          }
+        }
+
+        // Small initial delay before starting
+        setTimeout(tick, 600);
+      })();
     </script>
   </body>
 </html>
