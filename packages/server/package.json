@@ -19,6 +19,7 @@
     "bcrypt": "^6.0.0",
     "drizzle-orm": "^0.45.2",
     "hono": "^4.12.12",
+    "hono-rate-limiter": "^0.5.3",
     "pg": "^8.20.0"
   },
   "devDependencies": {

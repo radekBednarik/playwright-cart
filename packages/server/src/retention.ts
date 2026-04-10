@@ -1,6 +1,6 @@
 import { eq, lt } from 'drizzle-orm'
 import { db } from './db/client.js'
-import { appSettings, runs } from './db/schema.js'
+import { appSettings, revokedTokens, runs } from './db/schema.js'
 import { deleteRuns } from './runs/storage.js'
 
 const INTERVAL_MS = 1000 * 60 * 60 // 1 hour
@@ -36,6 +36,14 @@ export function startRetentionJob(): void {
       }
     } catch (err) {
       console.error('[retention] error during retention job:', err)
+    }
+  }, INTERVAL_MS)
+
+  setInterval(async () => {
+    try {
+      await db.delete(revokedTokens).where(lt(revokedTokens.exp, new Date()))
+    } catch (err) {
+      console.error('[retention] error cleaning up revoked tokens:', err)
     }
   }, INTERVAL_MS)
 }

@@ -6,6 +6,7 @@ export type AuthUser =
       role: 'admin' | 'user'
       theme: 'dark' | 'light' | 'system'
       exp: number
+      jti: string
     }
   | {
       type: 'apikey'

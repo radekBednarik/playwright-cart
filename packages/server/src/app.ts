@@ -5,6 +5,7 @@ import { Hono } from 'hono'
 import { cors } from 'hono/cors'
 import { logger } from 'hono/logger'
 import { streamSSE } from 'hono/streaming'
+import { rateLimiter } from 'hono-rate-limiter'
 import { apiKeysRouter } from './api-keys/routes.js'
 import { authMiddleware } from './auth/middleware.js'
 import { authRouter } from './auth/routes.js'
@@ -24,6 +25,14 @@ const PUBLIC_PATHS = new Set(['/api/auth/login', '/api/health'])
 app.use('*', logger())
 app.use('/api/*', cors())
 app.get('/api/health', (c) => c.json({ ok: true }))
+app.use(
+  '/api/auth/login',
+  rateLimiter({
+    windowMs: 15 * 60 * 1000,
+    limit: 10,
+    keyGenerator: (c) => c.req.header('x-real-ip') ?? c.req.header('x-forwarded-for') ?? 'unknown',
+  }),
+)
 app.use('/api/*', async (c, next) => {
   if (PUBLIC_PATHS.has(c.req.path)) return next()
   return authMiddleware(c, next)

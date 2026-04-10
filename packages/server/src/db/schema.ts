@@ -137,3 +137,8 @@ export const reportTokens = pgTable(
   },
   (t) => [uniqueIndex('report_tokens_hash_uniq').on(t.tokenHash)],
 )
+
+export const revokedTokens = pgTable('revoked_tokens', {
+  jti: text('jti').primaryKey(),
+  exp: timestamp('exp', { withTimezone: true }).notNull(),
+})

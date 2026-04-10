@@ -2,7 +2,7 @@ import { eq } from 'drizzle-orm'
 import type { MiddlewareHandler } from 'hono'
 import { getCookie } from 'hono/cookie'
 import { db } from '../db/client.js'
-import { apiKeys, users } from '../db/schema.js'
+import { apiKeys, revokedTokens, users } from '../db/schema.js'
 import type { HonoEnv } from './types.js'
 import { getJwtSecret, hashApiKey, verifyToken } from './utils.js'
 
@@ -12,17 +12,25 @@ export const authMiddleware: MiddlewareHandler<HonoEnv> = async (c, next) => {
   if (token) {
     const result = await verifyToken(token)
     if (result) {
-      const [user] = await db.select().from(users).where(eq(users.id, result.userId)).limit(1)
-      if (user) {
-        c.set('authUser', {
-          type: 'user',
-          id: user.id,
-          username: user.username,
-          role: user.role,
-          theme: user.theme,
-          exp: result.exp,
-        })
-        return next()
+      const [revoked] = await db
+        .select()
+        .from(revokedTokens)
+        .where(eq(revokedTokens.jti, result.jti))
+        .limit(1)
+      if (!revoked) {
+        const [user] = await db.select().from(users).where(eq(users.id, result.userId)).limit(1)
+        if (user) {
+          c.set('authUser', {
+            type: 'user',
+            id: user.id,
+            username: user.username,
+            role: user.role,
+            theme: user.theme,
+            exp: result.exp,
+            jti: result.jti,
+          })
+          return next()
+        }
       }
     }
   }

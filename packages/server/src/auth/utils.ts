@@ -10,17 +10,22 @@ export function getJwtSecret(): string {
 
 export async function signToken(payload: { userId: number }): Promise<string> {
   const exp = Math.floor(Date.now() / 1000) + 8 * 60 * 60
-  return sign({ ...payload, exp }, getJwtSecret())
+  const jti = randomBytes(16).toString('hex')
+  return sign({ ...payload, exp, jti }, getJwtSecret())
 }
 
-export async function verifyToken(token: string): Promise<{ userId: number; exp: number } | null> {
+export async function verifyToken(
+  token: string,
+): Promise<{ userId: number; exp: number; jti: string } | null> {
   try {
     const payload = (await verify(token, getJwtSecret(), 'HS256')) as Record<string, unknown>
     const userId = payload.userId
     const exp = payload.exp
+    const jti = payload.jti
     if (typeof userId !== 'number') return null
     if (typeof exp !== 'number') return null
-    return { userId, exp }
+    if (typeof jti !== 'string') return null
+    return { userId, exp, jti }
   } catch {
     return null
   }

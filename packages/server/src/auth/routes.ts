@@ -2,7 +2,7 @@ import { eq } from 'drizzle-orm'
 import { Hono } from 'hono'
 import { deleteCookie, setCookie } from 'hono/cookie'
 import { db } from '../db/client.js'
-import { users } from '../db/schema.js'
+import { revokedTokens, users } from '../db/schema.js'
 import type { HonoEnv } from './types.js'
 import { signToken, verifyPassword } from './utils.js'
 
@@ -38,7 +38,14 @@ authRouter.post('/login', async (c) => {
   return c.json({ ok: true })
 })
 
-authRouter.post('/logout', (c) => {
+authRouter.post('/logout', async (c) => {
+  const authUser = c.get('authUser')
+  if (authUser?.type === 'user') {
+    await db
+      .insert(revokedTokens)
+      .values({ jti: authUser.jti, exp: new Date(authUser.exp * 1000) })
+      .onConflictDoNothing()
+  }
   deleteCookie(c, 'auth_token', { path: '/' })
   return c.json({ ok: true })
 })
