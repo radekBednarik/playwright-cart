@@ -1,5 +1,16 @@
 {
   "hooks": {
+    "SessionStart": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "jq -Rs '{hookSpecificOutput: {hookEventName: \"SessionStart\", additionalContext: (\"Caveman skill — apply these communication rules for this session:\\n\" + .)}}' /home/radek/projects/personal/playwright-cart/.claude/skills/caveman/SKILL.md",
+            "statusMessage": "Loading caveman skill..."
+          }
+        ]
+      }
+    ],
     "PostToolUse": [
       {
         "matcher": "Write|Edit",
