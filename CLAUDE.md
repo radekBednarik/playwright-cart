@@ -39,6 +39,12 @@ pnpm --filter @playwright-cart/server test
 pnpm --filter @playwright-cart/server test:watch
 ```
 
+Run e2e tests (requires server + DB running):
+```bash
+pnpm --filter @playwright-cart/e2e test      # headless; pretest builds reporter first
+pnpm --filter @playwright-cart/e2e test:ui   # Playwright UI mode
+```
+
 Publish reporter (triggered automatically on GitHub Release):
 ```bash
 # Manual publish — requires NODE_AUTH_TOKEN with write:packages scope
@@ -91,27 +97,40 @@ A monorepo for collecting and viewing Playwright test reports in a centralized d
 - `test_attachments` — `id`, `testPk` (FK), `position`, `name`, `contentType`, `filename`
 - `users` — `id`, `username` (unique), `passwordHash` (bcrypt), `role` (admin|user), `theme` (dark|light|system)
 - `api_keys` — `id`, `keyHash` (SHA256, unique), `label`, `createdBy` (FK → users)
-- `app_settings` — `key` (PK), `value` (currently stores `data_retention_days`)
+- `app_settings` — `key` (PK), `value` (currently stores `data_retention_days`; default 90 days)
 - `report_tokens` — `id`, `tokenHash` (HMAC-SHA256, unique), `filePath`, `expiresAt` (1h); single-use (deleted on consumption), expired rows cleaned up on creation
+
+**Retention job** (`src/retention.ts`):
+- `startRetentionJob()` runs hourly via `setInterval`; deletes runs (and cascades to all child rows + disk files) older than `data_retention_days` setting (default 90)
+- Started in `src/index.ts` at server boot
 
 **Authentication** (`src/auth/`):
 - Dual auth: HTTP-only JWT cookie (`auth_token`, HS256, 8h) for browser sessions; `Authorization: Bearer <key>` API keys for CI/CD
 - Roles: `admin` (full control) and `user` (self-service only)
 - Middleware: `authMiddleware` (requires any auth), `adminMiddleware` (requires admin role)
-- Public paths (no auth): `POST /api/auth/login`, `GET /api/health`
+- **All `/api/*` routes require auth** except `POST /api/auth/login` and `GET /api/health` — this means reporter uploads require `apiKey` in any deployed setup
 - `GET /reports/*` requires session cookie or a valid `?token=<value>` query param (single-use, 1h expiry, issued by `POST /api/report-token`)
 - Admin bootstrap: on startup, `src/db/seed.ts` creates the default admin from `ADMIN_USERNAME`/`ADMIN_PASSWORD` env vars (idempotent)
-- API keys: 32-byte random hex generated, SHA256-hashed before DB storage, raw key shown only at creation
+- API keys: 32-byte random hex generated, HMAC-SHA256-hashed before DB storage, raw key shown only at creation
 
 **Routes** (`src/app.ts`):
-- `POST /api/auth/login` / `POST /api/auth/logout` / `GET /api/auth/me` — auth (public/session/session)
-- `GET|POST /api/users` / `PATCH /api/users/me` / `PATCH|DELETE /api/users/:id` — user management (admin, except PATCH me = any user)
+- `POST /api/auth/login` / `POST /api/auth/logout` / `GET /api/auth/me` — auth (login public; others require session)
+- `GET|POST /api/users` / `PATCH /api/users/me` / `PATCH|DELETE /api/users/:id` — user management (admin, except PATCH me = any authed user)
 - `GET|POST|DELETE /api/api-keys` — API key management (admin)
-- `GET /api/settings` / `PATCH /api/settings` — settings (public / admin)
-- `POST /api/runs` / `GET /api/runs` / `GET /api/runs/:runId` — run CRUD (public)
-- `POST /api/runs/:runId/tests` / `POST /api/runs/:runId/report` / `POST /api/runs/:runId/complete` — reporter upload (public)
-- `GET /reports/*` — static report files (public)
+- `GET /api/settings` / `PATCH /api/settings` — settings (any authed / admin)
+- `POST /api/runs` / `GET /api/runs` / `GET /api/runs/:runId` — run CRUD (any authed)
+- `DELETE /api/runs/:runId` / `POST /api/runs/delete-batch` — run deletion (admin)
+- `POST /api/runs/:runId/tests` / `POST /api/runs/:runId/report` / `POST /api/runs/:runId/complete` — reporter upload (any authed; use `apiKey`)
+- `POST /api/report-token` — issue single-use report token (any authed)
+- `GET /api/events` — SSE stream of run lifecycle events (any authed)
+- `GET /reports/*` — static report files (session cookie or `?token=`)
 - `GET /api/health` — health check (public)
+
+**`packages/e2e`** — End-to-end integration tests for the full stack
+- Serves a static `demo-app/` (a simple todo app) via `npx serve` on port 5500 as the test target
+- Uses `@playwright-cart/reporter` from the workspace (built by `pretest` before each run)
+- Requires a running server + DB and optionally `API_KEY` env var; configure via `.env` in the package
+- `playwright.config.ts` uses `project: 'e2e-demo'` and posts results to `http://localhost:3001`
 
 **`packages/web`** — React 19 + Vite frontend
 - Lists uploaded reports with project name, upload time, and test status
