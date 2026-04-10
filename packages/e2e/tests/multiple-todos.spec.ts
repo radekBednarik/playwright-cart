@@ -20,7 +20,11 @@ test.describe('Multiple Todos', () => {
     await page.click('[data-testid="add-button"]')
     await page.fill('[data-testid="todo-input"]', 'Second')
     await page.click('[data-testid="add-button"]')
-    await page.locator('[data-testid="todo-item"]').first().locator('[data-testid="delete-button"]').click()
+    await page
+      .locator('[data-testid="todo-item"]')
+      .first()
+      .locator('[data-testid="delete-button"]')
+      .click()
     await expect(page.locator('[data-testid="todo-list"]')).not.toContainText('First')
     await expect(page.locator('[data-testid="todo-list"]')).toContainText('Second')
   })
