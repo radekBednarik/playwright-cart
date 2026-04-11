@@ -69,7 +69,11 @@ export default function SettingsPage() {
 
 // ── Account Tab ───────────────────────────────────────────────────────────────
 
-function AccountTab({ user }: { user: { id: number; username: string; theme: Theme } }) {
+function AccountTab({
+  user,
+}: {
+  user: { id: number; username: string; theme: Theme; runsPerPage: number }
+}) {
   const queryClient = useQueryClient()
 
   return (
@@ -80,6 +84,10 @@ function AccountTab({ user }: { user: { id: number; username: string; theme: The
       />
       <ChangePasswordForm />
       <ThemeSelector onThemeChange={() => queryClient.invalidateQueries({ queryKey: ['me'] })} />
+      <RunsPerPageSelector
+        current={user.runsPerPage}
+        onSave={() => queryClient.invalidateQueries({ queryKey: ['me'] })}
+      />
     </div>
   )
 }
@@ -267,6 +275,53 @@ function ThemeSelector({ onThemeChange }: { onThemeChange: () => void }) {
           </button>
         ))}
       </div>
+    </section>
+  )
+}
+
+const PAGE_SIZES = [10, 25, 50, 100] as const
+type PageSize = (typeof PAGE_SIZES)[number]
+
+function RunsPerPageSelector({ current, onSave }: { current: number; onSave: () => void }) {
+  const [status, setStatus] = useState<'idle' | 'saving' | 'ok' | 'err'>('idle')
+  const [errMsg, setErrMsg] = useState('')
+
+  async function handleChange(size: PageSize) {
+    setStatus('saving')
+    setErrMsg('')
+    try {
+      await updateMe({ runsPerPage: size })
+      setStatus('ok')
+      onSave()
+    } catch (err) {
+      setErrMsg(err instanceof Error ? err.message : 'Failed to save preference')
+      setStatus('err')
+    }
+  }
+
+  return (
+    <section>
+      <SectionHeading>Runs Per Page</SectionHeading>
+      <div className="flex gap-2">
+        {PAGE_SIZES.map((size) => (
+          <button
+            key={size}
+            type="button"
+            disabled={status === 'saving'}
+            onClick={() => handleChange(size)}
+            className={[
+              'flex items-center gap-2 rounded-lg border px-4 py-2 font-display text-sm transition-colors disabled:opacity-50',
+              current === size
+                ? 'border-tn-blue bg-tn-highlight text-tn-blue'
+                : 'border-tn-border text-tn-muted hover:bg-tn-highlight hover:text-tn-fg',
+            ].join(' ')}
+          >
+            {size}
+          </button>
+        ))}
+      </div>
+      {status === 'ok' && <p className="mt-2 font-mono text-xs text-tn-green">Saved.</p>}
+      {status === 'err' && <p className="mt-2 font-mono text-xs text-tn-red">{errMsg}</p>}
     </section>
   )
 }
