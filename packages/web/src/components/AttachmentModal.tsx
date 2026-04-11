@@ -10,6 +10,15 @@ interface Props {
 
 type CopyState = 'idle' | 'success' | 'error'
 
+function triggerDownload(url: string, filename: string) {
+  const a = document.createElement('a')
+  a.href = url
+  a.download = filename
+  document.body.appendChild(a)
+  a.click()
+  document.body.removeChild(a)
+}
+
 export default function AttachmentModal({ url, filename, contentType, onClose }: Props) {
   const titleId = useId()
 
@@ -156,12 +165,7 @@ function ImageBody({
   }
 
   function handleDownload() {
-    const a = document.createElement('a')
-    a.href = url
-    a.download = filename
-    document.body.appendChild(a)
-    a.click()
-    document.body.removeChild(a)
+    triggerDownload(url, filename)
   }
 
   return (
@@ -183,6 +187,7 @@ function ImageBody({
         copyState={copyState}
         onCopy={handleCopy}
         onDownload={handleDownload}
+        copyDisabled={imgError}
       />
     </>
   )
@@ -236,12 +241,7 @@ function TextBody({
   }
 
   function handleDownload() {
-    const a = document.createElement('a')
-    a.href = url
-    a.download = filename
-    document.body.appendChild(a)
-    a.click()
-    document.body.removeChild(a)
+    triggerDownload(url, filename)
   }
 
   return (
