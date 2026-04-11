@@ -105,6 +105,73 @@ describe('GET /api/runs', () => {
   })
 })
 
+describe('GET /api/runs/meta', () => {
+  it('returns empty arrays when no runs exist', async () => {
+    const res = await runs.request('/meta')
+    expect(res.status).toBe(200)
+    const body = (await res.json()) as { projects: string[]; branches: string[] }
+    expect(body.projects).toEqual([])
+    expect(body.branches).toEqual([])
+  })
+
+  it('returns distinct sorted project names', async () => {
+    await storage.createRun({
+      runId: 'r1',
+      project: 'beta',
+      startedAt: '2026-04-02T10:00:00.000Z',
+      status: 'passed',
+    })
+    await storage.createRun({
+      runId: 'r2',
+      project: 'alpha',
+      startedAt: '2026-04-02T11:00:00.000Z',
+      status: 'passed',
+    })
+    await storage.createRun({
+      runId: 'r3',
+      project: 'alpha',
+      startedAt: '2026-04-02T12:00:00.000Z',
+      status: 'failed',
+    })
+    const res = await runs.request('/meta')
+    const body = (await res.json()) as { projects: string[]; branches: string[] }
+    expect(body.projects).toEqual(['alpha', 'beta'])
+  })
+
+  it('returns distinct sorted branch names, excluding null branches', async () => {
+    await storage.createRun({
+      runId: 'r1',
+      project: 'p',
+      startedAt: '2026-04-02T10:00:00.000Z',
+      status: 'passed',
+      branch: 'main',
+    })
+    await storage.createRun({
+      runId: 'r2',
+      project: 'p',
+      startedAt: '2026-04-02T11:00:00.000Z',
+      status: 'passed',
+      branch: 'feature/foo',
+    })
+    await storage.createRun({
+      runId: 'r3',
+      project: 'p',
+      startedAt: '2026-04-02T12:00:00.000Z',
+      status: 'passed',
+    }) // no branch
+    await storage.createRun({
+      runId: 'r4',
+      project: 'p',
+      startedAt: '2026-04-02T13:00:00.000Z',
+      status: 'passed',
+      branch: 'main',
+    }) // duplicate
+    const res = await runs.request('/meta')
+    const body = (await res.json()) as { projects: string[]; branches: string[] }
+    expect(body.branches).toEqual(['feature/foo', 'main'])
+  })
+})
+
 describe('GET /api/runs/:runId', () => {
   it('returns 404 for a missing run', async () => {
     const res = await runs.request('/no-such-run')
