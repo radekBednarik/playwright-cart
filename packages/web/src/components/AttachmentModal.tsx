@@ -154,7 +154,20 @@ function ImageBody({
       const res = await fetch(url, { credentials: 'include' })
       if (!res.ok) throw new Error('fetch failed')
       const blob = await res.blob()
-      await navigator.clipboard.write([new ClipboardItem({ [blob.type]: blob })])
+      const pngBlob = await new Promise<Blob>((resolve, reject) => {
+        const img = new Image()
+        img.onload = () => {
+          const canvas = document.createElement('canvas')
+          canvas.width = img.naturalWidth
+          canvas.height = img.naturalHeight
+          canvas.getContext('2d')?.drawImage(img, 0, 0)
+          canvas.toBlob((b) => (b ? resolve(b) : reject(new Error('toBlob failed'))), 'image/png')
+          URL.revokeObjectURL(img.src)
+        }
+        img.onerror = reject
+        img.src = URL.createObjectURL(blob)
+      })
+      await navigator.clipboard.write([new ClipboardItem({ 'image/png': pngBlob })])
       if (mountedRef.current) setCopyState('success')
     } catch {
       if (mountedRef.current) setCopyState('error')
