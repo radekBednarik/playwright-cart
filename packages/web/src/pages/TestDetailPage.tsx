@@ -2,11 +2,13 @@ import { Link, useParams } from 'react-router-dom'
 import AttachmentList from '../components/AttachmentList.js'
 import ErrorBlock from '../components/ErrorBlock.js'
 import TestHeader from '../components/TestHeader.js'
+import { useRun } from '../hooks/useRun.js'
 import { useTest } from '../hooks/useTest.js'
 
 export default function TestDetailPage() {
   const { runId, testId } = useParams<{ runId: string; testId: string }>()
   const { data: test, isLoading, error } = useTest(runId ?? '', testId ?? '')
+  const { data: run } = useRun(runId ?? '')
 
   if (isLoading) return <Skeleton />
 
@@ -37,7 +39,7 @@ export default function TestDetailPage() {
         </Link>
         <span>/</span>
         <Link to={`/runs/${runId}`} className="transition-colors hover:text-tn-blue">
-          {test.titlePath[0] ?? runId}
+          {run?.project ?? runId}
         </Link>
         <span>/</span>
         <span className="truncate text-tn-fg">{test.title}</span>
