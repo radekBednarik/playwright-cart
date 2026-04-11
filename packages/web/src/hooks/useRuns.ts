@@ -1,5 +1,5 @@
 import { useQuery } from '@tanstack/react-query'
-import { type RunsParams, fetchRuns } from '../lib/api.js'
+import { fetchRuns, type RunsParams } from '../lib/api.js'
 
 export function useRuns(params: RunsParams) {
   return useQuery({

@@ -1,19 +1,60 @@
+import { useQueryClient } from '@tanstack/react-query'
+import { useEffect, useState } from 'react'
 import { useSearchParams } from 'react-router-dom'
-import { applyFilters, FilterBar } from '../components/FilterBar.js'
+import { FilterBar } from '../components/FilterBar.js'
 import RunsTable from '../components/RunsTable.js'
 import StatsBar from '../components/StatsBar.js'
 import { useCurrentUser } from '../hooks/useCurrentUser.js'
 import { useRuns } from '../hooks/useRuns.js'
+import { useRunsMeta } from '../hooks/useRunsMeta.js'
 import { useSettings } from '../hooks/useSettings.js'
+import { updateMe } from '../lib/api.js'
+
+const PAGE_SIZES = [10, 25, 50, 100] as const
+type PageSize = (typeof PAGE_SIZES)[number]
 
 export default function RunsPage() {
   const [params] = useSearchParams()
-  const { data: runs, isLoading, error, refetch } = useRuns()
-  const { isAdmin } = useCurrentUser()
+  const queryClient = useQueryClient()
+  const { user, isAdmin } = useCurrentUser()
   const { data: settings } = useSettings()
+  const { data: meta } = useRunsMeta()
   const retentionDays = settings?.data_retention_days ?? 90
 
-  if (isLoading) return <Skeleton />
+  const [page, setPage] = useState(1)
+  const [pageSize, setPageSize] = useState<PageSize>(10)
+
+  // Sync pageSize from user preference once user data loads
+  useEffect(() => {
+    if (user?.runsPerPage && PAGE_SIZES.includes(user.runsPerPage as PageSize)) {
+      setPageSize(user.runsPerPage as PageSize)
+    }
+  }, [user?.runsPerPage])
+
+  // Reset to page 1 when filters change
+  const project = params.get('project') || undefined
+  const branch = params.get('branch') || undefined
+  const status = params.get('status') || undefined
+
+  // biome-ignore lint/correctness/useExhaustiveDependencies: derived from params — reactive via URLSearchParams
+  useEffect(() => {
+    setPage(1)
+  }, [project, branch, status])
+
+  const { data, isLoading, error, refetch } = useRuns({ page, pageSize, project, branch, status })
+
+  async function handlePageSizeChange(size: PageSize) {
+    setPageSize(size)
+    setPage(1)
+    try {
+      await updateMe({ runsPerPage: size })
+      queryClient.invalidateQueries({ queryKey: ['me'] })
+    } catch {
+      // best-effort: local state already updated
+    }
+  }
+
+  if (isLoading && !data) return <Skeleton />
 
   if (error) {
     return (
@@ -31,30 +72,79 @@ export default function RunsPage() {
     )
   }
 
-  if (!runs || runs.length === 0) return <EmptyState />
+  if (!data || (data.total === 0 && !project && !branch && !status)) return <EmptyState />
 
-  const filtered = applyFilters(runs, params)
+  const totalPages = Math.max(1, Math.ceil(data.total / pageSize))
 
   return (
     <div>
-      {/* Page header: title left, filters right */}
-      <div className="mb-5 flex items-center justify-between">
+      {/* Page header: title left, page-size selector + filters right */}
+      <div className="mb-5 flex items-center justify-between gap-4">
         <h1 className="font-display text-lg font-bold uppercase tracking-[0.15em] text-tn-fg">
           Runs
         </h1>
-        <FilterBar runs={runs} />
+        <div className="flex items-center gap-3">
+          {/* Page size selector */}
+          <div className="flex items-center gap-1">
+            {PAGE_SIZES.map((size) => (
+              <button
+                key={size}
+                type="button"
+                onClick={() => handlePageSizeChange(size)}
+                className={[
+                  'rounded px-2 py-1 font-display text-xs transition-colors',
+                  pageSize === size
+                    ? 'bg-tn-highlight text-tn-fg'
+                    : 'text-tn-muted hover:text-tn-fg',
+                ].join(' ')}
+              >
+                {size}
+              </button>
+            ))}
+          </div>
+          <span className="text-tn-border select-none">|</span>
+          <FilterBar projects={meta?.projects ?? []} branches={meta?.branches ?? []} />
+        </div>
       </div>
 
       {/* Stats strip */}
-      <StatsBar runs={runs} />
+      <StatsBar total={data.total} totalPassed={data.totalPassed} totalFailed={data.totalFailed} />
 
       {/* Table */}
       <RunsTable
-        runs={filtered}
+        runs={data.runs}
         isAdmin={isAdmin}
         retentionDays={retentionDays}
         onDeleteSuccess={() => refetch()}
       />
+
+      {/* Pagination controls */}
+      {totalPages > 1 && (
+        <div className="mt-4 flex items-center justify-between font-display text-xs text-tn-muted">
+          <span>{data.total} runs</span>
+          <div className="flex items-center gap-3">
+            <button
+              type="button"
+              disabled={page <= 1}
+              onClick={() => setPage((p) => p - 1)}
+              className="rounded border border-tn-border px-3 py-1.5 transition-colors hover:bg-tn-highlight disabled:cursor-not-allowed disabled:opacity-40"
+            >
+              Prev
+            </button>
+            <span>
+              Page {page} of {totalPages}
+            </span>
+            <button
+              type="button"
+              disabled={page >= totalPages}
+              onClick={() => setPage((p) => p + 1)}
+              className="rounded border border-tn-border px-3 py-1.5 transition-colors hover:bg-tn-highlight disabled:cursor-not-allowed disabled:opacity-40"
+            >
+              Next
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   )
 }

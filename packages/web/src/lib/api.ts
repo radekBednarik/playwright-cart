@@ -91,7 +91,7 @@ export async function updateMe(data: {
   return res.json() as Promise<CurrentUser>
 }
 
-export interface RunsPage {
+export interface PaginatedRuns {
   runs: RunRecord[]
   total: number
   totalPassed: number
@@ -108,7 +108,7 @@ export interface RunsParams {
   status?: string
 }
 
-export async function fetchRuns(params: RunsParams): Promise<RunsPage> {
+export async function fetchRuns(params: RunsParams): Promise<PaginatedRuns> {
   const query = new URLSearchParams()
   query.set('page', String(params.page))
   query.set('pageSize', String(params.pageSize))
@@ -117,7 +117,7 @@ export async function fetchRuns(params: RunsParams): Promise<RunsPage> {
   if (params.status) query.set('status', params.status)
   const res = await fetch(`/api/runs?${query}`)
   if (!res.ok) throw new Error(`HTTP ${res.status}`)
-  return res.json() as Promise<RunsPage>
+  return res.json() as Promise<PaginatedRuns>
 }
 
 export interface RunsMeta {
