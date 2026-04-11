@@ -5,6 +5,7 @@ import {
   integer,
   pgEnum,
   pgTable,
+  smallint,
   text,
   timestamp,
   uniqueIndex,
@@ -105,6 +106,7 @@ export const users = pgTable('users', {
   passwordHash: text('password_hash').notNull(),
   role: userRoleEnum('role').notNull().default('user'),
   theme: userThemeEnum('theme').notNull().default('system'),
+  runsPerPage: smallint('runs_per_page').notNull().default(10),
   createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
 })
 

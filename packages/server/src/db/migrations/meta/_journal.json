@@ -29,6 +29,13 @@
       "when": 1775842125279,
       "tag": "0003_salty_iceman",
       "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1775921132057,
+      "tag": "0004_noisy_kingpin",
+      "breakpoints": true
     }
   ]
 }

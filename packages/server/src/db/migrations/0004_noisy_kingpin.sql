@@ -1,0 +1,1 @@
+ALTER TABLE "users" ADD COLUMN "runs_per_page" smallint DEFAULT 10 NOT NULL;
