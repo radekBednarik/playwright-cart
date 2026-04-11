@@ -4,6 +4,8 @@ import AdmZip from 'adm-zip'
 import { Hono } from 'hono'
 import { adminMiddleware } from '../auth/middleware.js'
 import type { HonoEnv } from '../auth/types.js'
+import { db } from '../db/client.js'
+import { runs as runsSchema } from '../db/schema.js'
 import { type RunEvent, runEmitter } from '../events.js'
 import * as storage from './storage.js'
 
@@ -34,12 +36,28 @@ runs.post('/', async (c) => {
 })
 
 runs.get('/', async (c) => {
-  const page = Number(c.req.query('page') ?? 1)
-  const pageSize = Number(c.req.query('pageSize') ?? 20)
-  const project = c.req.query('project')
-  const branch = c.req.query('branch')
-  const status = c.req.query('status')
-  return c.json(await storage.listRuns({ page, pageSize, project, branch, status }))
+  const page = Math.max(1, Number(c.req.query('page') ?? '1'))
+  const rawPageSize = Number(c.req.query('pageSize') ?? '10')
+  const pageSize = ([10, 25, 50, 100] as const).includes(rawPageSize as 10 | 25 | 50 | 100)
+    ? (rawPageSize as 10 | 25 | 50 | 100)
+    : 10
+  const project = c.req.query('project') || undefined
+  const branch = c.req.query('branch') || undefined
+  const status = c.req.query('status') || undefined
+  const result = await storage.listRuns({ page, pageSize, project, branch, status })
+  return c.json({ ...result, page, pageSize })
+})
+
+runs.get('/meta', async (c) => {
+  const projectRows = await db.selectDistinct({ project: runsSchema.project }).from(runsSchema)
+  const branchRows = await db.selectDistinct({ branch: runsSchema.branch }).from(runsSchema)
+  return c.json({
+    projects: projectRows.map((r) => r.project).sort(),
+    branches: branchRows
+      .filter((r): r is { branch: string } => r.branch != null)
+      .map((r) => r.branch)
+      .sort(),
+  })
 })
 
 runs.get('/:runId', async (c) => {

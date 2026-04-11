@@ -73,10 +73,21 @@ describe('POST /api/runs', () => {
 })
 
 describe('GET /api/runs', () => {
-  it('returns an empty array when no runs exist', async () => {
+  it('returns empty result when no runs exist', async () => {
     const res = await runs.request('/')
     expect(res.status).toBe(200)
-    expect(await res.json()).toEqual([])
+    const body = (await res.json()) as {
+      runs: storage.RunRecord[]
+      total: number
+      totalPassed: number
+      totalFailed: number
+      page: number
+      pageSize: number
+    }
+    expect(body.runs).toEqual([])
+    expect(body.total).toBe(0)
+    expect(body.page).toBe(1)
+    expect(body.pageSize).toBe(10)
   })
 
   it('returns existing runs', async () => {
@@ -87,9 +98,10 @@ describe('GET /api/runs', () => {
       status: 'running',
     })
     const res = await runs.request('/')
-    const body = (await res.json()) as storage.RunRecord[]
-    expect(body).toHaveLength(1)
-    expect(body[0].runId).toBe('run-1')
+    const body = (await res.json()) as { runs: storage.RunRecord[]; total: number }
+    expect(body.runs).toHaveLength(1)
+    expect(body.runs[0].runId).toBe('run-1')
+    expect(body.total).toBe(1)
   })
 })
 
