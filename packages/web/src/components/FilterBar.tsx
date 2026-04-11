@@ -4,16 +4,12 @@ import type { RunRecord, RunStatus } from '../lib/api.js'
 const ALL_STATUSES: RunStatus[] = ['running', 'passed', 'failed', 'interrupted', 'timedOut']
 
 interface Props {
-  runs: RunRecord[]
+  projects: string[]
+  branches: string[]
 }
 
-export function FilterBar({ runs }: Props) {
+export function FilterBar({ projects, branches }: Props) {
   const [params, setParams] = useSearchParams()
-
-  const projects = [...new Set(runs.map((r) => r.project))].sort()
-  const branches = [
-    ...new Set(runs.map((r) => r.branch).filter((b): b is string => Boolean(b))),
-  ].sort()
 
   const project = params.get('project') ?? ''
   const branch = params.get('branch') ?? ''

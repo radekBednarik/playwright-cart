@@ -6,6 +6,7 @@ export interface CurrentUser {
   username: string
   role: UserRole
   theme: Theme
+  runsPerPage: number
   expiresAt: number
 }
 
@@ -76,6 +77,7 @@ export async function updateMe(data: {
   password?: string
   currentPassword?: string
   theme?: string
+  runsPerPage?: number
 }): Promise<CurrentUser> {
   const res = await fetch('/api/users/me', {
     method: 'PATCH',
@@ -89,10 +91,44 @@ export async function updateMe(data: {
   return res.json() as Promise<CurrentUser>
 }
 
-export async function fetchRuns(): Promise<RunRecord[]> {
-  const res = await fetch('/api/runs')
+export interface RunsPage {
+  runs: RunRecord[]
+  total: number
+  totalPassed: number
+  totalFailed: number
+  page: number
+  pageSize: number
+}
+
+export interface RunsParams {
+  page: number
+  pageSize: number
+  project?: string
+  branch?: string
+  status?: string
+}
+
+export async function fetchRuns(params: RunsParams): Promise<RunsPage> {
+  const query = new URLSearchParams()
+  query.set('page', String(params.page))
+  query.set('pageSize', String(params.pageSize))
+  if (params.project) query.set('project', params.project)
+  if (params.branch) query.set('branch', params.branch)
+  if (params.status) query.set('status', params.status)
+  const res = await fetch(`/api/runs?${query}`)
   if (!res.ok) throw new Error(`HTTP ${res.status}`)
-  return res.json() as Promise<RunRecord[]>
+  return res.json() as Promise<RunsPage>
+}
+
+export interface RunsMeta {
+  projects: string[]
+  branches: string[]
+}
+
+export async function fetchRunsMeta(): Promise<RunsMeta> {
+  const res = await fetch('/api/runs/meta')
+  if (!res.ok) throw new Error(`HTTP ${res.status}`)
+  return res.json() as Promise<RunsMeta>
 }
 
 export async function deleteRun(runId: string): Promise<void> {

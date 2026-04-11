@@ -1,11 +1,12 @@
 import { useQuery } from '@tanstack/react-query'
-import { fetchRuns } from '../lib/api.js'
+import { type RunsParams, fetchRuns } from '../lib/api.js'
 
-export function useRuns() {
+export function useRuns(params: RunsParams) {
   return useQuery({
-    queryKey: ['runs'],
-    queryFn: fetchRuns,
+    queryKey: ['runs', params],
+    queryFn: () => fetchRuns(params),
     staleTime: 30_000,
     refetchInterval: 60_000,
+    placeholderData: (prev) => prev,
   })
 }
