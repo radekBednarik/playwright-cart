@@ -1,6 +1,7 @@
 import { mkdirSync, rmSync } from 'node:fs'
 import { join } from 'node:path'
-import { and, desc, eq, inArray } from 'drizzle-orm'
+import type { SQL } from 'drizzle-orm'
+import { and, count, desc, eq, inArray, sql } from 'drizzle-orm'
 import { db } from '../db/client.js'
 import { runs, testAnnotations, testAttachments, testErrors, tests } from '../db/schema.js'
 
@@ -104,9 +105,46 @@ export async function updateRun(runId: string, update: Partial<RunRecord>): Prom
   await db.update(runs).set(values).where(eq(runs.runId, runId))
 }
 
-export async function listRuns(): Promise<RunRecord[]> {
-  const rows = await db.select().from(runs).orderBy(desc(runs.startedAt))
-  return rows.map(toRunRecord)
+export type RunsQuery = {
+  page: number
+  pageSize: number
+  project?: string
+  branch?: string
+  status?: string
+}
+
+export async function listRuns(
+  query: RunsQuery,
+): Promise<{ runs: RunRecord[]; total: number; totalPassed: number; totalFailed: number }> {
+  const conditions: SQL[] = []
+  if (query.project) conditions.push(eq(runs.project, query.project))
+  if (query.branch) conditions.push(eq(runs.branch, query.branch))
+  if (query.status) conditions.push(eq(runs.status, query.status as RunRecord['status']))
+  const whereClause = conditions.length > 0 ? and(...conditions) : undefined
+
+  const [agg] = await db
+    .select({
+      total: count(),
+      totalPassed: sql<number>`COUNT(*) FILTER (WHERE ${runs.status} = 'passed')`,
+      totalFailed: sql<number>`COUNT(*) FILTER (WHERE ${runs.status} = 'failed')`,
+    })
+    .from(runs)
+    .where(whereClause)
+
+  const rows = await db
+    .select()
+    .from(runs)
+    .where(whereClause)
+    .orderBy(desc(runs.startedAt))
+    .limit(query.pageSize)
+    .offset((query.page - 1) * query.pageSize)
+
+  return {
+    runs: rows.map(toRunRecord),
+    total: Number(agg?.total ?? 0),
+    totalPassed: Number(agg?.totalPassed ?? 0),
+    totalFailed: Number(agg?.totalFailed ?? 0),
+  }
 }
 
 // ---------- test operations ----------

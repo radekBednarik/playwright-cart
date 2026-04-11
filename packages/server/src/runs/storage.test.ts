@@ -62,8 +62,9 @@ describe('updateRun', () => {
 })
 
 describe('listRuns', () => {
-  it('returns an empty array when no runs exist', async () => {
-    expect(await storage.listRuns()).toEqual([])
+  it('returns empty result when no runs exist', async () => {
+    const result = await storage.listRuns({ page: 1, pageSize: 10 })
+    expect(result).toEqual({ runs: [], total: 0, totalPassed: 0, totalFailed: 0 })
   })
 
   it('returns runs sorted by startedAt descending', async () => {
@@ -79,9 +80,87 @@ describe('listRuns', () => {
       startedAt: '2026-04-02T10:00:00.000Z',
       status: 'running',
     })
-    const runs = await storage.listRuns()
-    expect(runs[0].runId).toBe('b')
-    expect(runs[1].runId).toBe('a')
+    const result = await storage.listRuns({ page: 1, pageSize: 10 })
+    expect(result.runs[0].runId).toBe('b')
+    expect(result.runs[1].runId).toBe('a')
+  })
+
+  it('respects pageSize and page offset', async () => {
+    for (let i = 0; i < 5; i++) {
+      await storage.createRun({
+        runId: `run-${i}`,
+        project: 'p',
+        startedAt: new Date(Date.now() + i * 1000).toISOString(),
+        status: 'passed',
+      })
+    }
+    const page1 = await storage.listRuns({ page: 1, pageSize: 3 })
+    const page2 = await storage.listRuns({ page: 2, pageSize: 3 })
+    expect(page1.runs).toHaveLength(3)
+    expect(page1.total).toBe(5)
+    expect(page2.runs).toHaveLength(2)
+  })
+
+  it('filters by project', async () => {
+    await storage.createRun({
+      runId: 'r1',
+      project: 'alpha',
+      startedAt: '2026-04-02T10:00:00.000Z',
+      status: 'passed',
+    })
+    await storage.createRun({
+      runId: 'r2',
+      project: 'beta',
+      startedAt: '2026-04-02T11:00:00.000Z',
+      status: 'failed',
+    })
+    const result = await storage.listRuns({ page: 1, pageSize: 10, project: 'alpha' })
+    expect(result.runs).toHaveLength(1)
+    expect(result.runs[0].runId).toBe('r1')
+    expect(result.total).toBe(1)
+  })
+
+  it('filters by status', async () => {
+    await storage.createRun({
+      runId: 'r1',
+      project: 'p',
+      startedAt: '2026-04-02T10:00:00.000Z',
+      status: 'passed',
+    })
+    await storage.createRun({
+      runId: 'r2',
+      project: 'p',
+      startedAt: '2026-04-02T11:00:00.000Z',
+      status: 'failed',
+    })
+    const result = await storage.listRuns({ page: 1, pageSize: 10, status: 'failed' })
+    expect(result.runs).toHaveLength(1)
+    expect(result.runs[0].runId).toBe('r2')
+  })
+
+  it('returns aggregate stats scoped to the active filter', async () => {
+    await storage.createRun({
+      runId: 'r1',
+      project: 'alpha',
+      startedAt: '2026-04-02T09:00:00.000Z',
+      status: 'passed',
+    })
+    await storage.createRun({
+      runId: 'r2',
+      project: 'alpha',
+      startedAt: '2026-04-02T10:00:00.000Z',
+      status: 'failed',
+    })
+    await storage.createRun({
+      runId: 'r3',
+      project: 'beta',
+      startedAt: '2026-04-02T11:00:00.000Z',
+      status: 'passed',
+    })
+    const result = await storage.listRuns({ page: 1, pageSize: 10, project: 'alpha' })
+    expect(result.total).toBe(2)
+    expect(result.totalPassed).toBe(1)
+    expect(result.totalFailed).toBe(1)
   })
 })
 

@@ -34,7 +34,12 @@ runs.post('/', async (c) => {
 })
 
 runs.get('/', async (c) => {
-  return c.json(await storage.listRuns())
+  const page = Number(c.req.query('page') ?? 1)
+  const pageSize = Number(c.req.query('pageSize') ?? 20)
+  const project = c.req.query('project')
+  const branch = c.req.query('branch')
+  const status = c.req.query('status')
+  return c.json(await storage.listRuns({ page, pageSize, project, branch, status }))
 })
 
 runs.get('/:runId', async (c) => {
