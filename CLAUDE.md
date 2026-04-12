@@ -102,7 +102,6 @@ A monorepo for collecting and viewing Playwright test reports in a centralized d
 - `users` — `id`, `username` (unique), `passwordHash` (bcrypt), `role` (admin|user), `theme` (dark|light|system), `runsPerPage` (smallint, default 10), `createdAt`
 - `api_keys` — `id`, `keyHash` (SHA256, unique), `label`, `createdBy` (FK → users), `createdAt`
 - `app_settings` — `key` (PK), `value` (currently stores `data_retention_days`; default 90 days)
-- `report_tokens` — `id`, `tokenHash` (HMAC-SHA256, unique), `filePath`, `expiresAt` (1h); single-use (deleted on consumption), expired rows cleaned up on creation
 - `revoked_tokens` — `jti` (PK), `exp`; stores revoked JWT IDs on logout until token expiry
 
 **Retention job** (`src/retention.ts`):
@@ -116,7 +115,7 @@ A monorepo for collecting and viewing Playwright test reports in a centralized d
 - **All `/api/*` routes require auth** except `POST /api/auth/login` and `GET /api/health` — this means reporter uploads require `apiKey` in any deployed setup
 - `POST /api/auth/login` is rate-limited: 10 requests per 15-minute window, keyed by `x-real-ip` / `x-forwarded-for`
 - JWT revocation on logout: JTI stored in `revoked_tokens` table; checked on every authenticated request until token expiry
-- `GET /reports/*` requires session cookie or a valid `?token=<value>` query param (single-use, 1h expiry, issued by `POST /api/report-token`)
+- `GET /reports/*` requires session cookie (same-origin; served by Nginx alongside the web frontend)
 - Admin bootstrap: on startup, `src/db/seed.ts` creates the default admin from `ADMIN_USERNAME`/`ADMIN_PASSWORD` env vars (idempotent)
 - API keys: 32-byte random hex generated, HMAC-SHA256-hashed before DB storage, raw key shown only at creation
 
@@ -128,9 +127,8 @@ A monorepo for collecting and viewing Playwright test reports in a centralized d
 - `POST /api/runs` / `GET /api/runs` / `GET /api/runs/:runId` — run CRUD (any authed)
 - `DELETE /api/runs/:runId` / `POST /api/runs/delete-batch` — run deletion (admin)
 - `POST /api/runs/:runId/tests` / `POST /api/runs/:runId/report` / `POST /api/runs/:runId/complete` — reporter upload (any authed; use `apiKey`)
-- `POST /api/report-token` — issue single-use report token (any authed)
 - `GET /api/events` — SSE stream of run lifecycle events (any authed)
-- `GET /reports/*` — static report files (session cookie or `?token=`)
+- `GET /reports/*` — static report files (session cookie required)
 - `GET /api/health` — health check (public)
 
 **`packages/e2e`** — End-to-end integration tests for the full stack
