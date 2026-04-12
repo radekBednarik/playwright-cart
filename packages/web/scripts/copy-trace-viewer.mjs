@@ -4,7 +4,15 @@ import { join, dirname } from 'path'
 import { fileURLToPath } from 'url'
 
 const require = createRequire(import.meta.url)
-const pkgPath = require.resolve('playwright-core/package.json')
+
+let pkgPath
+try {
+  pkgPath = require.resolve('playwright-core/package.json')
+} catch {
+  console.error('copy-trace-viewer: playwright-core not found. Run pnpm install.')
+  process.exit(1)
+}
+
 const traceViewerSrc = join(dirname(pkgPath), 'lib', 'vite', 'traceViewer')
 const traceViewerDest = join(
   dirname(fileURLToPath(import.meta.url)),
@@ -13,5 +21,12 @@ const traceViewerDest = join(
   'trace-viewer',
 )
 
-cpSync(traceViewerSrc, traceViewerDest, { recursive: true })
+try {
+  cpSync(traceViewerSrc, traceViewerDest, { recursive: true })
+} catch (err) {
+  console.error(`copy-trace-viewer: failed to copy from ${traceViewerSrc}`)
+  console.error(err.message)
+  process.exit(1)
+}
+
 console.log('Trace viewer assets copied.')
