@@ -22,6 +22,7 @@ export interface RunRecord {
   completedAt?: string
   status: RunStatus
   reportUrl?: string
+  flakyCount?: number
 }
 
 export interface TestRecord {
