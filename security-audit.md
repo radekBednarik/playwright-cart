@@ -1,155 +1,78 @@
-# Security Audit — 2026-04-11
+# Security Audit — 2026-04-12
 
-## Overall Score: 6.7 / 10  (Grade: C)
+## Overall Score: 8.4 / 10  (Grade: B)
 
-Penalties: 0 High · 3 Medium × 0.5 = 1.5 · 4 Low × 0.1 = 0.4 · 2 Info = 0
-(SA-005 and SA-NEW-1 reclassified after threat-model review — see findings for rationale)
+Penalties: 0 Critical · 0 High · 2 Medium × 0.5 = 1.0 · 6 Low × 0.1 = 0.6 · 1 Info = 0
 
 ## Executive Summary
 
-Significant progress since the 2026-04-10 audit (0.5/10 → 6.7/10). All three Critical
-path-traversal RCE vulnerabilities (SA-001–003) and two High auth weaknesses (SA-004, SA-006)
-have been fixed. CORS has been restricted to an explicit origin (SA-009, fixed). Two initially
-High findings were reclassified after threat-model review: JWT_SECRET dual-use (SA-005) is
-theoretical for a CI reporting dashboard and won't be fixed; the committed e2e API key
-(SA-NEW-1) is local-only with no production surface. What remains: nginx has no security
-headers (Medium), test metadata lacks schema validation (Medium), and several low-severity
-infra hygiene items. Authentication foundations — bcrypt, httpOnly cookies, jti revocation,
-rate limiting — are solid.
+Strong improvement since the 2026-04-11 audit (6.7/10 C → 8.4/10 B). SA-NEW-1 (API key in
+git) has been resolved — `packages/e2e/.env` is no longer tracked. Authentication foundations
+remain solid: bcrypt, httpOnly/SameSite:strict cookies, JTI revocation, rate-limited login,
+CORS restricted to an explicit origin. The two remaining Medium findings — nginx missing
+security headers and no Zod validation on test metadata JSON — are the top priorities. Six
+Low findings are infrastructure hygiene items (credential templating, logger redaction, upload
+guards). SA-012 is reclassified from Medium to Low: CVSS 3.5 falls in the Low range; the
+label in the previous report was incorrect.
 
 ---
 
 ## Findings
 
+### Critical  (CVSS 9.0–10.0)
+
+*No Critical findings.*
+
+---
+
 ### High  (CVSS 7.0–8.9)
 
-*No active High findings — see Info section for reclassified items.*
-
----
-
-### Reclassified (originally High, lowered after threat-model review)
-
-#### [SA-005] JWT_SECRET dual-used for three distinct cryptographic operations
-- **Severity:** ~~High (CVSS 7.5)~~ → **Info — won't fix** (severity lowered after threat-model review)
-- **Location:** `packages/server/src/app.ts:72,98`, `packages/server/src/auth/middleware.ts`
-- **Description:** `JWT_SECRET` is the key for: (1) JWT signing, (2) HMAC for API key hashes
-  stored in DB, (3) HMAC for report token hashes stored in DB. Key separation is a fundamental
-  cryptographic principle — the same key material must not serve multiple purposes.
-- **Impact:** A leaked or brute-forced `JWT_SECRET` lets an attacker forge arbitrary JWTs,
-  pre-compute valid API key hashes from any known raw key, and generate valid report tokens
-  for any file path. Single-point-of-compromise for all three auth mechanisms.
-- **Severity rationale:** The theoretical attack requires `JWT_SECRET` to already be leaked —
-  at which point rotating one secret fixes all three purposes simultaneously. An attacker who
-  holds a raw API key gains nothing from the dual-use: they can just use the key directly.
-  Report token forgery requires both `JWT_SECRET` and a valid file path, and tokens expire in
-  1h anyway. This is a CI test reporting dashboard, not a payment system or identity provider.
-  The threat model does not include timing oracles or cross-key attacks. Key separation remains
-  sound cryptographic hygiene but is over-engineering for this context. Won't fix.
-- **Fix (for reference only):**
-
-```bash
-# .env.example — add two new secrets alongside JWT_SECRET
-API_KEY_SECRET=      # openssl rand -hex 32
-REPORT_TOKEN_SECRET= # openssl rand -hex 32
-```
-
-```typescript
-// packages/server/src/auth/utils.ts — add two getter functions
-export function getApiKeySecret(): string {
-  const s = process.env.API_KEY_SECRET
-  if (!s) throw new Error('API_KEY_SECRET not set')
-  return s
-}
-export function getReportTokenSecret(): string {
-  const s = process.env.REPORT_TOKEN_SECRET
-  if (!s) throw new Error('REPORT_TOKEN_SECRET not set')
-  return s
-}
-```
-
-Update `hashApiKey` calls in `auth/middleware.ts` and `api-keys/routes.ts` to use
-`getApiKeySecret()`. Update the two `hashApiKey` calls in `app.ts` (lines 72 and 98)
-that hash report tokens to use `getReportTokenSecret()`.
-
----
-
-#### [SA-NEW-1] Raw API key committed to git
-- **Severity:** ~~High (CVSS 7.3)~~ → **Low — git hygiene** (severity lowered after context review)
-- **Location:** `packages/e2e/.env:1`
-- **Description:** `packages/e2e/.env` is tracked by git and contains
-  `API_KEY="deb8a025094a3f32ab2ada735506325f9b86a0fb79250ffacdbd1b5fb20f624c"` — a 64-hex
-  (32-byte) raw API key in plaintext. Confirmed via `git ls-files packages/e2e/.env`.
-- **Impact:** Anyone with repo read access can authenticate as a reporter: upload arbitrary
-  test data, create runs, or upload crafted zip/attachment payloads against any running
-  instance that still has this key active.
-- **Severity rationale:** `packages/e2e` is a local integration test package — the key only
-  works against a locally running dev server. There is no production surface exposed. Anyone
-  with repo access can spin up the server themselves and generate a new key anyway. Risk is
-  limited to git hygiene: the file should not be tracked, but the practical exploit potential
-  is near zero.
-- **Fix:**
-
-Step 1 — Revoke the key immediately via the admin API keys UI before doing anything else.
-
-Step 2 — Remove from git tracking:
-```bash
-git rm --cached packages/e2e/.env
-echo ".env" >> packages/e2e/.gitignore
-git commit -m "chore(e2e): untrack .env, add to .gitignore"
-```
-
-Step 3 — If the repo is or may become public, purge from history:
-```bash
-git filter-repo --path packages/e2e/.env --invert-paths
-```
-
-Step 4 — Create a documented placeholder:
-```bash
-# packages/e2e/.env.example
-API_KEY=your-api-key-here
-```
+*No High findings.*
 
 ---
 
 ### Medium  (CVSS 4.0–6.9)
 
 #### [SA-007] Nginx ships with no security response headers
-- **Severity:** Medium (CVSS 5.3) — unfixed from previous audit
+- **Severity:** Medium (CVSS 5.3) — unfixed from 2026-04-11
 - **Location:** `packages/web/nginx.conf`
-- **Description:** Zero security headers in the nginx config. Playwright HTML reports served
-  under `/reports/` contain user-controlled JavaScript — without CSP, a malicious test result
-  could exfiltrate the authenticated session cookie.
-- **Impact:** Clickjacking, MIME sniffing, and stored-XSS escalation via embedded report JS.
+- **Description:** The entire nginx config contains zero security headers. Playwright HTML
+  reports served under `/reports/` contain user-controlled JavaScript — without CSP, a
+  malicious test result could exfiltrate the authenticated session cookie.
+- **Impact:** Clickjacking via missing `X-Frame-Options`; MIME-sniffing attacks via missing
+  `X-Content-Type-Options`; stored-XSS escalation through embedded report JS without CSP.
 - **Fix:**
 
 ```nginx
-# packages/web/nginx.conf — add to the server {} block (before location blocks)
+# packages/web/nginx.conf — add inside the server {} block, before location blocks
 add_header X-Frame-Options "SAMEORIGIN" always;
 add_header X-Content-Type-Options "nosniff" always;
 add_header Referrer-Policy "strict-origin-when-cross-origin" always;
 add_header Strict-Transport-Security "max-age=63072000; includeSubDomains" always;
 
-# CSP only for the SPA — /reports/ uses inline scripts and needs its own policy
+# CSP only for the SPA — /reports/ uses inline scripts and would break under a strict policy
 location / {
   add_header Content-Security-Policy "default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline';" always;
   try_files $uri $uri/ /index.html;
 }
 ```
 
-Note: do NOT apply a restrictive CSP to `/reports/` — Playwright HTML reports use inline
-scripts and would break. Consider serving reports from a separate subdomain to isolate their
-permissions from the main SPA.
+Note: do NOT apply a restrictive CSP to `/reports/` — Playwright HTML reports rely on inline
+scripts. Consider serving reports from a separate subdomain to isolate their permissions from
+the main SPA.
 
 ---
 
 #### [SA-008] No schema validation on test metadata JSON
-- **Severity:** Medium (CVSS 4.5) — unfixed from previous audit
-- **Location:** `packages/server/src/runs/routes.ts:72`
-- **Description:** `JSON.parse(body.metadata as string) as storage.TestRecord` — the TypeScript
-  `as` cast is erased at runtime. No field or length validation. A malformed payload (e.g., a
-  10MB `title` string) reaches the DB insert without any guard.
-- **Impact:** DB errors surfaced as 500s, potential DoS via large payloads, unexpected nulls in
-  required fields causing silent data corruption.
+- **Severity:** Medium (CVSS 4.5) — unfixed from 2026-04-11
+- **Location:** `packages/server/src/runs/routes.ts:95`
+- **Description:** `JSON.parse(body.metadata as string) as storage.TestRecord` — the
+  TypeScript `as` cast is erased at runtime. No field or length validation. A malformed
+  payload (e.g., a 10 MB `title` string, missing required fields, wrong types) reaches the DB
+  insert without any guard. Additionally, `JSON.parse` throws `SyntaxError` on invalid input
+  — this is uncaught, so a malformed request returns 500 instead of 400.
+- **Impact:** DB errors surfaced as unhandled 500s (leaking stack traces); potential DoS via
+  large payloads; unexpected nulls in required fields causing silent data corruption.
 - **Fix:**
 
 ```typescript
@@ -162,51 +85,69 @@ const TestRecordSchema = z.object({
   title: z.string().max(1024),
   titlePath: z.array(z.string().max(512)).optional(),
   status: z.enum(['passed', 'failed', 'timedOut', 'skipped']),
-  durationMs: z.number().int().nonnegative(),
-  retry: z.number().int().nonnegative(),
+  durationMs: z.number().int().nonneg(),
+  retry: z.number().int().nonneg(),
   // add remaining fields as needed
 })
 
-const parsed = TestRecordSchema.safeParse(JSON.parse(body.metadata as string))
+// safeParse never throws — handles both invalid JSON and wrong shape
+let rawMetadata: unknown
+try {
+  rawMetadata = JSON.parse(body.metadata as string)
+} catch {
+  return c.json({ error: 'Invalid metadata JSON' }, 400)
+}
+const parsed = TestRecordSchema.safeParse(rawMetadata)
 if (!parsed.success) return c.json({ error: 'Invalid metadata' }, 400)
 const metadata = parsed.data
 ```
 
+This also closes the unhandled `SyntaxError` from `JSON.parse` on malformed input.
+
 ---
 
-#### [SA-009] CORS configured with no origin restriction
-- **Severity:** Medium (CVSS 4.3) — unfixed from previous audit
-- **Location:** `packages/server/src/app.ts:26,68`
-- **Description:** `cors()` with no arguments defaults to `Access-Control-Allow-Origin: *` on
-  both `/api/*` and `/reports/*`. Cookie-based auth is protected by `SameSite: Strict`, but
-  Bearer-token flows (CI pipelines, scripts) are not — any page can call the API using a key
-  stored in `localStorage`.
-- **Impact:** Cross-origin requests to the API using Bearer tokens; cross-origin access to
-  protected report files if an attacker can supply a valid token.
+### Low  (CVSS 0.1–3.9)
+
+#### [SA-010] Hardcoded Postgres credentials in production compose
+- **Severity:** Low (CVSS 3.7) — unfixed from 2026-04-11
+- **Location:** `docker-compose.prod.yml:14-16`
+- **Description:** `POSTGRES_PASSWORD: playwright_cart` is a literal string in the prod
+  compose file, checked into source control. The DB port is not externally exposed, but
+  defence-in-depth requires unique credentials.
 - **Fix:**
 
-```typescript
-// packages/server/src/app.ts
-app.use('/api/*', cors({
-  origin: process.env.ALLOWED_ORIGIN ?? 'http://localhost:5173',
-  credentials: true,
-}))
-// ...
-app.use('/reports/*', cors({
-  origin: process.env.ALLOWED_ORIGIN ?? 'http://localhost:5173',
-  credentials: true,
-}))
+```yaml
+# docker-compose.prod.yml
+POSTGRES_USER: "${POSTGRES_USER}"
+POSTGRES_PASSWORD: "${POSTGRES_PASSWORD}"
+POSTGRES_DB: "${POSTGRES_DB:-playwright_cart}"
 ```
 
-Add `ALLOWED_ORIGIN=` to `.env.example`, and wire it up in both compose files.
+Also add `POSTGRES_USER=` and `POSTGRES_PASSWORD=` to `.env.example`.
+
+---
+
+#### [SA-011] Dev compose JWT_SECRET has a weak, known fallback
+- **Severity:** Low (CVSS 3.1) — unfixed from 2026-04-11
+- **Location:** `docker-compose.yml:39`
+- **Description:** `JWT_SECRET: "${JWT_SECRET:-change-this-secret-in-production}"` — the
+  fallback is a publicly known string. If an operator accidentally runs dev compose in a
+  reachable environment, all tokens are signed with a guessable secret.
+- **Fix:**
+
+```yaml
+# docker-compose.yml
+JWT_SECRET: "${JWT_SECRET:?JWT_SECRET must be set}"
+```
 
 ---
 
 #### [SA-012] No Content-Type / magic-byte validation on zip upload
-- **Severity:** Medium (CVSS 3.5) — unfixed from previous audit
-- **Location:** `packages/server/src/runs/routes.ts:90`
-- **Description:** `POST /:runId/report` accepts any file as the `report` multipart field with
-  no MIME type or magic-byte check. Defence-in-depth after SA-001 fix.
+- **Severity:** Low (CVSS 3.5) — unfixed from 2026-04-11 *(reclassified from Medium; CVSS 3.5
+  is in the Low range — the previous label was incorrect)*
+- **Location:** `packages/server/src/runs/routes.ts:121-122`
+- **Description:** `POST /:runId/report` accepts any file as the `report` multipart field
+  with no MIME type or magic-byte check. Defence-in-depth after the SA-001 zip-slip fix.
 - **Fix:**
 
 ```typescript
@@ -219,45 +160,12 @@ if (zipBuf[0] !== 0x50 || zipBuf[1] !== 0x4b || zipBuf[2] !== 0x03 || zipBuf[3] 
 
 ---
 
-### Low  (CVSS 0.1–3.9)
-
-#### [SA-010] Hardcoded Postgres credentials in production compose
-- **Severity:** Low (CVSS 3.7) — unfixed from previous audit
-- **Location:** `docker-compose.prod.yml:14-16`
-- **Description:** `POSTGRES_PASSWORD: playwright_cart` is a literal string in the prod compose
-  file, checked into source control. The DB port is not externally exposed, but defence-in-depth
-  requires unique credentials.
-- **Fix:**
-
-```yaml
-# docker-compose.prod.yml
-POSTGRES_USER: "${POSTGRES_USER}"
-POSTGRES_PASSWORD: "${POSTGRES_PASSWORD}"
-POSTGRES_DB: "${POSTGRES_DB:-playwright_cart}"
-```
-
----
-
-#### [SA-011] Dev compose JWT_SECRET has a weak, known fallback
-- **Severity:** Low (CVSS 3.1) — unfixed from previous audit
-- **Location:** `docker-compose.yml:37`
-- **Description:** `JWT_SECRET: "${JWT_SECRET:-change-this-secret-in-production}"` — the
-  fallback is a publicly known string. If an operator accidentally runs dev compose in a
-  reachable environment, all tokens are signed with a guessable secret.
-- **Fix:**
-
-```yaml
-JWT_SECRET: "${JWT_SECRET:?JWT_SECRET must be set}"
-```
-
----
-
 #### [SA-NEW-2] Server logger emits Authorization headers in plaintext
-- **Severity:** Low (CVSS 3.5) — new finding
-- **Location:** `packages/server/src/app.ts:25`
-- **Description:** `app.use('*', logger())` — Hono's default logger logs full request headers,
-  including `Authorization: Bearer <raw-api-key>`. Anyone with access to server logs (CI output,
-  log aggregators, sysadmins) can extract raw API keys.
+- **Severity:** Low (CVSS 3.5) — unfixed from 2026-04-11
+- **Location:** `packages/server/src/app.ts:20`
+- **Description:** `app.use('*', logger())` — Hono's default logger logs full request
+  headers, including `Authorization: Bearer <raw-api-key>`. Anyone with access to server
+  logs (CI output, log aggregators, sysadmins) can extract raw API keys.
 - **Fix:**
 
 ```typescript
@@ -272,17 +180,87 @@ app.use('*', logger((str, ...rest) => {
 
 ---
 
+#### [SA-NEW-4] No per-file size limit on attachment uploads
+- **Severity:** Low (CVSS 2.5) — new finding
+- **Location:** `packages/server/src/runs/routes.ts:99-106`
+- **Description:** The attachment upload loop calls `file.arrayBuffer()` with no per-file
+  size guard. Nginx enforces a 100 MB `client_max_body_size` per request, but a single
+  large file within that limit fully materialises in memory before being written to disk.
+  Accumulated across many test uploads, this creates a DoS surface.
+- **Impact:** Memory pressure during upload of large attachments; disk exhaustion with many
+  runs.
+- **Fix:**
+
+```typescript
+// packages/server/src/runs/routes.ts — inside the attachment loop
+const MAX_ATTACHMENT_BYTES = 10 * 1024 * 1024 // 10 MB
+
+for (let i = 0; ; i++) {
+  const file = body[`attachment_${i}`]
+  if (!file) break
+  if (file instanceof File) {
+    if (file.size > MAX_ATTACHMENT_BYTES) {
+      return c.json({ error: `Attachment ${i} exceeds 10 MB limit` }, 400)
+    }
+    const buf = Buffer.from(await file.arrayBuffer())
+    writeFileSync(join(attachmentsDir, basename(file.name)), buf)
+  }
+}
+```
+
+---
+
+#### [SA-NEW-5] No rate limiting on reporter upload endpoints
+- **Severity:** Low (CVSS 3.2) — new finding
+- **Location:** `packages/server/src/runs/routes.ts` — `POST /:runId/tests` (line 91),
+  `POST /:runId/report` (line 113)
+- **Description:** Only `POST /api/auth/login` is rate-limited. A compromised or leaked API
+  key can drive unlimited uploads — exhausting disk, CPU, and Postgres row limits — with no
+  throttle. API keys are revocable but revocation requires manual admin intervention.
+- **Impact:** DoS via disk/DB exhaustion using a single leaked API key; no automated
+  backpressure to signal abuse.
+- **Fix:**
+
+```typescript
+// packages/server/src/app.ts — add alongside the login rate-limiter
+app.use(
+  '/api/runs/:runId/tests',
+  rateLimiter({
+    windowMs: 15 * 60 * 1000,
+    limit: 500,
+    keyGenerator: (c) =>
+      c.req.header('x-real-ip') ?? c.req.header('x-forwarded-for') ?? 'unknown',
+  }),
+)
+app.use(
+  '/api/runs/:runId/report',
+  rateLimiter({
+    windowMs: 15 * 60 * 1000,
+    limit: 50,
+    keyGenerator: (c) =>
+      c.req.header('x-real-ip') ?? c.req.header('x-forwarded-for') ?? 'unknown',
+  }),
+)
+```
+
+---
+
 ### Info
 
-#### [SA-013] HTTP-only, no HTTPS in dev/compose default
-- **Severity:** Info (CVSS 0.0)
-- Intentional and correctly documented. `secure` cookie flag gated on `NODE_ENV === 'production'`. Not a finding.
+#### [SA-005] JWT_SECRET dual-used for three distinct cryptographic operations
+- **Severity:** Info — won't fix (reclassified from High after threat-model review on
+  2026-04-11; see that audit for full rationale)
+- **Location:** `packages/server/src/app.ts`, `packages/server/src/auth/middleware.ts`
+- Key separation is sound cryptographic hygiene but is over-engineering for a CI test
+  reporting dashboard. Won't fix.
+
+---
 
 #### [SA-014] Stack traces rendered to UI
 - **Severity:** Info (CVSS 0.0)
-- **Location:** `packages/web/src/components/ErrorBlock.tsx:12`
-- **Description:** `{error.stack}` rendered in UI. No XSS risk (React text node), but leaks
-  file paths and library versions to end users in production.
+- **Location:** `packages/web/src/components/ErrorBlock.tsx:9-14`
+- **Description:** `{error.stack}` rendered unconditionally. No XSS risk (React text node),
+  but leaks file paths and library versions to end users in production.
 - **Fix:** Guard with `import.meta.env.DEV && error.stack`.
 
 ---
@@ -293,6 +271,8 @@ app.use('*', logger((str, ...rest) => {
 pnpm audit: 1 vulnerability found — Severity: 1 moderate
 ```
 
+Unchanged from 2026-04-11 audit.
+
 | Package | Via | Vulnerable | Patched | Advisory |
 |---------|-----|-----------|---------|---------|
 | `esbuild <=0.24.2` | `drizzle-kit → @esbuild-kit/esm-loader → @esbuild-kit/core-utils` | <=0.24.2 | >=0.25.0 | GHSA-67mh-4wv8-2f99 |
@@ -302,23 +282,21 @@ Update `drizzle-kit` when an upstream release pulls in esbuild ≥0.25.0.
 
 ---
 
-## What Was Fixed (since 2026-04-10)
+## What Was Fixed (since 2026-04-11)
 
-| Finding | Fix | Commit |
-|---------|-----|--------|
-| SA-001 Zip-slip | Entry paths validated before `extractAllTo` | 2812c73 |
-| SA-002 Attachment filename traversal | `basename(file.name)` applied | 2812c73 |
-| SA-003 testId path traversal | `SAFE_ID` regex on runId + testId | 2812c73 |
-| SA-004 No login rate limiting | `hono-rate-limiter` 10 req/15 min | 06838ed |
-| SA-006 Logout doesn't invalidate JWT | jti deny list + DB table | 06838ed |
-| SA-009 CORS unrestricted | Explicit `ALLOWED_ORIGIN` + `trace.playwright.dev` | e5f1580 |
+| Finding | Fix |
+|---------|-----|
+| SA-NEW-1 Raw API key committed to git | `packages/e2e/.env` no longer tracked by git |
 
-### Reclassified (no fix required)
+Previously fixed items (SA-001–004, SA-006, SA-009) remain verified fixed.
 
-| Finding | Original | Revised | Reason |
+### Reclassified
+
+| Finding | Previous | Revised | Reason |
 |---------|----------|---------|--------|
-| SA-005 JWT_SECRET dual-use | High (CVSS 7.5) | Info — won't fix | Threat model doesn't warrant key separation for a CI dashboard |
-| SA-NEW-1 API key in git | High (CVSS 7.3) | Low — hygiene | Local e2e key only; no production surface |
+| SA-005 JWT_SECRET dual-use | High (CVSS 7.5) | Info — won't fix | Threat model unchanged; see 2026-04-11 rationale |
+| SA-NEW-1 API key in git | Low — git hygiene | Fixed | File no longer tracked by git |
+| SA-012 zip magic-byte check | Medium (CVSS 3.5) | Low (CVSS 3.5) | CVSS 3.5 is in the Low range; previous label was incorrect |
 
 ---
 
@@ -326,13 +304,14 @@ Update `drizzle-kit` when an upstream release pulls in esbuild ≥0.25.0.
 
 Work through in this order:
 
-1. **[SA-007]** Add security headers to nginx.conf — one block, prevents XSS escalation via reports
-2. **[SA-008]** Add Zod validation to test metadata — closes DoS and data integrity gap
+1. **[SA-008]** Add Zod validation + JSON.parse error handling to test metadata — closes DoS, data integrity, and unhandled exception in one change
+2. **[SA-007]** Add security headers to nginx.conf — prevents XSS escalation via Playwright report JS
 3. **[SA-NEW-2]** Redact Authorization headers from logger — one wrapper, prevents key leakage in logs
-4. **[SA-010]** Template Postgres credentials in prod compose
-5. **[SA-011]** Remove weak JWT_SECRET fallback from dev compose
-6. **[SA-012]** Add magic-byte check on zip upload
-7. **[SA-NEW-1]** Untrack `packages/e2e/.env` + add to .gitignore — git hygiene
-8. **[SA-014]** Hide stack traces from UI in production
+4. **[SA-NEW-5]** Rate-limit reporter upload endpoints — backpressure against compromised API keys
+5. **[SA-011]** Remove weak JWT_SECRET fallback from dev compose — use `:?` to force explicit value
+6. **[SA-010]** Template Postgres credentials in prod compose — use env vars, document in .env.example
+7. **[SA-012]** Add magic-byte check on zip upload — defence-in-depth for zip processing
+8. **[SA-NEW-4]** Add per-file size cap on attachment uploads — prevents memory spike on large files
+9. **[SA-014]** Guard stack traces from UI in production — `import.meta.env.DEV &&`
 
 Won't fix: SA-005 (JWT_SECRET dual-use — not warranted for this threat model)
