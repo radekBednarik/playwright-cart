@@ -1,7 +1,7 @@
 import { mkdirSync, rmSync } from 'node:fs'
 import { join } from 'node:path'
 import type { SQL } from 'drizzle-orm'
-import { and, count, desc, eq, inArray, sql } from 'drizzle-orm'
+import { and, count, desc, eq, gt, inArray, sql } from 'drizzle-orm'
 import { db } from '../db/client.js'
 import { runs, testAnnotations, testAttachments, testErrors, tests } from '../db/schema.js'
 
@@ -18,6 +18,7 @@ export interface RunRecord {
   completedAt?: string
   status: 'running' | 'passed' | 'failed' | 'interrupted' | 'timedOut'
   reportUrl?: string
+  flakyCount?: number
 }
 
 export interface TestRecord {
@@ -139,8 +140,19 @@ export async function listRuns(
     .limit(query.pageSize)
     .offset((query.page - 1) * query.pageSize)
 
+  const runIds = rows.map((r) => r.runId)
+  const flakyCounts =
+    runIds.length > 0
+      ? await db
+          .select({ runId: tests.runId, flakyCount: count() })
+          .from(tests)
+          .where(and(inArray(tests.runId, runIds), gt(tests.retry, 0), eq(tests.status, 'passed')))
+          .groupBy(tests.runId)
+      : []
+  const flakyMap = new Map(flakyCounts.map((r) => [r.runId, r.flakyCount]))
+
   return {
-    runs: rows.map(toRunRecord),
+    runs: rows.map((row) => ({ ...toRunRecord(row), flakyCount: flakyMap.get(row.runId) ?? 0 })),
     total: Number(agg?.total ?? 0),
     totalPassed: Number(agg?.totalPassed ?? 0),
     totalFailed: Number(agg?.totalFailed ?? 0),

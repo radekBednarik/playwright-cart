@@ -164,6 +164,81 @@ describe('listRuns', () => {
   })
 })
 
+describe('listRuns — flakyCount', () => {
+  async function makeRun(runId: string) {
+    await storage.createRun({
+      runId,
+      project: 'p',
+      startedAt: new Date().toISOString(),
+      status: 'passed',
+    })
+  }
+
+  async function makeTest(
+    runId: string,
+    testId: string,
+    retry: number,
+    status: storage.TestRecord['status'],
+  ) {
+    await storage.writeTestResult(runId, {
+      testId,
+      title: testId,
+      titlePath: [testId],
+      location: { file: 'test.spec.ts', line: 1, column: 1 },
+      status,
+      duration: 100,
+      errors: [],
+      retry,
+      annotations: [],
+      attachments: [],
+    })
+  }
+
+  it('returns flakyCount 0 when run has no tests', async () => {
+    await makeRun('run-a')
+    const result = await storage.listRuns({ page: 1, pageSize: 10 })
+    expect(result.runs[0].flakyCount).toBe(0)
+  })
+
+  it('returns flakyCount 0 when all tests passed on first attempt', async () => {
+    await makeRun('run-a')
+    await makeTest('run-a', 'test-1', 0, 'passed')
+    await makeTest('run-a', 'test-2', 0, 'passed')
+    const result = await storage.listRuns({ page: 1, pageSize: 10 })
+    expect(result.runs[0].flakyCount).toBe(0)
+  })
+
+  it('returns flakyCount equal to number of retry-passed tests', async () => {
+    await makeRun('run-a')
+    await makeTest('run-a', 'test-1--r0', 0, 'failed') // first attempt failed
+    await makeTest('run-a', 'test-1--r1', 1, 'passed') // retry passed → flaky
+    await makeTest('run-a', 'test-2', 0, 'passed') // clean pass, not flaky
+    const result = await storage.listRuns({ page: 1, pageSize: 10 })
+    expect(result.runs[0].flakyCount).toBe(1)
+  })
+
+  it('returns flakyCount 0 when retry attempt also failed', async () => {
+    await makeRun('run-a')
+    await makeTest('run-a', 'test-1--r0', 0, 'failed')
+    await makeTest('run-a', 'test-1--r1', 1, 'failed') // retry also failed → not flaky
+    const result = await storage.listRuns({ page: 1, pageSize: 10 })
+    expect(result.runs[0].flakyCount).toBe(0)
+  })
+
+  it('scopes flakyCount per run, not globally', async () => {
+    await makeRun('run-a')
+    await makeRun('run-b')
+    await makeTest('run-a', 'test-1--r1', 1, 'passed') // flaky in run-a
+    await makeTest('run-b', 'test-2', 0, 'passed') // clean in run-b
+    const result = await storage.listRuns({ page: 1, pageSize: 10 })
+    // runs sorted desc by startedAt, but both created at ~same time; just find by runId
+    const a = result.runs.find((r) => r.runId === 'run-a')
+    const b = result.runs.find((r) => r.runId === 'run-b')
+    expect(a?.flakyCount).toBe(1)
+    expect(b?.flakyCount).toBe(0)
+  })
+})
+
 describe('writeTestResult / getTestResults', () => {
   it('stores and retrieves test results including nested arrays', async () => {
     await storage.createRun({
