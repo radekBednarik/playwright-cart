@@ -120,9 +120,13 @@ export type RunsQuery = {
   tags?: string[]
 }
 
-export async function listRuns(
-  query: RunsQuery,
-): Promise<{ runs: RunRecord[]; total: number; totalPassed: number; totalFailed: number }> {
+export async function listRuns(query: RunsQuery): Promise<{
+  runs: RunRecord[]
+  total: number
+  totalPassed: number
+  totalFailed: number
+  totalCompleted: number
+}> {
   const conditions: SQL[] = []
   if (query.project) conditions.push(eq(runs.project, query.project))
   if (query.branch) conditions.push(eq(runs.branch, query.branch))
@@ -135,6 +139,7 @@ export async function listRuns(
       total: count(),
       totalPassed: sql<number>`COUNT(*) FILTER (WHERE ${runs.status} = 'passed')`,
       totalFailed: sql<number>`COUNT(*) FILTER (WHERE ${runs.status} = 'failed')`,
+      totalCompleted: sql<number>`COUNT(*) FILTER (WHERE ${runs.status} <> 'running')`,
     })
     .from(runs)
     .where(whereClause)
@@ -163,6 +168,7 @@ export async function listRuns(
     total: Number(agg?.total ?? 0),
     totalPassed: Number(agg?.totalPassed ?? 0),
     totalFailed: Number(agg?.totalFailed ?? 0),
+    totalCompleted: Number(agg?.totalCompleted ?? 0),
   }
 }
 

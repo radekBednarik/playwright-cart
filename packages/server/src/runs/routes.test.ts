@@ -83,11 +83,13 @@ describe('GET /api/runs', () => {
       total: number
       totalPassed: number
       totalFailed: number
+      totalCompleted: number
       page: number
       pageSize: number
     }
     expect(body.runs).toEqual([])
     expect(body.total).toBe(0)
+    expect(body.totalCompleted).toBe(0)
     expect(body.page).toBe(1)
     expect(body.pageSize).toBe(10)
   })
@@ -101,10 +103,43 @@ describe('GET /api/runs', () => {
       status: 'running',
     })
     const res = await runs.request('/')
-    const body = (await res.json()) as { runs: storage.RunRecord[]; total: number }
+    const body = (await res.json()) as {
+      runs: storage.RunRecord[]
+      total: number
+      totalCompleted: number
+    }
     expect(body.runs).toHaveLength(1)
     expect(body.runs[0].runId).toBe('run-1')
     expect(body.total).toBe(1)
+    expect(body.totalCompleted).toBe(0)
+  })
+
+  it('returns totalCompleted excluding running runs', async () => {
+    await storage.createRun({
+      runId: 'run-1',
+      project: 'p',
+      tags: [],
+      startedAt: '2026-04-02T10:00:00.000Z',
+      status: 'passed',
+    })
+    await storage.createRun({
+      runId: 'run-2',
+      project: 'p',
+      tags: [],
+      startedAt: '2026-04-02T11:00:00.000Z',
+      status: 'running',
+    })
+
+    const res = await runs.request('/')
+    const body = (await res.json()) as {
+      total: number
+      totalPassed: number
+      totalCompleted: number
+    }
+
+    expect(body.total).toBe(2)
+    expect(body.totalPassed).toBe(1)
+    expect(body.totalCompleted).toBe(1)
   })
 
   it('filters runs by repeated tag params with AND semantics', async () => {

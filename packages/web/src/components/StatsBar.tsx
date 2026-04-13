@@ -2,16 +2,17 @@ interface Props {
   total: number
   totalPassed: number
   totalFailed: number
+  totalCompleted: number
 }
 
-export default function StatsBar({ total, totalPassed, totalFailed }: Props) {
-  const passRate = total > 0 ? Math.round((totalPassed / total) * 100) : 0
+export default function StatsBar({ total, totalPassed, totalFailed, totalCompleted }: Props) {
+  const passRate = totalCompleted > 0 ? `${Math.round((totalPassed / totalCompleted) * 100)}%` : '—'
 
   return (
     <div className="mb-6 flex items-baseline gap-0 divide-x divide-tn-border">
       <Stat value={total} label="runs" containerClassName="pr-6" className="text-tn-fg" />
       <Stat
-        value={`${passRate}%`}
+        value={passRate}
         label="pass rate"
         containerClassName="px-6"
         className="text-tn-green"

@@ -66,7 +66,13 @@ describe('updateRun', () => {
 describe('listRuns', () => {
   it('returns empty result when no runs exist', async () => {
     const result = await storage.listRuns({ page: 1, pageSize: 10 })
-    expect(result).toEqual({ runs: [], total: 0, totalPassed: 0, totalFailed: 0 })
+    expect(result).toEqual({
+      runs: [],
+      total: 0,
+      totalPassed: 0,
+      totalFailed: 0,
+      totalCompleted: 0,
+    })
   })
 
   it('returns runs sorted by startedAt descending', async () => {
@@ -225,6 +231,46 @@ describe('listRuns', () => {
     expect(result.total).toBe(2)
     expect(result.totalPassed).toBe(1)
     expect(result.totalFailed).toBe(1)
+    expect(result.totalCompleted).toBe(2)
+  })
+
+  it('excludes running runs from totalCompleted', async () => {
+    await storage.createRun({
+      runId: 'r1',
+      project: 'alpha',
+      tags: [],
+      startedAt: '2026-04-02T09:00:00.000Z',
+      status: 'passed',
+    })
+    await storage.createRun({
+      runId: 'r2',
+      project: 'alpha',
+      tags: [],
+      startedAt: '2026-04-02T10:00:00.000Z',
+      status: 'running',
+    })
+
+    const result = await storage.listRuns({ page: 1, pageSize: 10, project: 'alpha' })
+
+    expect(result.total).toBe(2)
+    expect(result.totalPassed).toBe(1)
+    expect(result.totalCompleted).toBe(1)
+  })
+
+  it('returns totalCompleted 0 when only running runs match', async () => {
+    await storage.createRun({
+      runId: 'r1',
+      project: 'alpha',
+      tags: [],
+      startedAt: '2026-04-02T09:00:00.000Z',
+      status: 'running',
+    })
+
+    const result = await storage.listRuns({ page: 1, pageSize: 10, project: 'alpha' })
+
+    expect(result.total).toBe(1)
+    expect(result.totalPassed).toBe(0)
+    expect(result.totalCompleted).toBe(0)
   })
 })
 

@@ -24,6 +24,7 @@ describe('fetchRuns', () => {
       total: 1,
       totalPassed: 1,
       totalFailed: 0,
+      totalCompleted: 1,
       page: 1,
       pageSize: 10,
     }
@@ -36,7 +37,15 @@ describe('fetchRuns', () => {
   })
 
   it('includes filter params in the query string when provided', async () => {
-    const mockPage = { runs: [], total: 0, totalPassed: 0, totalFailed: 0, page: 1, pageSize: 25 }
+    const mockPage = {
+      runs: [],
+      total: 0,
+      totalPassed: 0,
+      totalFailed: 0,
+      totalCompleted: 0,
+      page: 1,
+      pageSize: 25,
+    }
     vi.mocked(fetch).mockResolvedValue(new Response(JSON.stringify(mockPage), { status: 200 }))
 
     await fetchRuns({

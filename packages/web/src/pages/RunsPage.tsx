@@ -122,7 +122,12 @@ export default function RunsPage() {
       </div>
 
       {/* Stats strip */}
-      <StatsBar total={data.total} totalPassed={data.totalPassed} totalFailed={data.totalFailed} />
+      <StatsBar
+        total={data.total}
+        totalPassed={data.totalPassed}
+        totalFailed={data.totalFailed}
+        totalCompleted={data.totalCompleted}
+      />
 
       {/* Table */}
       <RunsTable

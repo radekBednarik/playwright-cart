@@ -99,6 +99,7 @@ export interface PaginatedRuns {
   total: number
   totalPassed: number
   totalFailed: number
+  totalCompleted: number
   page: number
   pageSize: number
 }
