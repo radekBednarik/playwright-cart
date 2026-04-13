@@ -1,4 +1,5 @@
 import type { AnnotatedRunWithTests, AnnotatedTestRecord } from '../lib/api.js'
+import ExternalLink from './ExternalLink.js'
 import StatusBadge from './StatusBadge.js'
 import TagChip from './TagChip.js'
 
@@ -34,14 +35,12 @@ export default function RunHeader({ run }: Props) {
           )}
         </div>
         {run.reportUrl && (
-          <a
+          <ExternalLink
             href={run.reportUrl}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="shrink-0 rounded-lg border border-tn-blue px-4 py-2 font-display text-xs font-semibold tracking-wide text-tn-blue transition-colors hover:bg-tn-blue/10"
+            className="inline-flex shrink-0 items-center gap-1.5 rounded-lg border border-tn-blue px-4 py-2 font-display text-xs font-semibold tracking-wide text-tn-blue transition-colors hover:bg-tn-blue/10"
           >
-            Open Report ↗
-          </a>
+            Open Report
+          </ExternalLink>
         )}
       </div>
 
