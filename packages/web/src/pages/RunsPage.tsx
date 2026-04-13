@@ -202,7 +202,7 @@ function EmptyState() {
         {`// playwright.config.ts
 reporter: [
   ['html'],
-  ['@playwright-cart/reporter', {
+  ['@radekbednarik/playwright-cart-reporter', {
     serverUrl: 'http://localhost:3001',
     project: 'my-app',
     apiKey: 'your api-key',

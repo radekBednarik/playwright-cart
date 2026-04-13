@@ -118,12 +118,12 @@ A monorepo for collecting and viewing Playwright test reports in a centralized d
 - **All `/api/*` routes require auth** except `POST /api/auth/login` and `GET /api/health` — this means reporter uploads require `apiKey` in any deployed setup
 - `POST /api/auth/login` is rate-limited: 10 requests per 15-minute window, keyed by `x-real-ip` / `x-forwarded-for`
 - JWT revocation on logout: JTI stored in `revoked_tokens` table; checked on every authenticated request until token expiry
-- `GET /reports/*` requires session cookie (same-origin; served by Nginx alongside the web frontend)
+- `GET /reports/*` uses the same auth middleware as `/api/*`; same-origin session cookies work in browser flows, and Bearer API keys are also accepted
 - Admin bootstrap: on startup, `src/db/seed.ts` creates the default admin from `ADMIN_USERNAME`/`ADMIN_PASSWORD` env vars (idempotent)
-- API keys: 32-byte random hex generated, HMAC-SHA256-hashed before DB storage, raw key shown only at creation
+- API keys: 32-byte random hex generated, HMAC-SHA256-hashed with `JWT_SECRET` before DB storage, raw key shown only at creation
 
 **Routes** (`src/app.ts`):
-- `POST /api/auth/login` / `POST /api/auth/logout` / `GET /api/auth/me` — auth (login public; others require session)
+- `POST /api/auth/login` / `POST /api/auth/logout` / `GET /api/auth/me` — auth (`login` public; `logout` accepts any auth, but JWT revocation only applies to session auth; `me` requires session)
 - `GET|POST /api/users` / `PATCH /api/users/me` / `PATCH|DELETE /api/users/:id` — user management (admin, except PATCH me = any authed user)
 - `GET|POST|DELETE /api/api-keys` — API key management (admin)
 - `GET /api/settings` / `PATCH /api/settings` — settings (any authed / admin)
@@ -131,7 +131,7 @@ A monorepo for collecting and viewing Playwright test reports in a centralized d
 - `DELETE /api/runs/:runId` / `POST /api/runs/delete-batch` — run deletion (admin)
 - `POST /api/runs/:runId/tests` / `POST /api/runs/:runId/report` / `POST /api/runs/:runId/complete` — reporter upload (any authed; use `apiKey`)
 - `GET /api/events` — SSE stream of run lifecycle events (any authed)
-- `GET /reports/*` — static report files (session cookie required)
+- `GET /reports/*` — static report files (requires auth; session cookie or Bearer API key)
 - `GET /api/health` — health check (public)
 
 **`packages/e2e`** — End-to-end integration tests for the full stack

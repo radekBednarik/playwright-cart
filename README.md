@@ -100,7 +100,7 @@ export default defineConfig({
 })
 ```
 
-The reporter streams test results to the server during the run and uploads the zipped Playwright HTML report on completion. Run-level tags from reporter config and test-level tags from Playwright are stored and exposed in the dashboard filters.
+The reporter streams test results to the server during the run and uploads the zipped Playwright HTML report on completion. Run-level tags from reporter config and test-level tags from Playwright are stored and exposed in the dashboard filters. In deployed setups, reporter uploads should use an API key because all non-public `/api/*` routes require authentication.
 
 ---
 
@@ -133,7 +133,7 @@ Or via the reporter config:
 apiKey: process.env.PLAYWRIGHT_CART_API_KEY,
 ```
 
-API keys are hashed with SHA256 before storage and can be revoked at any time.
+API keys are HMAC-SHA256-hashed with `JWT_SECRET` before storage and can be revoked at any time.
 
 ---
 
@@ -149,12 +149,12 @@ cp .env.example .env
 |---|---|---|
 | `PORT` | `3001` | Port the server listens on |
 | `DATABASE_URL` | *(required)* | PostgreSQL connection string |
-| `DATA_DIR` | `/app/data` | Directory for binary files: attachments and extracted HTML reports |
+| `DATA_DIR` | `./data` | Directory for binary files: attachments and extracted HTML reports. `docker compose` overrides this to `/app/data`. |
 | `ADMIN_USERNAME` | `admin` | Username for the initial admin account |
 | `ADMIN_PASSWORD` | `changeme123` | Password for the initial admin account — **change in production** |
 | `JWT_SECRET` | *(insecure default)* | Secret for signing JWT session tokens. Generate with `openssl rand -hex 32`. **Must be set in production.** |
 | `NODE_ENV` | `development` | Set to `production` to enable secure (HTTPS-only) cookies |
-| `ALLOWED_ORIGIN` | `http://localhost:5173` | CORS allowed origin for `/api/*` and `/reports/*`. Set to your dashboard URL in production. |
+| `ALLOWED_ORIGIN` | `http://localhost:5173` | CORS allowed origin for `/api/*`. Set to your dashboard URL in production. |
 
 ---
 
