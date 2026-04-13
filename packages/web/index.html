@@ -13,7 +13,18 @@
     />
     <script>
       (() => {
-        var stored = localStorage.getItem('theme')
+        var storageKey = 'playwright-cart.theme'
+        var legacyKey = 'theme'
+        var stored = localStorage.getItem(storageKey)
+        var legacy = null
+        if (stored !== 'dark' && stored !== 'light') {
+          legacy = localStorage.getItem(legacyKey)
+          if (legacy === 'dark' || legacy === 'light') {
+            stored = legacy
+            localStorage.setItem(storageKey, legacy)
+            localStorage.removeItem(legacyKey)
+          }
+        }
         var theme = stored === 'dark' || stored === 'light'
           ? stored
           : window.matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark'
