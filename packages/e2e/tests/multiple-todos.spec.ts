@@ -1,6 +1,6 @@
 import { expect, test } from '@playwright/test'
 
-test.describe('Multiple Todos', () => {
+test.describe('Multiple Todos', { tag: '@regression' }, () => {
   test('can add multiple todos and all appear in the list', async ({ page }) => {
     await page.goto('/')
     const items = ['Buy groceries', 'Call dentist', 'Fix the bike']
@@ -29,7 +29,7 @@ test.describe('Multiple Todos', () => {
     await expect(page.locator('[data-testid="todo-list"]')).toContainText('Second')
   })
 
-  test('todo count badge reflects number of items', async ({ page }) => {
+  test('todo count badge reflects number of items', { tag: '@failure-demo' }, async ({ page }) => {
     await page.goto('/')
     await page.fill('[data-testid="todo-input"]', 'One more thing')
     await page.click('[data-testid="add-button"]')

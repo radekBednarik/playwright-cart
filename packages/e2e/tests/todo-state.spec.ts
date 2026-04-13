@@ -1,6 +1,6 @@
 import { expect, test } from '@playwright/test'
 
-test.describe('Todo State', () => {
+test.describe('Todo State', { tag: ['@regression', '@state'] }, () => {
   test('clicking Done twice toggles item back to undone', async ({ page }) => {
     await page.goto('/')
     await page.fill('[data-testid="todo-input"]', 'Read a book')
@@ -12,7 +12,7 @@ test.describe('Todo State', () => {
     await expect(item).not.toHaveClass(/done/)
   })
 
-  test('completed item has "completed" CSS class', async ({ page }) => {
+  test('completed item has "completed" CSS class', { tag: '@failure-demo' }, async ({ page }) => {
     await page.goto('/')
     await page.fill('[data-testid="todo-input"]', 'Write tests')
     await page.click('[data-testid="add-button"]')

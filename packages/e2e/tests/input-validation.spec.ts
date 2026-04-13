@@ -1,6 +1,6 @@
 import { expect, test } from '@playwright/test'
 
-test.describe('Input Validation', () => {
+test.describe('Input Validation', { tag: ['@regression', '@validation'] }, () => {
   test('empty input does not add a todo', async ({ page }) => {
     await page.goto('/')
     await page.click('[data-testid="add-button"]')
@@ -14,7 +14,7 @@ test.describe('Input Validation', () => {
     await expect(page.locator('[data-testid="todo-list"]')).toContainText('Feed the cat')
   })
 
-  test('character counter updates as user types', async ({ page }) => {
+  test('character counter updates as user types', { tag: '@failure-demo' }, async ({ page }) => {
     await page.goto('/')
     await page.fill('[data-testid="todo-input"]', 'Hello')
     // This element does not exist — intentional failure to test dashboard error display

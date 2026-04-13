@@ -1,12 +1,12 @@
 import { expect, test } from '@playwright/test'
 
-test.describe('Todo App', () => {
-  test('homepage loads with correct title', async ({ page }) => {
+test.describe('Todo App', { tag: ['@smoke', '@crud'] }, () => {
+  test('homepage loads with correct title', { tag: '@happy-path' }, async ({ page }) => {
     await page.goto('/')
     await expect(page).toHaveTitle('Demo Todo App')
   })
 
-  test('can add a todo item', async ({ page }) => {
+  test('can add a todo item', { tag: '@happy-path' }, async ({ page }) => {
     await page.goto('/')
     await page.fill('[data-testid="todo-input"]', 'Buy milk')
     await page.click('[data-testid="add-button"]')

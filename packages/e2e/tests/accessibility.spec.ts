@@ -1,6 +1,6 @@
 import { expect, test } from '@playwright/test'
 
-test.describe('Accessibility', () => {
+test.describe('Accessibility', { tag: '@a11y' }, () => {
   test('page has a visible h1 heading', async ({ page }) => {
     await page.goto('/')
     const heading = page.locator('h1')
@@ -8,7 +8,7 @@ test.describe('Accessibility', () => {
     await expect(heading).not.toBeEmpty()
   })
 
-  test('todo input has an aria-label', async ({ page }) => {
+  test('todo input has an aria-label', { tag: '@failure-demo' }, async ({ page }) => {
     await page.goto('/')
     // The input has no aria-label in the demo app — intentional failure
     await expect(page.locator('[data-testid="todo-input"]')).toHaveAttribute(

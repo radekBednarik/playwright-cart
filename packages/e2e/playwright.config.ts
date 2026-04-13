@@ -14,6 +14,7 @@ export default defineConfig({
         branch: process.env.BRANCH ?? 'test',
         commitSha: process.env.COMMIT_SHA ?? '4db6gf7',
         apiKey: process.env.API_KEY,
+        tags: ['@demo', '@e2e'],
       },
     ],
   ],
