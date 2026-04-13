@@ -1,6 +1,5 @@
 import { useSearchParams } from 'react-router-dom'
 import type { RunRecord, RunStatus } from '../lib/api.js'
-import TagFilter from './TagFilter.js'
 
 const ALL_STATUSES: RunStatus[] = ['running', 'passed', 'failed', 'interrupted', 'timedOut']
 
@@ -16,7 +15,7 @@ export function FilterBar({ projects, branches, tags }: Props) {
   const project = params.get('project') ?? ''
   const branch = params.get('branch') ?? ''
   const status = params.get('status') ?? ''
-  const selectedTags = params.getAll('tag').sort()
+  const tag = params.get('tag') ?? ''
 
   function setParam(key: string, value: string) {
     setParams((prev) => {
@@ -27,46 +26,43 @@ export function FilterBar({ projects, branches, tags }: Props) {
     })
   }
 
-  function setTags(nextTags: string[]) {
-    setParams((prev) => {
-      const next = new URLSearchParams(prev)
-      next.delete('tag')
-      for (const tag of nextTags) next.append('tag', tag)
-      return next
-    })
-  }
-
   return (
-    <div className="space-y-3">
-      <div className="flex flex-wrap items-center gap-1">
-        <FilterSelect label="Project" value={project} onChange={(v) => setParam('project', v)}>
-          <option value="">All projects</option>
-          {projects.map((p) => (
-            <option key={p} value={p}>
-              {p}
-            </option>
-          ))}
-        </FilterSelect>
-        <span className="text-tn-border select-none">|</span>
-        <FilterSelect label="Branch" value={branch} onChange={(v) => setParam('branch', v)}>
-          <option value="">All branches</option>
-          {branches.map((b) => (
-            <option key={b} value={b}>
-              {b}
-            </option>
-          ))}
-        </FilterSelect>
-        <span className="text-tn-border select-none">|</span>
-        <FilterSelect label="Status" value={status} onChange={(v) => setParam('status', v)}>
-          <option value="">All statuses</option>
-          {ALL_STATUSES.map((s) => (
-            <option key={s} value={s}>
-              {s}
-            </option>
-          ))}
-        </FilterSelect>
-      </div>
-      <TagFilter tags={tags} selectedTags={selectedTags} label="Run tags" onChange={setTags} />
+    <div className="flex flex-wrap items-center gap-1">
+      <FilterSelect label="Project" value={project} onChange={(v) => setParam('project', v)}>
+        <option value="">All projects</option>
+        {projects.map((p) => (
+          <option key={p} value={p}>
+            {p}
+          </option>
+        ))}
+      </FilterSelect>
+      <span className="text-tn-border select-none">|</span>
+      <FilterSelect label="Branch" value={branch} onChange={(v) => setParam('branch', v)}>
+        <option value="">All branches</option>
+        {branches.map((b) => (
+          <option key={b} value={b}>
+            {b}
+          </option>
+        ))}
+      </FilterSelect>
+      <span className="text-tn-border select-none">|</span>
+      <FilterSelect label="Status" value={status} onChange={(v) => setParam('status', v)}>
+        <option value="">All statuses</option>
+        {ALL_STATUSES.map((s) => (
+          <option key={s} value={s}>
+            {s}
+          </option>
+        ))}
+      </FilterSelect>
+      <span className="text-tn-border select-none">|</span>
+      <FilterSelect label="Tag" value={tag} onChange={(v) => setParam('tag', v)}>
+        <option value="">All tags</option>
+        {tags.map((currentTag) => (
+          <option key={currentTag} value={currentTag}>
+            {currentTag}
+          </option>
+        ))}
+      </FilterSelect>
     </div>
   )
 }
