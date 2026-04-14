@@ -1,5 +1,6 @@
 import { useQueryClient } from '@tanstack/react-query'
-import { useEffect, useRef, useState } from 'react'
+import { type ReactElement, useEffect, useRef, useState } from 'react'
+import { MonitorIcon, MoonIcon, SunIcon } from '../components/ThemeIcons.js'
 import { useCurrentUser } from '../hooks/useCurrentUser.js'
 import { useTheme } from '../hooks/useTheme.js'
 import {
@@ -238,10 +239,10 @@ function ChangePasswordForm() {
 
 function ThemeSelector({ onThemeChange }: { onThemeChange: () => void }) {
   const { theme: currentTheme } = useTheme()
-  const themes: { value: Theme; label: string; glyph: string }[] = [
-    { value: 'dark', label: 'Dark', glyph: '◑' },
-    { value: 'light', label: 'Light', glyph: '○' },
-    { value: 'system', label: 'System', glyph: '◐' },
+  const themes: { value: Theme; label: string; icon: ReactElement }[] = [
+    { value: 'dark', label: 'Dark', icon: <MoonIcon /> },
+    { value: 'light', label: 'Light', icon: <SunIcon /> },
+    { value: 'system', label: 'System', icon: <MonitorIcon /> },
   ]
 
   async function handleTheme(theme: Theme) {
@@ -258,7 +259,7 @@ function ThemeSelector({ onThemeChange }: { onThemeChange: () => void }) {
     <section>
       <SectionHeading>Theme</SectionHeading>
       <div className="flex gap-2">
-        {themes.map(({ value, label, glyph }) => (
+        {themes.map(({ value, label, icon }) => (
           <button
             key={value}
             type="button"
@@ -270,7 +271,7 @@ function ThemeSelector({ onThemeChange }: { onThemeChange: () => void }) {
                 : 'border-tn-border text-tn-muted hover:bg-tn-highlight hover:text-tn-fg',
             ].join(' ')}
           >
-            <span className="font-mono">{glyph}</span>
+            {icon}
             {label}
           </button>
         ))}

@@ -1,5 +1,5 @@
 import { useQueryClient } from '@tanstack/react-query'
-import { useEffect, useRef, useState } from 'react'
+import { type ReactElement, useEffect, useRef, useState } from 'react'
 import { Link, useLocation, useNavigate } from 'react-router-dom'
 import { useCurrentUser } from '../hooks/useCurrentUser.js'
 import { useSessionTimer } from '../hooks/useSessionTimer.js'
@@ -7,11 +7,12 @@ import { useTheme } from '../hooks/useTheme.js'
 import { logout, updateMe } from '../lib/api.js'
 import { applyTheme, cycleTheme, getStoredTheme, type Theme } from '../lib/theme.js'
 import SessionIndicator from './SessionIndicator.js'
+import { MonitorIcon, MoonIcon, SunIcon } from './ThemeIcons.js'
 
-const THEME_GLYPHS: Record<Theme, string> = {
-  system: '◐',
-  dark: '◑',
-  light: '○',
+const THEME_ICONS: Record<Theme, ReactElement> = {
+  light: <SunIcon />,
+  dark: <MoonIcon />,
+  system: <MonitorIcon />,
 }
 
 const THEME_LABELS: Record<Theme, string> = {
@@ -112,7 +113,7 @@ export default function TopNav() {
             title={`Theme: ${THEME_LABELS[theme]} — click to cycle`}
             className="flex items-center gap-1 rounded px-2.5 py-1.5 text-sm text-tn-muted transition-colors hover:bg-tn-highlight hover:text-tn-fg"
           >
-            <span className="font-mono text-base leading-none">{THEME_GLYPHS[theme]}</span>
+            {THEME_ICONS[theme]}
           </button>
 
           {/* Session expiry indicator */}
