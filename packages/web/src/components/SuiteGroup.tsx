@@ -37,7 +37,7 @@ export default function SuiteGroup({
   depth = 0,
 }: Props) {
   const [open, setOpen] = useState(() => defaultOpenPaths.has(getSuitePathKey(path)))
-  const { total, failed, flaky } = countTests(node)
+  const { total, failed, flaky, skipped } = countTests(node)
   const visibleSuiteTags = getVisibleTags(collectNodeTags(node), selectedTags)
 
   return (
@@ -72,9 +72,13 @@ export default function SuiteGroup({
             <span className="inline-flex items-center gap-1 rounded-full bg-tn-yellow/10 px-2 py-0.5 font-display text-xs font-semibold text-tn-yellow">
               {flaky} flaky
             </span>
+          ) : skipped === total ? (
+            <span className="inline-flex items-center gap-1 rounded-full bg-tn-muted/10 px-2 py-0.5 font-display text-xs font-semibold text-tn-muted">
+              {skipped} skipped
+            </span>
           ) : (
             <span className="inline-flex items-center gap-1 rounded-full bg-tn-green/10 px-2 py-0.5 font-display text-xs font-semibold text-tn-green">
-              {total} passed
+              {total - skipped} passed
             </span>
           )}
         </span>
@@ -147,7 +151,12 @@ function collectNodeTags(node: SuiteTreeNode): string[] {
   return collectUniqueTags([node.tests.flatMap((test) => test.tags), ...nestedTags])
 }
 
-function countTests(node: SuiteTreeNode): { total: number; failed: number; flaky: number } {
+function countTests(node: SuiteTreeNode): {
+  total: number
+  failed: number
+  flaky: number
+  skipped: number
+} {
   const direct = node.tests.filter((t) => !t.retried)
   const result = {
     total: direct.length,
@@ -158,12 +167,14 @@ function countTests(node: SuiteTreeNode): { total: number; failed: number; flaky
       return t.status === 'failed' || t.status === 'timedOut'
     }).length,
     flaky: node.tests.filter((t) => t.retried).length,
+    skipped: direct.filter((t) => t.status === 'skipped').length,
   }
   for (const child of node.children.values()) {
     const sub = countTests(child)
     result.total += sub.total
     result.failed += sub.failed
     result.flaky += sub.flaky
+    result.skipped += sub.skipped
   }
   return result
 }

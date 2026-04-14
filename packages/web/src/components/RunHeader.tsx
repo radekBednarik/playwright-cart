@@ -81,6 +81,7 @@ function PassRateBar({ tests }: { tests: AnnotatedTestRecord[] }) {
   const passedPct = (passed / total) * 100
   const failedPct = ((failed + timedOut) / total) * 100
   const flakyPct = (flaky / total) * 100
+  const skippedPct = (skipped / total) * 100
 
   return (
     <div className="mt-3 space-y-2">
@@ -94,6 +95,10 @@ function PassRateBar({ tests }: { tests: AnnotatedTestRecord[] }) {
         <div
           className="bg-tn-yellow transition-all duration-500"
           style={{ width: `${flakyPct}%` }}
+        />
+        <div
+          className="bg-tn-muted/40 transition-all duration-500"
+          style={{ width: `${skippedPct}%` }}
         />
       </div>
 
