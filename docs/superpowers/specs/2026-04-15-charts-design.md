@@ -58,6 +58,7 @@ All routes are protected (existing `ProtectedRoute` wrapper applies).
 - Click tile → navigate to `/charts/<id>`.
 - Tile F (Test Reliability) is different: shows "Search a test…" prompt, no sparkline. Click → `/charts/test-reliability`.
 - **Auto-refresh:** subscribes to the existing SSE stream (`GET /api/events` via `useServerEvents`). When a `run:complete` event arrives, invalidates the `runTimeline` React Query cache — all tiles refresh automatically.
+- **Tile reordering:** tiles are drag-and-drop sortable via `@dnd-kit/sortable`. The order persists server-side per user (same pattern as `theme` and `runsPerPage`). On drop, optimistic local update + debounced `PATCH /api/users/me` with the new `chartOrder` array. Null/missing `chartOrder` = default order (A→B→C→D→E→F).
 
 ### 4.2 Individual Chart Page — `/charts/<id>`
 
@@ -88,9 +89,26 @@ All routes are protected (existing `ProtectedRoute` wrapper applies).
 
 ---
 
-## 5. Server — New Endpoints
+## 5. Server Changes
 
-### 5.1 `GET /api/runs/stats/timeline`
+### 5.0 Schema — `users` table
+
+Add `chartOrder` column (nullable text array, default `null`):
+
+```ts
+// src/db/schema.ts
+chartOrder: text('chart_order').array()  // null = default order [A,B,C,D,E,F]
+```
+
+New Drizzle migration required. Extend `PATCH /api/users/me` to accept and validate `chartOrder` (array of chart IDs, exactly the 6 known IDs in any order).
+
+Return `chartOrder` in `GET /api/auth/me` response so `useCurrentUser()` already carries the preference — no extra fetch needed.
+
+---
+
+## 6. Server — New Endpoints
+
+### 6.1 `GET /api/runs/stats/timeline`
 
 Time-bucketed aggregate for metrics A–E.
 
@@ -125,7 +143,7 @@ Time-bucketed aggregate for metrics A–E.
 
 **Implementation:** Drizzle query with `GROUP BY date_trunc(interval, startedAt)` or `GROUP BY runId`. Aggregates from the `tests` table joined to `runs`.
 
-### 5.2 `GET /api/tests/search`
+### 6.2 `GET /api/tests/search`
 
 Autocomplete — returns distinct test identities matching a title query.
 
@@ -146,7 +164,7 @@ Autocomplete — returns distinct test identities matching a title query.
 
 **Implementation:** `SELECT DISTINCT testId, title, titlePath, locationFile FROM tests WHERE title ILIKE '%q%'` limited to 20 results. No new table needed.
 
-### 5.3 `GET /api/tests/:testId/history`
+### 6.3 `GET /api/tests/:testId/history`
 
 Per-test run history for dot timeline.
 
@@ -174,12 +192,14 @@ Per-test run history for dot timeline.
 
 ## 6. Frontend Architecture
 
-### 6.1 Charting Library
+### 6.1 Libraries
 
-**Recharts** — React-native, TypeScript-first, composable, responsive. Install in `packages/web`.
+**Recharts** — React-native, TypeScript-first, composable, responsive.
+
+**@dnd-kit/core + @dnd-kit/sortable** — modern drag-and-drop, accessible, touch-friendly, purpose-built for sortable grids.
 
 ```bash
-pnpm --filter @playwright-cart/web add recharts
+pnpm --filter @playwright-cart/web add recharts @dnd-kit/core @dnd-kit/sortable @dnd-kit/utilities
 ```
 
 ### 6.2 New Files
@@ -187,12 +207,12 @@ pnpm --filter @playwright-cart/web add recharts
 ```
 packages/web/src/
 ├── pages/
-│   ├── ChartsPage.tsx              ← dashboard of tiles
+│   ├── ChartsPage.tsx              ← dashboard of tiles (DnD sortable grid)
 │   ├── ChartDetailPage.tsx         ← full chart (metrics A–E)
 │   └── TestReliabilityPage.tsx     ← search + dot timeline (metric F)
 ├── components/
 │   ├── charts/
-│   │   ├── ChartTile.tsx           ← tile wrapper (sparkline + stat + name)
+│   │   ├── ChartTile.tsx           ← tile wrapper (sparkline + stat + name + drag handle)
 │   │   ├── TrendChart.tsx          ← reusable bar/line chart (A, B, C, E)
 │   │   ├── DurationChart.tsx       ← dual-series chart (avg + p95) for D
 │   │   ├── DotTimeline.tsx         ← dot-per-run timeline for F
@@ -204,7 +224,7 @@ packages/web/src/
 │   ├── useTestSearch.ts            ← GET /api/tests/search
 │   └── useTestHistory.ts           ← GET /api/tests/:testId/history
 └── lib/
-    └── api.ts                      ← extend with fetchRunTimeline, fetchTestSearch, fetchTestHistory
+    └── api.ts                      ← extend with fetchRunTimeline, fetchTestSearch, fetchTestHistory, patchMe (chartOrder)
 ```
 
 ### 6.3 Component Reuse Strategy
@@ -212,8 +232,30 @@ packages/web/src/
 - `TrendChart` is the single reusable chart component for A, B, C, E. Accepts `data`, `color`, `valueKey`, `label` props. Renders a `ResponsiveContainer` + `BarChart` from Recharts.
 - `DurationChart` extends the same pattern but renders two series (avg = solid, p95 = muted).
 - `DotTimeline` is standalone — renders SVG circles via plain React (no Recharts needed, dots are simple).
-- `ChartTile` wraps a mini `TrendChart` (or the search prompt for F) with the stat pill header.
+- `ChartTile` wraps a mini `TrendChart` (or the search prompt for F) with the stat pill header. Exposes a drag handle (grab icon, top-right corner) used by `@dnd-kit/sortable`.
 - `ChartControls` is used on both `ChartDetailPage` and `TestReliabilityPage`.
+
+### 6.4 Tile Reordering — Implementation Detail
+
+`ChartsPage` wraps the tile grid in `@dnd-kit`'s `DndContext` + `SortableContext`:
+
+```tsx
+// ChartsPage.tsx (sketch)
+const [order, setOrder] = useState<ChartId[]>(user.chartOrder ?? DEFAULT_ORDER)
+
+function handleDragEnd(event: DragEndEvent) {
+  const { active, over } = event
+  if (active.id !== over?.id) {
+    const newOrder = arrayMove(order, oldIndex, newIndex)
+    setOrder(newOrder)                            // optimistic local update
+    debouncedPatch({ chartOrder: newOrder })       // PATCH /api/users/me
+  }
+}
+```
+
+- Debounce: 500ms — avoids a request on every intermediate drag position.
+- On mount: order read from `useCurrentUser().user.chartOrder` (already in the `/api/auth/me` response after the schema change).
+- `null` chartOrder → falls back to `DEFAULT_ORDER = ['pass-rate','failures','flaky','duration','total-tests','test-reliability']`.
 
 ### 6.4 State & URL Design
 
@@ -229,8 +271,8 @@ packages/web/src/
 
 | Session | Scope | Deliverable |
 |---------|-------|-------------|
-| **1** | Server | 3 new endpoints + Drizzle queries + route wiring + tests |
-| **2** | Web — Routing + Dashboard | TopNav update, App.tsx routes, `ChartsPage` with tiles (static/mock data first) |
+| **1** | Server | `chartOrder` column + migration, extend `PATCH /api/users/me`, 3 new endpoints + Drizzle queries + route wiring + tests |
+| **2** | Web — Routing + Dashboard | TopNav update, App.tsx routes, `ChartsPage` with tiles + DnD reordering + persist via PATCH (static/mock data first) |
 | **3** | Web — Chart Detail | `ChartDetailPage`, `TrendChart`, `DurationChart`, `ChartControls`, `useRunTimeline` hook |
 | **4** | Web — Test Reliability | `TestReliabilityPage`, `DotTimeline`, `TestSearch`, `useTestSearch`, `useTestHistory` |
 | **5** | Integration & Polish | Flaky badge → reliability link in `RunDetailPage`/`TestHeader`, SSE auto-refresh wiring on all chart pages, filter persistence, responsive tuning, loading/error states |
