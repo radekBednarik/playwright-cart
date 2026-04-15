@@ -115,6 +115,16 @@ export default function SuiteGroup({
                       retried
                     </span>
                   )}
+                  {!test.retried &&
+                    (getTestOutcome(test) === 'expected-failure' ? (
+                      <span className="rounded-full bg-tn-purple/10 px-1.5 py-0.5 font-mono text-xs text-tn-purple">
+                        xfail
+                      </span>
+                    ) : getTestOutcome(test) === 'unexpected-pass' ? (
+                      <span className="rounded-full bg-tn-orange/10 px-1.5 py-0.5 font-mono text-xs text-tn-orange">
+                        xpass
+                      </span>
+                    ) : null)}
                   <span className="font-mono text-xs text-tn-muted">
                     {formatDuration(test.duration)}
                   </span>
