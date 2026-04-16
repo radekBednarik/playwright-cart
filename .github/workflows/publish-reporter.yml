@@ -13,7 +13,8 @@ jobs:
       id-token: write
 
     steps:
-      - uses: actions/checkout@v5
+      - name: Checkout repository
+        uses: actions/checkout@v6
 
       - name: Setup pnpm
         uses: pnpm/action-setup@v4
@@ -32,4 +33,4 @@ jobs:
 
       - name: Publish
         working-directory: packages/reporter
-        run: npm publish --access public --provenance
+        run: npm publish
