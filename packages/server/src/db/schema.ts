@@ -110,6 +110,7 @@ export const users = pgTable('users', {
   role: userRoleEnum('role').notNull().default('user'),
   theme: userThemeEnum('theme').notNull().default('system'),
   runsPerPage: smallint('runs_per_page').notNull().default(10),
+  chartOrder: text('chart_order').array(),
   createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
 })
 
