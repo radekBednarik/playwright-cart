@@ -1,12 +1,13 @@
 {
   "name": "playwright-cart-reporter",
-  "version": "1.0.17",
+  "version": "1.0.18",
   "type": "module",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "repository": {
     "type": "git",
-    "url": "https://github.com/radekBednarik/playwright-cart.git"
+    "url": "git+https://github.com/radekBednarik/playwright-cart.git",
+    "directory": "packages/reporter"
   },
   "files": [
     "dist"
