@@ -31,3 +31,5 @@ jobs:
 
       - name: Publish
         run: pnpm --filter playwright-cart-reporter publish --access public --provenance --no-git-checks
+        with:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
