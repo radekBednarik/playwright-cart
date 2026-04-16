@@ -1,6 +1,6 @@
 {
-  "name": "@radekbednarik/playwright-cart-reporter",
-  "version": "0.2.0",
+  "name": "playwright-cart-reporter",
+  "version": "1.0.0",
   "type": "module",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
@@ -12,8 +12,18 @@
     "dist"
   ],
   "publishConfig": {
-    "registry": "https://npm.pkg.github.com/"
+    "registry": "https://registry.npmjs.com/"
   },
+  "description": "Custom Playwright reporter for Playwright Cart",
+  "keywords": [
+    "playwright",
+    "playwright-cart",
+    "reporter",
+    "test",
+    "automation",
+    "testing"
+  ],
+  "homepage": "https://radekbednarik.github.io/playwright-cart/",
   "scripts": {
     "build": "tsc",
     "dev": "tsc --watch",

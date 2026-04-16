@@ -1,4 +1,4 @@
-name: Publish Reporter to GitHub Packages
+name: Publish Reporter to NPM packages 
 
 on:
   release:
@@ -9,7 +9,7 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       contents: read
-      packages: write
+      id-token: write
 
     steps:
       - uses: actions/checkout@v4
@@ -21,16 +21,13 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: '24'
-          registry-url: 'https://npm.pkg.github.com'
-          scope: '@radekbednarik'
+          registry-url: 'https://registry.npmjs.com'
 
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
       - name: Build reporter
-        run: pnpm --filter @radekbednarik/playwright-cart-reporter build
+        run: pnpm --filter playwright-cart-reporter build
 
       - name: Publish
-        run: pnpm --filter @radekbednarik/playwright-cart-reporter publish --no-git-checks
-        env:
-          NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: pnpm --filter playwright-cart-reporter publish --access public --provenance --no-git-checks
