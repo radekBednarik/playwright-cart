@@ -31,6 +31,7 @@ app.use(
   rateLimiter({
     windowMs: 15 * 60 * 1000,
     limit: 100,
+    message: { error: 'Too many login attempts. Please try again later.' },
     keyGenerator: (c) => c.req.header('x-real-ip') ?? c.req.header('x-forwarded-for') ?? 'unknown',
   }),
 )

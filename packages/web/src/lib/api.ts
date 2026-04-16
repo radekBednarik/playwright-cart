@@ -62,6 +62,26 @@ export class NotFoundError extends Error {
   }
 }
 
+async function getErrorMessage(res: Response, fallbackMessage: string): Promise<string> {
+  const rateLimitMessage = 'Too many requests. Please try again later.'
+
+  const contentType = res.headers.get('content-type') ?? ''
+  if (!contentType.includes('application/json')) {
+    return res.status === 429 ? rateLimitMessage : fallbackMessage
+  }
+
+  try {
+    const err = (await res.json()) as { error?: unknown }
+    if (typeof err.error === 'string' && err.error.trim()) {
+      return err.error
+    }
+  } catch {
+    return res.status === 429 ? rateLimitMessage : fallbackMessage
+  }
+
+  return res.status === 429 ? rateLimitMessage : fallbackMessage
+}
+
 export async function fetchMe(): Promise<CurrentUser | null> {
   const res = await fetch('/api/auth/me')
   if (res.status === 401) return null
@@ -76,8 +96,7 @@ export async function login(username: string, password: string): Promise<void> {
     body: JSON.stringify({ username, password }),
   })
   if (!res.ok) {
-    const err = await res.json()
-    throw new Error((err as { error?: string }).error || 'Login failed')
+    throw new Error(await getErrorMessage(res, 'Login failed. Please try again.'))
   }
 }
 
@@ -98,8 +117,7 @@ export async function updateMe(data: {
     body: JSON.stringify(data),
   })
   if (!res.ok) {
-    const err = await res.json()
-    throw new Error((err as { error?: string }).error || `HTTP ${res.status}`)
+    throw new Error(await getErrorMessage(res, 'Failed to update account settings.'))
   }
   return res.json() as Promise<CurrentUser>
 }
@@ -202,8 +220,7 @@ export async function createUser(
     body: JSON.stringify({ username, password, role }),
   })
   if (!res.ok) {
-    const err = await res.json()
-    throw new Error((err as { error?: string }).error || `HTTP ${res.status}`)
+    throw new Error(await getErrorMessage(res, 'Failed to create user.'))
   }
   return res.json() as Promise<UserRecord>
 }
@@ -220,8 +237,7 @@ export async function updateUserRole(userId: number, role: 'admin' | 'user'): Pr
     body: JSON.stringify({ role }),
   })
   if (!res.ok) {
-    const err = await res.json()
-    throw new Error((err as { error?: string }).error || `HTTP ${res.status}`)
+    throw new Error(await getErrorMessage(res, 'Failed to update user role.'))
   }
   return res.json() as Promise<UserRecord>
 }
@@ -251,8 +267,7 @@ export async function createApiKey(label: string): Promise<CreatedApiKey> {
     body: JSON.stringify({ label }),
   })
   if (!res.ok) {
-    const err = await res.json()
-    throw new Error((err as { error?: string }).error || `HTTP ${res.status}`)
+    throw new Error(await getErrorMessage(res, 'Failed to create API key.'))
   }
   return res.json() as Promise<CreatedApiKey>
 }
@@ -280,8 +295,7 @@ export async function updateSettings(data: Partial<AppSettings>): Promise<AppSet
     body: JSON.stringify(data),
   })
   if (!res.ok) {
-    const err = await res.json()
-    throw new Error((err as { error?: string }).error || `HTTP ${res.status}`)
+    throw new Error(await getErrorMessage(res, 'Failed to update settings.'))
   }
   return res.json() as Promise<AppSettings>
 }

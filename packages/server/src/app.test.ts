@@ -89,3 +89,28 @@ describe('GET /api/events', () => {
     await reader.cancel()
   })
 })
+
+describe('POST /api/auth/login', () => {
+  it('returns JSON rate-limit response without internal details', async () => {
+    const attempts = Array.from({ length: 101 }, () =>
+      app.request('/api/auth/login', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'x-real-ip': 'rate-limit-test-ip',
+        },
+        body: JSON.stringify({ username: 'missing-user', password: 'wrong-pass' }),
+      }),
+    )
+
+    const responses = await Promise.all(attempts)
+    const limited = responses.at(-1)
+    if (!limited) throw new Error('Missing rate-limited response')
+
+    expect(limited.status).toBe(429)
+    expect(limited.headers.get('content-type')).toContain('application/json')
+    await expect(limited.json()).resolves.toEqual({
+      error: 'Too many login attempts. Please try again later.',
+    })
+  })
+})

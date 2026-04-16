@@ -1,5 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
-import { fetchRun, fetchRuns, fetchTest, NotFoundError } from './api.js'
+import { fetchRun, fetchRuns, fetchTest, login, NotFoundError } from './api.js'
 
 beforeEach(() => {
   vi.stubGlobal('fetch', vi.fn())
@@ -64,6 +64,43 @@ describe('fetchRuns', () => {
   it('throws on non-ok response', async () => {
     vi.mocked(fetch).mockResolvedValue(new Response('', { status: 500 }))
     await expect(fetchRuns({ page: 1, pageSize: 10 })).rejects.toThrow('HTTP 500')
+  })
+})
+
+describe('login', () => {
+  it('resolves on successful login', async () => {
+    vi.mocked(fetch).mockResolvedValue(new Response(JSON.stringify({ ok: true }), { status: 200 }))
+
+    await expect(login('demo', 'secret')).resolves.toBeUndefined()
+    expect(fetch).toHaveBeenCalledWith('/api/auth/login', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ username: 'demo', password: 'secret' }),
+    })
+  })
+
+  it('uses JSON error message for invalid credentials', async () => {
+    vi.mocked(fetch).mockResolvedValue(
+      new Response(JSON.stringify({ error: 'Invalid credentials' }), {
+        status: 401,
+        headers: { 'Content-Type': 'application/json' },
+      }),
+    )
+
+    await expect(login('demo', 'wrong')).rejects.toThrow('Invalid credentials')
+  })
+
+  it('falls back to friendly message for non-JSON rate-limit responses', async () => {
+    vi.mocked(fetch).mockResolvedValue(
+      new Response('Too many requests, please try again later.', {
+        status: 429,
+        headers: { 'Content-Type': 'text/plain' },
+      }),
+    )
+
+    await expect(login('demo', 'secret')).rejects.toThrow(
+      'Too many requests. Please try again later.',
+    )
   })
 })
 
