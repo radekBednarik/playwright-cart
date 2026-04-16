@@ -1,8 +1,9 @@
 name: Publish Reporter to NPM packages 
 
 on:
-  release:
-    types: [published]
+  push:
+    tags:
+      - 'v*.*.*'
 
 jobs:
   publish:
