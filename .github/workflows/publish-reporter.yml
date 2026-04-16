@@ -34,3 +34,13 @@ jobs:
       - name: Publish
         working-directory: packages/reporter
         run: npm publish
+
+      - name: Printout npm logs
+        if: always()
+        run: |
+            ls -la ~/.npm/_logs || true
+            for file in ~/.npm/_logs/*; do
+              [ -f "$file" ] || continue
+              echo "Contents of $file:"
+              cat "$file"
+            done
