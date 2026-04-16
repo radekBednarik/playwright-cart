@@ -41,22 +41,16 @@ docker compose down -v    # stop containers and delete all data
 
 ## Reporter Setup
 
-The reporter is published as a **public** package to GitHub Packages under `@radekbednarik/playwright-cart-reporter` — no auth token required to install.
+The reporter is published as a public npm package under `playwright-cart-reporter`.
 
 ### 1. Install
 
-Add the registry scope to `.npmrc` in your **project root** (the project that runs Playwright tests, not this repo):
-
-```ini
-@radekbednarik:registry=https://npm.pkg.github.com
-```
-
-Then install:
+Install it in your Playwright project (not in this repo):
 
 ```bash
-npm install --save-dev @radekbednarik/playwright-cart-reporter
+npm install --save-dev playwright-cart-reporter
 # or
-pnpm add -D @radekbednarik/playwright-cart-reporter
+pnpm add -D playwright-cart-reporter
 ```
 
 ### 2. Configure in `playwright.config.ts`
@@ -69,7 +63,7 @@ import { defineConfig } from '@playwright/test'
 export default defineConfig({
   reporter: [
     ['html'],
-    ['@radekbednarik/playwright-cart-reporter', {
+    ['playwright-cart-reporter', {
       serverUrl: 'http://localhost:3001',              // URL of your playwright-cart server (required)
       project: 'my-app',                               // logical project name shown in the dashboard (required)
       branch: process.env.BRANCH,                      // git branch name (optional)
@@ -177,7 +171,7 @@ For deploying playwright-cart to a production server with HTTPS, see the [Deploy
 ```
 playwright tests
       │
-      │  @radekbednarik/playwright-cart-reporter (npm package)
+      │  playwright-cart-reporter (npm package)
       │  streams results during test run
       ▼
 ┌─────────────┐        ┌─────────────┐
@@ -209,7 +203,7 @@ Individual packages:
 ```bash
 pnpm --filter @playwright-cart/server dev                        # tsx watch — server on :3001
 pnpm --filter @playwright-cart/web dev                           # Vite dev server on :5173
-pnpm --filter @radekbednarik/playwright-cart-reporter dev        # tsc watch
+pnpm --filter playwright-cart-reporter dev                       # tsc watch
 ```
 
 Build, lint, and type-check:
@@ -224,8 +218,8 @@ pnpm typecheck
 ### Running tests
 
 ```bash
-pnpm --filter @radekbednarik/playwright-cart-reporter test
-pnpm --filter @radekbednarik/playwright-cart-reporter test:watch
+pnpm --filter playwright-cart-reporter test
+pnpm --filter playwright-cart-reporter test:watch
 
 pnpm --filter @playwright-cart/server test
 pnpm --filter @playwright-cart/server test:watch

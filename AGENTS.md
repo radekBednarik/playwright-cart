@@ -32,13 +32,13 @@ Individual package commands (from root with `--filter`):
 ```bash
 pnpm --filter @playwright-cart/server dev                        # tsx watch mode
 pnpm --filter @playwright-cart/web dev                           # Vite dev server
-pnpm --filter @radekbednarik/playwright-cart-reporter dev        # tsc watch mode
+pnpm --filter playwright-cart-reporter dev                       # tsc watch mode
 ```
 
 Run tests (reporter, server, and web use Vitest):
 ```bash
-pnpm --filter @radekbednarik/playwright-cart-reporter test       # run once
-pnpm --filter @radekbednarik/playwright-cart-reporter test:watch # watch mode
+pnpm --filter playwright-cart-reporter test                      # run once
+pnpm --filter playwright-cart-reporter test:watch                # watch mode
 pnpm --filter @playwright-cart/server test
 pnpm --filter @playwright-cart/server test:watch
 pnpm --filter @playwright-cart/web test
@@ -53,9 +53,9 @@ pnpm --filter @playwright-cart/e2e test:ui   # Playwright UI mode
 
 Publish reporter (triggered automatically on GitHub Release):
 ```bash
-# Manual publish — set NODE_AUTH_TOKEN to a GitHub PAT with write:packages; in Actions uses GITHUB_TOKEN automatically
-pnpm --filter @radekbednarik/playwright-cart-reporter build
-pnpm --filter @radekbednarik/playwright-cart-reporter publish --no-git-checks
+# Manual publish — set NODE_AUTH_TOKEN to an npm token
+pnpm --filter playwright-cart-reporter build                     # build reporter package
+pnpm --filter playwright-cart-reporter publish --no-git-checks
 ```
 
 ## Architecture
@@ -75,7 +75,7 @@ A monorepo for collecting and viewing Playwright test reports in a centralized d
   export default defineConfig({
     reporter: [
       ['html'],
-       ['@radekbednarik/playwright-cart-reporter', {
+       ['playwright-cart-reporter', {
          serverUrl: 'http://localhost:3001',              // required
          project: 'my-app',                               // required
          branch: process.env.BRANCH,                      // optional

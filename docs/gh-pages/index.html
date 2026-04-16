@@ -1666,7 +1666,7 @@
             <div class="step-number" aria-hidden="true">02</div>
             <h3>Add the reporter</h3>
             <p>
-              Install <code>@radekbednarik/playwright-cart-reporter</code>, add
+              Install <code>playwright-cart-reporter</code>, add
               it alongside the <code>html</code> reporter in your
               <code>playwright.config.ts</code>. Set your server URL and API
               key. That's two config lines.
@@ -1822,7 +1822,7 @@
           Enable reporting in your<br />project in 2 steps.
         </h2>
         <p class="section-sub">
-          Published as a <strong>public package</strong> on GitHub Packages — install directly, no auth needed.
+          Published as a <strong>public package</strong> on npm — install directly.
         </p>
 
         <div class="integration-steps">
@@ -1830,11 +1830,11 @@
             <p class="int-step-label">// 01 — install</p>
             <div class="install-strip">
               <span class="install-prompt" aria-hidden="true">$</span>
-              <code>pnpm add @radekbednarik/playwright-cart-reporter</code>
+              <code>pnpm add playwright-cart-reporter</code>
               <button
                 type="button"
                 class="copy-btn"
-                data-copy="pnpm add @radekbednarik/playwright-cart-reporter"
+                data-copy="pnpm add playwright-cart-reporter"
                 aria-label="Copy install command"
               >
                 copy
@@ -1870,7 +1870,7 @@
 <span class="kw">export default</span> <span class="fn">defineConfig</span>({
   reporter: [
     [<span class="str">'html'</span>],
-    [<span class="str">'@radekbednarik/playwright-cart-reporter'</span>, {
+    [<span class="str">'playwright-cart-reporter'</span>, {
       <span class="prop">serverUrl</span>: <span class="str">'https://your-server.example.com'</span>,  <span class="cm">// required</span>
       <span class="prop">project</span>:   <span class="str">'my-app'</span>,                           <span class="cm">// required</span>
       <span class="prop">branch</span>:    process.env.<span class="prop">BRANCH</span>,                 <span class="cm">// optional</span>

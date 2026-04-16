@@ -7,7 +7,7 @@ export default defineConfig({
   reporter: [
     ['html', { open: 'never', outputFolder: 'html-report' }],
     [
-      '@radekbednarik/playwright-cart-reporter',
+      'playwright-cart-reporter',
       {
         serverUrl: 'http://localhost:3001',
         project: 'e2e-demo',

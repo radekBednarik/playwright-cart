@@ -23,7 +23,7 @@ importers:
 
   packages/e2e:
     dependencies:
-      '@radekbednarik/playwright-cart-reporter':
+      playwright-cart-reporter:
         specifier: workspace:*
         version: link:../reporter
     devDependencies:
