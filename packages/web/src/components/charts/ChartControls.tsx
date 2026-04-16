@@ -44,19 +44,21 @@ export default function ChartControls({ value, onChange }: Props) {
         ))}
       </div>
 
-      {/* Date range (always shown) */}
-      <div className="flex overflow-hidden rounded border border-tn-border">
-        {DAY_OPTIONS.map((d) => (
-          <button
-            key={d}
-            type="button"
-            className={btn(value.days === d)}
-            onClick={() => onChange({ ...value, days: d })}
-          >
-            {d === 365 ? 'All' : `${d}d`}
-          </button>
-        ))}
-      </div>
+      {/* Date range (hidden in per-run mode — server uses limit instead) */}
+      {value.interval !== 'run' && (
+        <div className="flex overflow-hidden rounded border border-tn-border">
+          {DAY_OPTIONS.map((d) => (
+            <button
+              key={d}
+              type="button"
+              className={btn(value.days === d)}
+              onClick={() => onChange({ ...value, days: d })}
+            >
+              {d === 365 ? 'All' : `${d}d`}
+            </button>
+          ))}
+        </div>
+      )}
 
       {/* Run count (only for per-run granularity) */}
       {value.interval === 'run' && (
