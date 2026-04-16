@@ -1,4 +1,4 @@
-import { useRef, useState } from 'react'
+import { useState } from 'react'
 import { useTestSearch } from '../hooks/useTestSearch.js'
 import type { TestSearchResult } from '../lib/api.js'
 
@@ -10,7 +10,6 @@ interface Props {
 export default function TestSearch({ project, onSelect }: Props) {
   const [q, setQ] = useState('')
   const [open, setOpen] = useState(false)
-  const ref = useRef<HTMLDivElement>(null)
   const { data: results = [] } = useTestSearch(q, project)
 
   function handleSelect(test: TestSearchResult) {
@@ -20,7 +19,7 @@ export default function TestSearch({ project, onSelect }: Props) {
   }
 
   return (
-    <div ref={ref} className="relative">
+    <div className="relative">
       <input
         type="text"
         value={q}

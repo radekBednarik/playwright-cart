@@ -36,9 +36,9 @@ export default function DotTimeline({ history }: Props) {
   return (
     <div className="relative">
       <div className="flex flex-wrap gap-1.5 rounded-lg border border-tn-border bg-tn-panel p-4">
-        {ordered.map((entry, i) => (
+        {ordered.map((entry) => (
           <button
-            key={`${entry.runId}-${i}`}
+            key={entry.runId}
             type="button"
             className={`size-4 rounded-full transition-transform hover:scale-125 ${dotColor(entry)}`}
             onMouseEnter={(e) => {
@@ -67,7 +67,9 @@ export default function DotTimeline({ history }: Props) {
                 ? 'text-tn-yellow'
                 : tooltip.entry.status === 'passed'
                   ? 'text-tn-green'
-                  : 'text-tn-red'
+                  : tooltip.entry.status === 'skipped'
+                    ? 'text-tn-muted'
+                    : 'text-tn-red'
             }`}
           >
             {dotLabel(tooltip.entry)}
