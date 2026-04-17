@@ -371,8 +371,24 @@ export async function getRunTimeline(params: TimelineParams): Promise<TimelineBu
         r.started_at::text AS started_at,
         1 AS run_count,
         COUNT(t.id)::int AS total,
-        COUNT(t.id) FILTER (WHERE t.status = 'passed')::int AS passed,
-        COUNT(t.id) FILTER (WHERE t.status IN ('failed','timedOut','interrupted'))::int AS failed,
+        COUNT(t.id) FILTER (WHERE
+          (t.status = 'passed' AND NOT EXISTS (
+            SELECT 1 FROM test_annotations ta WHERE ta.test_pk = t.id AND ta.type = 'fail'
+          ))
+          OR
+          (t.status = 'failed' AND EXISTS (
+            SELECT 1 FROM test_annotations ta WHERE ta.test_pk = t.id AND ta.type = 'fail'
+          ))
+        )::int AS passed,
+        COUNT(t.id) FILTER (WHERE
+          t.status IN ('timedOut', 'interrupted')
+          OR (t.status = 'failed' AND NOT EXISTS (
+            SELECT 1 FROM test_annotations ta WHERE ta.test_pk = t.id AND ta.type = 'fail'
+          ))
+          OR (t.status = 'passed' AND EXISTS (
+            SELECT 1 FROM test_annotations ta WHERE ta.test_pk = t.id AND ta.type = 'fail'
+          ))
+        )::int AS failed,
         COUNT(t.id) FILTER (WHERE t.retry > 0 AND t.status = 'passed')::int AS flaky,
         COALESCE(AVG(t.duration_ms)::int, 0) AS avg_duration_ms,
         COALESCE(PERCENTILE_CONT(0.95) WITHIN GROUP (ORDER BY t.duration_ms)::int, 0) AS p95_duration_ms
@@ -417,8 +433,24 @@ export async function getRunTimeline(params: TimelineParams): Promise<TimelineBu
       MIN(r.started_at)::text AS started_at,
       COUNT(DISTINCT r.run_id)::int AS run_count,
       COUNT(t.id)::int AS total,
-      COUNT(t.id) FILTER (WHERE t.status = 'passed')::int AS passed,
-      COUNT(t.id) FILTER (WHERE t.status IN ('failed','timedOut','interrupted'))::int AS failed,
+      COUNT(t.id) FILTER (WHERE
+        (t.status = 'passed' AND NOT EXISTS (
+          SELECT 1 FROM test_annotations ta WHERE ta.test_pk = t.id AND ta.type = 'fail'
+        ))
+        OR
+        (t.status = 'failed' AND EXISTS (
+          SELECT 1 FROM test_annotations ta WHERE ta.test_pk = t.id AND ta.type = 'fail'
+        ))
+      )::int AS passed,
+      COUNT(t.id) FILTER (WHERE
+        t.status IN ('timedOut', 'interrupted')
+        OR (t.status = 'failed' AND NOT EXISTS (
+          SELECT 1 FROM test_annotations ta WHERE ta.test_pk = t.id AND ta.type = 'fail'
+        ))
+        OR (t.status = 'passed' AND EXISTS (
+          SELECT 1 FROM test_annotations ta WHERE ta.test_pk = t.id AND ta.type = 'fail'
+        ))
+      )::int AS failed,
       COUNT(t.id) FILTER (WHERE t.retry > 0 AND t.status = 'passed')::int AS flaky,
       COALESCE(AVG(t.duration_ms)::int, 0) AS avg_duration_ms,
       COALESCE(PERCENTILE_CONT(0.95) WITHIN GROUP (ORDER BY t.duration_ms)::int, 0) AS p95_duration_ms
