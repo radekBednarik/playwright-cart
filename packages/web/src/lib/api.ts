@@ -48,8 +48,8 @@ export type TestOutcome = 'expected-failure' | 'unexpected-pass' | 'normal'
 export function getTestOutcome(test: Pick<TestRecord, 'status' | 'annotations'>): TestOutcome {
   const hasFailAnnotation = test.annotations.some((a) => a.type === 'fail')
   if (!hasFailAnnotation) return 'normal'
-  if (test.status === 'failed') return 'expected-failure'
-  if (test.status === 'passed') return 'unexpected-pass'
+  if (test.status === 'passed') return 'expected-failure'
+  if (test.status === 'failed') return 'unexpected-pass'
   return 'normal'
 }
 

@@ -1,5 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
-import { fetchRun, fetchRuns, fetchTest, login, NotFoundError } from './api.js'
+import type { TestStatus } from './api.js'
+import { fetchRun, fetchRuns, fetchTest, getTestOutcome, login, NotFoundError } from './api.js'
 
 beforeEach(() => {
   vi.stubGlobal('fetch', vi.fn())
@@ -142,5 +143,32 @@ describe('fetchTest', () => {
   it('throws NotFoundError on 404', async () => {
     vi.mocked(fetch).mockResolvedValue(new Response('', { status: 404 }))
     await expect(fetchTest('run-1', 'no-such')).rejects.toThrow(NotFoundError)
+  })
+})
+
+describe('getTestOutcome', () => {
+  const makeTest = (status: string, annotationTypes: string[] = []) => ({
+    status: status as TestStatus,
+    annotations: annotationTypes.map((type) => ({ type })),
+  })
+
+  it('returns normal for test without fail annotation', () => {
+    expect(getTestOutcome(makeTest('passed'))).toBe('normal')
+    expect(getTestOutcome(makeTest('failed'))).toBe('normal')
+  })
+
+  it('returns expected-failure for status=passed with fail annotation (server pre-inverted expected failure)', () => {
+    // Server inverts: test.fail() that failed in Playwright → API ships status='passed'
+    expect(getTestOutcome(makeTest('passed', ['fail']))).toBe('expected-failure')
+  })
+
+  it('returns unexpected-pass for status=failed with fail annotation (server pre-inverted unexpected pass)', () => {
+    // Server inverts: test.fail() that passed in Playwright → API ships status='failed'
+    expect(getTestOutcome(makeTest('failed', ['fail']))).toBe('unexpected-pass')
+  })
+
+  it('returns normal for non-fail annotation types', () => {
+    expect(getTestOutcome(makeTest('passed', ['slow']))).toBe('normal')
+    expect(getTestOutcome(makeTest('failed', ['issue']))).toBe('normal')
   })
 })
