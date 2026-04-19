@@ -1,13 +1,14 @@
 import { writeFileSync } from 'node:fs'
 import { basename, join, resolve } from 'node:path'
 import AdmZip from 'adm-zip'
-import { sql } from 'drizzle-orm'
+import { and, eq, sql } from 'drizzle-orm'
 import { Hono } from 'hono'
 import { adminMiddleware } from '../auth/middleware.js'
 import type { HonoEnv } from '../auth/types.js'
+import { generateRunSummaries } from '../ai/summarizer.js'
 import { db } from '../db/client.js'
-import { runs as runsSchema } from '../db/schema.js'
-import { type RunEvent, runEmitter } from '../events.js'
+import { aiSummaries, appSettings, runs as runsSchema } from '../db/schema.js'
+import { type AppEvent, type RunEvent, runEmitter } from '../events.js'
 import { applyOutcomeInversion } from './outcome.js'
 import * as storage from './storage.js'
 
@@ -123,6 +124,17 @@ runs.post('/:runId/complete', async (c) => {
   }>()
   await storage.updateRun(runId, { completedAt, status })
   runEmitter.emit('event', { type: 'run:updated', runId } satisfies RunEvent)
+
+  if (status === 'failed' || status === 'interrupted' || status === 'timedOut') {
+    const [row] = await db
+      .select({ value: appSettings.value })
+      .from(appSettings)
+      .where(eq(appSettings.key, 'llm_enabled'))
+    if (row?.value === 'true') {
+      generateRunSummaries(runId).catch((err) => console.error('[ai] summary error:', err))
+    }
+  }
+
   return c.json({})
 })
 
@@ -174,6 +186,68 @@ runs.post('/:runId/report', async (c) => {
   runEmitter.emit('event', { type: 'run:updated', runId } satisfies RunEvent)
 
   return c.json({ reportUrl })
+})
+
+runs.get('/:runId/summary', async (c) => {
+  const runId = c.req.param('runId')
+  const [row] = await db
+    .select()
+    .from(aiSummaries)
+    .where(
+      and(
+        eq(aiSummaries.entityType, 'run'),
+        eq(aiSummaries.runId, runId),
+        eq(aiSummaries.entityId, runId),
+      ),
+    )
+    .limit(1)
+  if (!row) return c.json(null)
+  return c.json({
+    status: row.status,
+    content: row.content,
+    errorMsg: row.errorMsg,
+    generatedAt: row.generatedAt?.toISOString() ?? null,
+    model: row.model,
+    provider: row.provider,
+  })
+})
+
+runs.get('/:runId/tests/:testId/summary', async (c) => {
+  const { runId, testId } = c.req.param()
+  const [row] = await db
+    .select()
+    .from(aiSummaries)
+    .where(
+      and(
+        eq(aiSummaries.entityType, 'test'),
+        eq(aiSummaries.runId, runId),
+        eq(aiSummaries.entityId, testId),
+      ),
+    )
+    .limit(1)
+  if (!row) return c.json(null)
+  return c.json({
+    status: row.status,
+    content: row.content,
+    errorMsg: row.errorMsg,
+    generatedAt: row.generatedAt?.toISOString() ?? null,
+    model: row.model,
+    provider: row.provider,
+  })
+})
+
+runs.post('/:runId/summary/regenerate', async (c) => {
+  const runId = c.req.param('runId')
+  const run = await storage.getRun(runId)
+  if (!run) return c.json({ error: 'Not found' }, 404)
+  generateRunSummaries(runId).catch((err) => console.error('[ai] regen error:', err))
+  return c.json({ ok: true }, 202)
+})
+
+runs.post('/:runId/tests/:testId/summary/regenerate', async (c) => {
+  const runId = c.req.param('runId')
+  generateRunSummaries(runId).catch((err) => console.error('[ai] regen error:', err))
+  return c.json({ ok: true }, 202)
 })
 
 runs.delete('/:runId', adminMiddleware, async (c) => {
