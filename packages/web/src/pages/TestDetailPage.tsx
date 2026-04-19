@@ -1,4 +1,4 @@
-import { Link, useParams } from 'react-router-dom'
+import { Link, useLocation, useParams } from 'react-router-dom'
 import AttachmentList from '../components/AttachmentList.js'
 import ErrorBlock from '../components/ErrorBlock.js'
 import TestHeader from '../components/TestHeader.js'
@@ -7,6 +7,7 @@ import { useTest } from '../hooks/useTest.js'
 
 export default function TestDetailPage() {
   const { runId, testId } = useParams<{ runId: string; testId: string }>()
+  const location = useLocation()
   const { data: test, isLoading, error } = useTest(runId ?? '', testId ?? '')
   const { data: run } = useRun(runId ?? '')
 
@@ -44,6 +45,16 @@ export default function TestDetailPage() {
         <span>/</span>
         <span className="truncate text-tn-fg">{test.title}</span>
       </nav>
+
+      <div className="mb-5">
+        <Link
+          to={`/tests/${testId}`}
+          state={{ from: location.pathname }}
+          className="font-mono text-xs text-tn-blue transition-colors hover:text-tn-purple"
+        >
+          View reliability stats →
+        </Link>
+      </div>
 
       {/* Two-panel layout on desktop */}
       <div className="lg:grid lg:grid-cols-[3fr_2fr] lg:gap-8">

@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { Link } from 'react-router-dom'
+import { Link, useLocation } from 'react-router-dom'
 import { type AnnotatedTestRecord, getTestOutcome, type TestStatus } from '../lib/api.js'
 import { formatDuration } from '../lib/format.js'
 import { collectUniqueTags, getVisibleTags } from '../lib/tags.js'
@@ -39,6 +39,7 @@ export default function SuiteGroup({
   const [open, setOpen] = useState(() => defaultOpenPaths.has(getSuitePathKey(path)))
   const { total, failed, flaky, skipped } = countTests(node)
   const visibleSuiteTags = getVisibleTags(collectNodeTags(node), selectedTags)
+  const location = useLocation()
 
   return (
     <div className="overflow-hidden rounded-xl border border-tn-border">
@@ -90,45 +91,58 @@ export default function SuiteGroup({
           {node.tests.length > 0 && (
             <div className="divide-y divide-tn-border">
               {node.tests.map((test) => (
-                <Link
+                <div
                   key={test.testId}
-                  to={`/runs/${runId}/tests/${test.testId}`}
-                  className={`flex items-center gap-3 py-2.5 pr-4 transition-colors hover:bg-tn-highlight/40 ${getPadding(depth + 1)}`}
+                  className={`group relative flex items-center transition-colors hover:bg-tn-highlight/40 ${getPadding(depth + 1)}`}
                 >
-                  <TestStatusIcon
-                    status={test.status}
-                    retried={test.retried}
-                    annotations={test.annotations}
-                  />
-                  <div className="min-w-0 flex-1">
-                    <span className="text-sm text-tn-fg">{test.title}</span>
-                    {getVisibleTags(test.tags, selectedTags).length > 0 && (
-                      <div className="mt-1 flex flex-wrap gap-1.5">
-                        {getVisibleTags(test.tags, selectedTags).map((tag) => (
-                          <TagChip key={tag} tag={tag} small />
-                        ))}
-                      </div>
+                  <Link
+                    to={`/runs/${runId}/tests/${test.testId}`}
+                    className="flex min-w-0 flex-1 items-center gap-3 py-2.5 pr-10"
+                  >
+                    <TestStatusIcon
+                      status={test.status}
+                      retried={test.retried}
+                      annotations={test.annotations}
+                    />
+                    <div className="min-w-0 flex-1">
+                      <span className="text-sm text-tn-fg">{test.title}</span>
+                      {getVisibleTags(test.tags, selectedTags).length > 0 && (
+                        <div className="mt-1 flex flex-wrap gap-1.5">
+                          {getVisibleTags(test.tags, selectedTags).map((tag) => (
+                            <TagChip key={tag} tag={tag} small />
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                    {test.retried && (
+                      <span className="rounded-full bg-tn-yellow/10 px-1.5 py-0.5 font-mono text-xs text-tn-yellow">
+                        retried
+                      </span>
                     )}
-                  </div>
-                  {test.retried && (
-                    <span className="rounded-full bg-tn-yellow/10 px-1.5 py-0.5 font-mono text-xs text-tn-yellow">
-                      retried
+                    {!test.retried &&
+                      (getTestOutcome(test) === 'expected-failure' ? (
+                        <span className="rounded-full bg-tn-purple/10 px-1.5 py-0.5 font-mono text-xs text-tn-purple">
+                          xfail
+                        </span>
+                      ) : getTestOutcome(test) === 'unexpected-pass' ? (
+                        <span className="rounded-full bg-tn-orange/10 px-1.5 py-0.5 font-mono text-xs text-tn-orange">
+                          xpass
+                        </span>
+                      ) : null)}
+                    <span className="font-mono text-xs text-tn-muted">
+                      {formatDuration(test.duration)}
                     </span>
-                  )}
-                  {!test.retried &&
-                    (getTestOutcome(test) === 'expected-failure' ? (
-                      <span className="rounded-full bg-tn-purple/10 px-1.5 py-0.5 font-mono text-xs text-tn-purple">
-                        xfail
-                      </span>
-                    ) : getTestOutcome(test) === 'unexpected-pass' ? (
-                      <span className="rounded-full bg-tn-orange/10 px-1.5 py-0.5 font-mono text-xs text-tn-orange">
-                        xpass
-                      </span>
-                    ) : null)}
-                  <span className="font-mono text-xs text-tn-muted">
-                    {formatDuration(test.duration)}
-                  </span>
-                </Link>
+                  </Link>
+                  <Link
+                    to={`/tests/${test.testId}`}
+                    state={{ from: location.pathname }}
+                    className="absolute right-0 top-0 flex h-full w-10 items-center justify-center text-tn-muted opacity-0 transition-opacity group-hover:opacity-100 hover:text-tn-blue"
+                    title="View reliability stats"
+                    aria-label="View reliability stats"
+                  >
+                    <StatsIcon />
+                  </Link>
+                </div>
               ))}
             </div>
           )}
@@ -213,4 +227,22 @@ function TestStatusIcon({
   }
   const { icon, className } = STATUS_ICON[status]
   return <span className={`font-mono text-sm leading-none ${className}`}>{icon}</span>
+}
+
+function StatsIcon() {
+  return (
+    <svg
+      width="14"
+      height="14"
+      viewBox="0 0 14 14"
+      fill="currentColor"
+      className="transition-colors"
+      aria-hidden="true"
+    >
+      <rect x="0" y="7" width="3" height="7" />
+      <rect x="4" y="4" width="3" height="10" />
+      <rect x="8" y="1" width="3" height="13" />
+      <rect x="12" y="5" width="2" height="9" />
+    </svg>
+  )
 }

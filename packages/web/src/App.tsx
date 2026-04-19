@@ -9,6 +9,7 @@ import RunsPage from './pages/RunsPage.js'
 import SettingsPage from './pages/SettingsPage.js'
 import TestDetailPage from './pages/TestDetailPage.js'
 import TestReliabilityPage from './pages/TestReliabilityPage.js'
+import TestStatsPage from './pages/TestStatsPage.js'
 
 export default function App() {
   return (
@@ -23,6 +24,7 @@ export default function App() {
             <Route path="settings" element={<SettingsPage />} />
             <Route path="charts" element={<ChartsPage />} />
             <Route path="charts/test-reliability" element={<TestReliabilityPage />} />
+            <Route path="tests/:testId" element={<TestStatsPage />} />
             <Route path="charts/:chartId" element={<ChartDetailPage />} />
           </Route>
         </Route>
