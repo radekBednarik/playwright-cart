@@ -21,7 +21,11 @@ export class AnthropicProvider implements LLMProvider {
       ...opts.images.map(
         (img): Anthropic.ImageBlockParam => ({
           type: 'image',
-          source: { type: 'base64', media_type: img.mediaType as 'image/png', data: img.data },
+          source: {
+            type: 'base64',
+            media_type: img.mediaType as Anthropic.Base64ImageSource['media_type'],
+            data: img.data,
+          },
         }),
       ),
       { type: 'text', text: opts.prompt },

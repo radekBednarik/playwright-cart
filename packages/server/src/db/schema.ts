@@ -32,6 +32,15 @@ export const userRoleEnum = pgEnum('user_role', ['admin', 'user'])
 
 export const userThemeEnum = pgEnum('user_theme', ['dark', 'light', 'system'])
 
+export const aiEntityTypeEnum = pgEnum('ai_entity_type', ['run', 'test'])
+
+export const aiSummaryStatusEnum = pgEnum('ai_summary_status', [
+  'pending',
+  'generating',
+  'done',
+  'error',
+])
+
 export const runs = pgTable(
   'runs',
   {
@@ -142,3 +151,22 @@ export const revokedTokens = pgTable('revoked_tokens', {
   jti: text('jti').primaryKey(),
   exp: timestamp('exp', { withTimezone: true }).notNull(),
 })
+
+export const aiSummaries = pgTable(
+  'ai_summaries',
+  {
+    id: bigserial('id', { mode: 'number' }).primaryKey(),
+    entityType: aiEntityTypeEnum('entity_type').notNull(),
+    entityId: text('entity_id').notNull(),
+    runId: text('run_id')
+      .notNull()
+      .references(() => runs.runId, { onDelete: 'cascade' }),
+    status: aiSummaryStatusEnum('status').notNull().default('pending'),
+    content: text('content'),
+    errorMsg: text('error_msg'),
+    provider: text('provider').notNull(),
+    model: text('model').notNull(),
+    generatedAt: timestamp('generated_at', { withTimezone: true }),
+  },
+  (t) => [uniqueIndex('ai_summaries_entity_uniq').on(t.entityType, t.runId, t.entityId)],
+)
