@@ -8,7 +8,7 @@ import { apiKeysRouter } from './api-keys/routes.js'
 import { authMiddleware } from './auth/middleware.js'
 import { authRouter } from './auth/routes.js'
 import type { HonoEnv } from './auth/types.js'
-import { type RunEvent, runEmitter } from './events.js'
+import { type AppEvent, runEmitter } from './events.js'
 import { runs } from './runs/routes.js'
 import { settingsRouter } from './settings/routes.js'
 import { testsRouter } from './tests/routes.js'
@@ -44,7 +44,7 @@ app.route('/api/auth', authRouter)
 
 app.get('/api/events', (c) =>
   streamSSE(c, (stream) => {
-    const send = (event: RunEvent) => {
+    const send = (event: AppEvent) => {
       stream.writeSSE({ event: event.type, data: JSON.stringify(event) })
     }
     runEmitter.on('event', send)
