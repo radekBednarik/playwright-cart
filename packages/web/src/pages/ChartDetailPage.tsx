@@ -61,11 +61,12 @@ function StatPill({
 }) {
   const tooltipId = useId()
   return (
-    <div className="group/pill relative" aria-describedby={tooltip ? tooltipId : undefined}>
+    <div tabIndex={tooltip ? 0 : undefined} className="group/pill relative">
       <div
         className={`rounded-lg border px-4 py-2 text-center ${highlight ? 'border-tn-green/30 bg-tn-green/10' : 'border-tn-border bg-tn-panel'}`}
       >
         <p
+          aria-describedby={tooltip ? tooltipId : undefined}
           className={`font-display text-xl font-bold ${highlight ? 'text-tn-green' : 'text-tn-fg'}`}
         >
           {value}
@@ -76,7 +77,7 @@ function StatPill({
         <span
           id={tooltipId}
           role="tooltip"
-          className="pointer-events-none invisible absolute bottom-full left-1/2 z-50 mb-2 w-56 -translate-x-1/2 whitespace-normal rounded border border-tn-border bg-tn-panel px-2.5 py-1.5 font-mono text-xs text-tn-fg opacity-0 shadow-xl transition-opacity duration-150 group-hover/pill:visible group-hover/pill:opacity-100"
+          className="pointer-events-none invisible absolute bottom-full left-1/2 z-50 mb-2 w-56 -translate-x-1/2 whitespace-normal rounded border border-tn-border bg-tn-panel px-2.5 py-1.5 font-mono text-xs text-tn-fg opacity-0 shadow-xl transition-opacity duration-150 group-hover/pill:visible group-hover/pill:opacity-100 group-focus-within/pill:visible group-focus-within/pill:opacity-100"
         >
           {tooltip}
         </span>
@@ -117,6 +118,16 @@ export default function ChartDetailPage() {
       : null
   const { unit, range } = describeControls(controls)
 
+  const currentTooltip =
+    validId === 'pass-rate'
+      ? `The share of individual tests that passed in the most recent ${unit}. Counts every single test case — not just whether the overall run passed or failed.`
+      : `The value from the most recent ${unit} in the ${range}`
+
+  const avgTooltip =
+    validId === 'pass-rate'
+      ? `The average share of individual tests passing across the ${range}. Because this counts every test separately, it may differ from the dashboard pass rate, which counts whole runs.`
+      : `The average across all ${unit}s in the ${range}`
+
   return (
     <div className="mx-auto max-w-7xl px-6 py-8">
       {/* Breadcrumb */}
@@ -141,16 +152,12 @@ export default function ChartDetailPage() {
             <StatPill
               label="Current"
               value={detail.formatValue(latest)}
-              tooltip={`The value from the most recent ${unit} in the ${range}`}
+              tooltip={currentTooltip}
               highlight
             />
           )}
           {avg !== null && (
-            <StatPill
-              label="Period avg"
-              value={detail.formatValue(avg)}
-              tooltip={`The average across all ${unit}s in the ${range}`}
-            />
+            <StatPill label="Period avg" value={detail.formatValue(avg)} tooltip={avgTooltip} />
           )}
         </div>
       </div>
