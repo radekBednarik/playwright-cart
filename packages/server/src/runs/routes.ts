@@ -246,6 +246,8 @@ runs.post('/:runId/summary/regenerate', async (c) => {
 
 runs.post('/:runId/tests/:testId/summary/regenerate', async (c) => {
   const runId = c.req.param('runId')
+  const run = await storage.getRun(runId)
+  if (!run) return c.json({ error: 'Not found' }, 404)
   generateRunSummaries(runId).catch((err) => console.error('[ai] regen error:', err))
   return c.json({ ok: true }, 202)
 })
