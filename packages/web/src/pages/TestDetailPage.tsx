@@ -97,7 +97,11 @@ export default function TestDetailPage() {
       </div>
 
       {activeTab === 'summary' && llmEnabled && test && (
-        <TestAiSummaryTab runId={runId ?? ''} testId={test.testId} />
+        <TestAiSummaryTab
+          runId={runId ?? ''}
+          testId={test.testId}
+          runStatus={run?.status ?? 'running'}
+        />
       )}
 
       {/* Two-panel layout on desktop */}
