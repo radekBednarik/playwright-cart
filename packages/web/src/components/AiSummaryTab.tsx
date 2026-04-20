@@ -272,6 +272,7 @@ export function RunAiSummaryTab({ runId, runStatus }: { runId: string; runStatus
 
   // SSE: invalidate on summary_run_done / summary_run_error
   useEffect(() => {
+    if (runStatus === 'running') return
     const es = new EventSource('/api/events', { withCredentials: true })
     es.addEventListener('summary_run_done', (e) => {
       const data = JSON.parse(e.data) as { runId: string }
@@ -285,7 +286,7 @@ export function RunAiSummaryTab({ runId, runStatus }: { runId: string; runStatus
       es.close()
     })
     return () => es.close()
-  }, [runId, invalidate])
+  }, [runId, runStatus, invalidate])
 
   if (runStatus === 'running') return <RunningState />
 
@@ -394,6 +395,7 @@ export function TestAiSummaryTab({
 
   // SSE: invalidate on summary_test_done / summary_test_error matching this test
   useEffect(() => {
+    if (runStatus === 'running') return
     const es = new EventSource('/api/events', { withCredentials: true })
     es.addEventListener('summary_test_done', (e) => {
       const data = JSON.parse(e.data) as { runId: string; testId: string }
@@ -407,7 +409,7 @@ export function TestAiSummaryTab({
       es.close()
     })
     return () => es.close()
-  }, [runId, testId, invalidate])
+  }, [runId, testId, runStatus, invalidate])
 
   if (runStatus === 'running') return <RunningState />
 
