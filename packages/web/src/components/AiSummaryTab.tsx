@@ -1,5 +1,5 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query'
-import { useEffect } from 'react'
+import { useEffect, useState } from 'react'
 import {
   useInvalidateRunSummary,
   useInvalidateTestSummary,
@@ -54,14 +54,17 @@ function SummaryFooter({
 
 function GeneratingState() {
   return (
-    <div className="flex items-center gap-3 rounded-xl border border-tn-border bg-tn-panel p-4">
-      <div
-        className={[
-          'h-4 w-4 animate-spin rounded-full border-2 border-tn-blue',
-          'border-t-transparent shrink-0',
-        ].join(' ')}
-      />
-      <p className="font-mono text-sm text-tn-fg">Generating summary…</p>
+    <div className="flex flex-col gap-2 rounded-xl border border-tn-border bg-tn-panel p-4">
+      <div className="flex items-center gap-3">
+        <div
+          className={[
+            'h-4 w-4 animate-spin rounded-full border-2 border-tn-blue',
+            'border-t-transparent shrink-0',
+          ].join(' ')}
+        />
+        <p className="font-mono text-sm text-tn-fg">Generating summary…</p>
+      </div>
+      <p className="font-mono text-xs text-tn-muted">This may take up to 30 seconds</p>
     </div>
   )
 }
@@ -141,14 +144,13 @@ export function RunAiSummaryTab({ runId }: { runId: string }) {
   const invalidate = useInvalidateRunSummary()
   const qc = useQueryClient()
   const queryKey = ['run-summary', runId]
+  const [notice, setNotice] = useState<string | null>(null)
 
   const mutation = useMutation({
     mutationFn: () => regenerateRunSummary(runId),
     onMutate: async () => {
-      // Cancel in-flight refetches so they don't overwrite the optimistic value
       await qc.cancelQueries({ queryKey })
       const snapshot = qc.getQueryData<AiSummary | null>(queryKey)
-      // Immediately show generating state — component transitions away from buttons
       qc.setQueryData<AiSummary>(queryKey, {
         status: 'generating',
         content: null,
@@ -159,9 +161,13 @@ export function RunAiSummaryTab({ runId }: { runId: string }) {
       })
       return snapshot
     },
-    onSuccess: () => invalidate(runId),
-    onError: (_err, _vars, snapshot) => {
-      // Rollback to previous state; server refetch will resolve final status
+    onError: (err, _vars, snapshot) => {
+      if (err instanceof Error && err.message === 'HTTP 409') {
+        invalidate(runId)
+        setNotice('Generation already in progress')
+        setTimeout(() => setNotice(null), 4000)
+        return
+      }
       qc.setQueryData(queryKey, snapshot)
       invalidate(runId)
     },
@@ -189,7 +195,13 @@ export function RunAiSummaryTab({ runId }: { runId: string }) {
   if (!summary)
     return <EmptyState onGenerate={() => mutation.mutate()} disabled={mutation.isPending} />
 
-  if (summary.status === 'generating' || summary.status === 'pending') return <GeneratingState />
+  if (summary.status === 'generating' || summary.status === 'pending')
+    return (
+      <div>
+        <GeneratingState />
+        {notice && <p className="font-mono text-xs text-tn-muted mt-2">{notice}</p>}
+      </div>
+    )
 
   if (summary.status === 'error') {
     return (
@@ -223,6 +235,7 @@ export function TestAiSummaryTab({ runId, testId }: { runId: string; testId: str
   const invalidate = useInvalidateTestSummary()
   const qc = useQueryClient()
   const queryKey = ['test-summary', runId, testId]
+  const [notice, setNotice] = useState<string | null>(null)
 
   const mutation = useMutation({
     mutationFn: () => regenerateTestSummary(runId, testId),
@@ -239,8 +252,13 @@ export function TestAiSummaryTab({ runId, testId }: { runId: string; testId: str
       })
       return snapshot
     },
-    onSuccess: () => invalidate(runId, testId),
-    onError: (_err, _vars, snapshot) => {
+    onError: (err, _vars, snapshot) => {
+      if (err instanceof Error && err.message === 'HTTP 409') {
+        invalidate(runId, testId)
+        setNotice('Generation already in progress')
+        setTimeout(() => setNotice(null), 4000)
+        return
+      }
       qc.setQueryData(queryKey, snapshot)
       invalidate(runId, testId)
     },
@@ -268,7 +286,13 @@ export function TestAiSummaryTab({ runId, testId }: { runId: string; testId: str
   if (!summary)
     return <EmptyState onGenerate={() => mutation.mutate()} disabled={mutation.isPending} />
 
-  if (summary.status === 'generating' || summary.status === 'pending') return <GeneratingState />
+  if (summary.status === 'generating' || summary.status === 'pending')
+    return (
+      <div>
+        <GeneratingState />
+        {notice && <p className="font-mono text-xs text-tn-muted mt-2">{notice}</p>}
+      </div>
+    )
 
   if (summary.status === 'error') {
     return (

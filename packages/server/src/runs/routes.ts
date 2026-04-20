@@ -3,7 +3,11 @@ import { basename, join, resolve } from 'node:path'
 import AdmZip from 'adm-zip'
 import { and, eq, sql } from 'drizzle-orm'
 import { Hono } from 'hono'
-import { generateRunSummaries } from '../ai/summarizer.js'
+import {
+  generateRunSummaries,
+  markRunSummaryGenerating,
+  markTestSummaryGenerating,
+} from '../ai/summarizer.js'
 import { adminMiddleware } from '../auth/middleware.js'
 import type { HonoEnv } from '../auth/types.js'
 import { db } from '../db/client.js'
@@ -240,14 +244,40 @@ runs.post('/:runId/summary/regenerate', async (c) => {
   const runId = c.req.param('runId')
   const run = await storage.getRun(runId)
   if (!run) return c.json({ error: 'Not found' }, 404)
+  const [existing] = await db
+    .select({ status: aiSummaries.status })
+    .from(aiSummaries)
+    .where(
+      and(
+        eq(aiSummaries.entityType, 'run'),
+        eq(aiSummaries.entityId, runId),
+        eq(aiSummaries.runId, runId),
+      ),
+    )
+    .limit(1)
+  if (existing?.status === 'generating') return c.json({ error: 'already_generating' }, 409)
+  await markRunSummaryGenerating(runId)
   generateRunSummaries(runId).catch((err) => console.error('[ai] regen error:', err))
   return c.json({ ok: true }, 202)
 })
 
 runs.post('/:runId/tests/:testId/summary/regenerate', async (c) => {
-  const runId = c.req.param('runId')
+  const { runId, testId } = c.req.param()
   const run = await storage.getRun(runId)
   if (!run) return c.json({ error: 'Not found' }, 404)
+  const [existing] = await db
+    .select({ status: aiSummaries.status })
+    .from(aiSummaries)
+    .where(
+      and(
+        eq(aiSummaries.entityType, 'test'),
+        eq(aiSummaries.entityId, testId),
+        eq(aiSummaries.runId, runId),
+      ),
+    )
+    .limit(1)
+  if (existing?.status === 'generating') return c.json({ error: 'already_generating' }, 409)
+  await markTestSummaryGenerating(runId, testId)
   generateRunSummaries(runId).catch((err) => console.error('[ai] regen error:', err))
   return c.json({ ok: true }, 202)
 })

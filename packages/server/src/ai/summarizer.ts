@@ -105,6 +105,18 @@ async function upsertSummary(
     })
 }
 
+export async function markRunSummaryGenerating(runId: string): Promise<void> {
+  const config = await getLlmConfig()
+  if (!config) return
+  await upsertSummary('run', runId, runId, 'generating', config)
+}
+
+export async function markTestSummaryGenerating(runId: string, testId: string): Promise<void> {
+  const config = await getLlmConfig()
+  if (!config) return
+  await upsertSummary('test', testId, runId, 'generating', config)
+}
+
 export async function generateRunSummaries(runId: string): Promise<void> {
   const config = await getLlmConfig()
   if (!config) return
