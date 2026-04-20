@@ -235,6 +235,17 @@ export function RunAiSummaryTab({ runId }: { runId: string }) {
         noticeTimerRef.current = setTimeout(() => setNotice(null), 4000)
         return
       }
+      if (err instanceof Error && err.message === 'HTTP 422') {
+        qc.setQueryData<AiSummary>(queryKey, {
+          status: 'error',
+          content: snapshot?.content ?? null,
+          errorMsg: 'AI summaries are currently disabled.',
+          generatedAt: snapshot?.generatedAt ?? null,
+          model: snapshot?.model ?? '',
+          provider: snapshot?.provider ?? '',
+        })
+        return
+      }
       qc.setQueryData(queryKey, snapshot)
       invalidate(runId)
     },
@@ -334,6 +345,17 @@ export function TestAiSummaryTab({ runId, testId }: { runId: string; testId: str
         setNotice('Generation already in progress')
         if (noticeTimerRef.current) clearTimeout(noticeTimerRef.current)
         noticeTimerRef.current = setTimeout(() => setNotice(null), 4000)
+        return
+      }
+      if (err instanceof Error && err.message === 'HTTP 422') {
+        qc.setQueryData<AiSummary>(queryKey, {
+          status: 'error',
+          content: snapshot?.content ?? null,
+          errorMsg: 'AI summaries are currently disabled.',
+          generatedAt: snapshot?.generatedAt ?? null,
+          model: snapshot?.model ?? '',
+          provider: snapshot?.provider ?? '',
+        })
         return
       }
       qc.setQueryData(queryKey, snapshot)

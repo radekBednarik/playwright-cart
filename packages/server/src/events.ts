@@ -12,7 +12,9 @@ export type SummaryEvent =
   | { type: 'summary_run_done'; runId: string }
   | { type: 'summary_run_error'; runId: string; error: string }
 
-export type AppEvent = RunEvent | SummaryEvent
+export type SettingsEvent = { type: 'settings:llm_updated'; enabled: boolean }
+
+export type AppEvent = RunEvent | SummaryEvent | SettingsEvent
 
 class RunEventEmitter extends EventEmitter {}
 

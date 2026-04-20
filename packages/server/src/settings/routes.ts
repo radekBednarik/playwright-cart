@@ -6,6 +6,7 @@ import { adminMiddleware } from '../auth/middleware.js'
 import type { HonoEnv } from '../auth/types.js'
 import { db } from '../db/client.js'
 import { appSettings } from '../db/schema.js'
+import { type AppEvent, runEmitter } from '../events.js'
 
 export const settingsRouter = new Hono<HonoEnv>()
 
@@ -94,6 +95,13 @@ settingsRouter.patch('/llm', adminMiddleware, async (c) => {
       .insert(appSettings)
       .values({ key, value })
       .onConflictDoUpdate({ target: appSettings.key, set: { value } })
+  }
+
+  if (enabledUpdate) {
+    runEmitter.emit('event', {
+      type: 'settings:llm_updated',
+      enabled: enabledUpdate.value === 'true',
+    } satisfies AppEvent)
   }
 
   return c.json({ ok: true })

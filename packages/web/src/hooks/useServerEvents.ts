@@ -23,6 +23,10 @@ export function useServerEvents() {
       queryClient.invalidateQueries({ queryKey: ['runTimeline'] })
     })
 
+    es.addEventListener('settings:llm_updated', () => {
+      queryClient.invalidateQueries({ queryKey: ['llm-settings'] })
+    })
+
     // run:complete is emitted as run:updated when status transitions to terminal
     // Invalidate chart data on reconnect to catch missed events
     es.addEventListener('open', () => {

@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { Link, useLocation, useParams } from 'react-router-dom'
 import { TestAiSummaryTab } from '../components/AiSummaryTab.js'
 import AttachmentList from '../components/AttachmentList.js'
@@ -16,6 +16,10 @@ export default function TestDetailPage() {
   const { data: llmSettings } = useLlmSettings()
   const llmEnabled = llmSettings?.enabled ?? false
   const [activeTab, setActiveTab] = useState<'details' | 'summary'>('details')
+
+  useEffect(() => {
+    if (!llmEnabled && activeTab === 'summary') setActiveTab('details')
+  }, [llmEnabled, activeTab])
 
   if (isLoading) return <Skeleton />
 

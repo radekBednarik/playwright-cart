@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { Link, useParams, useSearchParams } from 'react-router-dom'
 import { RunAiSummaryTab } from '../components/AiSummaryTab.js'
 import RunHeader from '../components/RunHeader.js'
@@ -18,6 +18,10 @@ export default function RunDetailPage() {
   const { data: llmSettings } = useLlmSettings()
   const llmEnabled = llmSettings?.enabled ?? false
   const [activeTab, setActiveTab] = useState<'tests' | 'summary'>('tests')
+
+  useEffect(() => {
+    if (!llmEnabled && activeTab === 'summary') setActiveTab('tests')
+  }, [llmEnabled, activeTab])
 
   if (isLoading) return <Skeleton />
 
