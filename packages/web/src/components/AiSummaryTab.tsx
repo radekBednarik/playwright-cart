@@ -7,7 +7,12 @@ import {
   useRunSummary,
   useTestSummary,
 } from '../hooks/useAiSummary.js'
-import { type AiSummary, regenerateRunSummary, regenerateTestSummary } from '../lib/api.js'
+import {
+  type AiSummary,
+  type RunStatus,
+  regenerateRunSummary,
+  regenerateTestSummary,
+} from '../lib/api.js'
 
 // -- Shared sub-components --
 
@@ -49,6 +54,20 @@ function SummaryFooter({
           '↺ Regenerate'
         )}
       </button>
+    </div>
+  )
+}
+
+export function RunningState() {
+  return (
+    <div className="flex flex-col gap-2 rounded-xl border border-tn-blue bg-tn-panel p-4">
+      <div className="flex items-center gap-3">
+        <div className="h-2.5 w-2.5 rounded-full bg-tn-blue shrink-0 animate-pulse" />
+        <p className="font-mono text-sm text-tn-blue">Tests are currently running</p>
+      </div>
+      <p className="font-mono text-xs text-tn-muted">
+        Summary will be generated automatically once the run finishes, if it is considered failed.
+      </p>
     </div>
   )
 }
@@ -197,7 +216,7 @@ function SummaryContent({ content }: { content: string | null }) {
 
 // -- Run summary tab --
 
-export function RunAiSummaryTab({ runId }: { runId: string }) {
+export function RunAiSummaryTab({ runId, runStatus }: { runId: string; runStatus: RunStatus }) {
   const { data: summary, isLoading } = useRunSummary(runId)
   const invalidate = useInvalidateRunSummary()
   const qc = useQueryClient()
@@ -268,6 +287,8 @@ export function RunAiSummaryTab({ runId }: { runId: string }) {
     return () => es.close()
   }, [runId, invalidate])
 
+  if (runStatus === 'running') return <RunningState />
+
   if (isLoading) return <GeneratingState />
 
   if (!summary)
@@ -309,7 +330,15 @@ export function RunAiSummaryTab({ runId }: { runId: string }) {
 
 // -- Test summary tab --
 
-export function TestAiSummaryTab({ runId, testId }: { runId: string; testId: string }) {
+export function TestAiSummaryTab({
+  runId,
+  testId,
+  runStatus,
+}: {
+  runId: string
+  testId: string
+  runStatus: RunStatus
+}) {
   const { data: summary, isLoading } = useTestSummary(runId, testId)
   const invalidate = useInvalidateTestSummary()
   const qc = useQueryClient()
@@ -379,6 +408,8 @@ export function TestAiSummaryTab({ runId, testId }: { runId: string; testId: str
     })
     return () => es.close()
   }, [runId, testId, invalidate])
+
+  if (runStatus === 'running') return <RunningState />
 
   if (isLoading) return <GeneratingState />
 
