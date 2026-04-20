@@ -116,7 +116,9 @@ export default function RunDetailPage() {
       </div>
 
       {/* AI Summary tab */}
-      {activeTab === 'summary' && llmEnabled && run && <RunAiSummaryTab runId={run.runId} />}
+      {activeTab === 'summary' && llmEnabled && run && (
+        <RunAiSummaryTab runId={run.runId} runStatus={run.status} />
+      )}
 
       {/* Suite tree */}
       {activeTab === 'tests' &&
