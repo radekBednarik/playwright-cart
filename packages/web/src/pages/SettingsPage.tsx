@@ -2,6 +2,7 @@ import { useQueryClient } from '@tanstack/react-query'
 import { type ReactElement, useEffect, useRef, useState } from 'react'
 import { MonitorIcon, MoonIcon, SunIcon } from '../components/ThemeIcons.js'
 import { useCurrentUser } from '../hooks/useCurrentUser.js'
+import { useLlmSettings } from '../hooks/useLlmSettings.js'
 import { useTheme } from '../hooks/useTheme.js'
 import {
   type ApiKeyRecord,
@@ -14,6 +15,7 @@ import {
   fetchSettings,
   fetchUsers,
   type UserRecord,
+  updateLlmSettings,
   updateMe,
   updateSettings,
   updateUserRole,
@@ -335,6 +337,10 @@ function AdminTab({ currentUserId }: { currentUserId: number }) {
       <UsersSection currentUserId={currentUserId} />
       <ApiKeysSection />
       <DataRetentionSection />
+      <section>
+        <SectionHeading>AI Summaries</SectionHeading>
+        <AiSummariesSection />
+      </section>
     </div>
   )
 }
@@ -706,6 +712,153 @@ function ApiKeysSection() {
         </div>
       )}
     </section>
+  )
+}
+
+function AiSummariesSection() {
+  const queryClient = useQueryClient()
+  const { data: settings, isLoading } = useLlmSettings()
+
+  const [enabled, setEnabled] = useState(false)
+  const [provider, setProvider] = useState('')
+  const [model, setModel] = useState('')
+  const [apiKey, setApiKey] = useState('')
+  const [status, setStatus] = useState<'idle' | 'saving' | 'ok' | 'err'>('idle')
+  const [errMsg, setErrMsg] = useState('')
+
+  useEffect(() => {
+    if (!settings) return
+    setEnabled(settings.enabled)
+    setProvider(settings.provider)
+    setModel(settings.model)
+  }, [settings])
+
+  const availableProviders = settings?.providers ?? []
+  const currentProviderModels = availableProviders.find((p) => p.name === provider)?.models ?? []
+
+  async function handleSubmit(e: React.FormEvent) {
+    e.preventDefault()
+    setStatus('saving')
+    setErrMsg('')
+    try {
+      await updateLlmSettings({
+        enabled,
+        provider,
+        model,
+        ...(apiKey.length > 0 ? { apiKey } : {}),
+      })
+      await queryClient.invalidateQueries({ queryKey: ['llm-settings'] })
+      setApiKey('')
+      setStatus('ok')
+    } catch (err) {
+      setErrMsg(err instanceof Error ? err.message : 'Failed to save LLM settings')
+      setStatus('err')
+    }
+  }
+
+  if (isLoading) {
+    return (
+      <div className="animate-pulse space-y-3">
+        <div className="h-8 w-64 rounded-lg bg-tn-panel" />
+        <div className="h-8 w-48 rounded-lg bg-tn-panel" />
+        <div className="h-8 w-56 rounded-lg bg-tn-panel" />
+      </div>
+    )
+  }
+
+  return (
+    <form onSubmit={handleSubmit} className="max-w-sm space-y-4">
+      <label className="flex items-center gap-3">
+        <input
+          type="checkbox"
+          checked={enabled}
+          onChange={(e) => {
+            setEnabled(e.target.checked)
+            setStatus('idle')
+          }}
+          className="h-4 w-4 rounded border-tn-border accent-tn-purple"
+        />
+        <span className="font-display text-sm text-tn-fg">Enable AI summaries</span>
+      </label>
+
+      <div className="flex flex-col gap-1.5">
+        <label htmlFor="ai-provider" className="font-display text-xs text-tn-muted">
+          Provider
+        </label>
+        <select
+          id="ai-provider"
+          value={provider}
+          onChange={(e) => {
+            setProvider(e.target.value)
+            setModel('')
+            setStatus('idle')
+          }}
+          className={inputClass}
+        >
+          <option value="">— select provider —</option>
+          {availableProviders.map((p) => (
+            <option key={p.name} value={p.name}>
+              {p.name}
+            </option>
+          ))}
+        </select>
+      </div>
+
+      <div className="flex flex-col gap-1.5">
+        <label htmlFor="ai-model" className="font-display text-xs text-tn-muted">
+          Model
+        </label>
+        <select
+          id="ai-model"
+          value={model}
+          onChange={(e) => {
+            setModel(e.target.value)
+            setStatus('idle')
+          }}
+          disabled={currentProviderModels.length === 0}
+          className={inputClass}
+        >
+          <option value="">— select model —</option>
+          {currentProviderModels.map((m) => (
+            <option key={m.id} value={m.id}>
+              {m.label}
+            </option>
+          ))}
+        </select>
+      </div>
+
+      <div className="flex flex-col gap-1.5">
+        <div className="flex items-center gap-2">
+          <label htmlFor="ai-api-key" className="font-display text-xs text-tn-muted">
+            API Key
+          </label>
+          {settings?.isConfigured && (
+            <span className="font-mono text-xs text-tn-green">● Configured</span>
+          )}
+        </div>
+        <input
+          id="ai-api-key"
+          type="password"
+          value={apiKey}
+          onChange={(e) => {
+            setApiKey(e.target.value)
+            setStatus('idle')
+          }}
+          placeholder={
+            settings?.isConfigured ? 'Leave blank to keep existing key' : 'Enter API key'
+          }
+          autoComplete="new-password"
+          className={inputClass}
+        />
+      </div>
+
+      <button type="submit" disabled={status === 'saving'} className={btnSecondaryClass}>
+        {status === 'saving' ? 'Saving…' : 'Save'}
+      </button>
+
+      {status === 'ok' && <p className="font-mono text-xs text-tn-green">Settings saved.</p>}
+      {status === 'err' && <p className="font-mono text-xs text-tn-red">{errMsg}</p>}
+    </form>
   )
 }
 
