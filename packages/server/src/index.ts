@@ -3,8 +3,8 @@ import { eq } from 'drizzle-orm'
 import { app } from './app.js'
 import { db } from './db/client.js'
 import { runMigrations } from './db/migrate.js'
-import { runSeed } from './db/seed.js'
 import { aiSummaries } from './db/schema.js'
+import { runSeed } from './db/seed.js'
 import { startRetentionJob } from './retention.js'
 
 const port = Number(process.env.PORT ?? 3001)
