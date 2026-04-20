@@ -159,19 +159,18 @@ function SummaryContent({ content }: { content: string | null }) {
           li: ({ children }) => <li>{children}</li>,
           strong: ({ children }) => <strong className="font-semibold">{children}</strong>,
           em: ({ children }) => <em className="italic">{children}</em>,
-          code: ({ children, className }) => {
-            const isBlock = className?.startsWith('language-')
-            return isBlock ? (
-              <code className="block font-mono text-xs bg-tn-highlight text-tn-fg rounded p-3 mb-3 overflow-x-auto whitespace-pre">
-                {children}
-              </code>
-            ) : (
-              <code className="font-mono text-xs bg-tn-highlight text-tn-fg rounded px-1 py-0.5">
-                {children}
-              </code>
-            )
-          },
-          pre: ({ children }) => <pre className="mb-3">{children}</pre>,
+          // pre wraps all fenced blocks (with or without a language tag) — owns block styling
+          pre: ({ children }) => (
+            <pre className="font-mono text-xs bg-tn-highlight text-tn-fg rounded p-3 mb-3 overflow-x-auto whitespace-pre">
+              {children}
+            </pre>
+          ),
+          // code here is always inline (block code lives inside pre above)
+          code: ({ children }) => (
+            <code className="font-mono text-xs bg-tn-highlight text-tn-fg rounded px-1 py-0.5">
+              {children}
+            </code>
+          ),
           a: ({ href, children }) => (
             <a
               href={href}
@@ -281,6 +280,9 @@ export function RunAiSummaryTab({ runId }: { runId: string }) {
     )
   }
 
+  if (!summary.content)
+    return <EmptyState onGenerate={() => mutation.mutate()} disabled={mutation.isPending} />
+
   return (
     <div className="rounded-xl border border-tn-border bg-tn-panel p-4">
       <SummaryContent content={summary.content} />
@@ -378,6 +380,9 @@ export function TestAiSummaryTab({ runId, testId }: { runId: string; testId: str
       />
     )
   }
+
+  if (!summary.content)
+    return <EmptyState onGenerate={() => mutation.mutate()} disabled={mutation.isPending} />
 
   return (
     <div className="rounded-xl border border-tn-border bg-tn-panel p-4">
