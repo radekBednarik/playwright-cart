@@ -1,4 +1,4 @@
-import { useMutation } from '@tanstack/react-query'
+import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { useEffect } from 'react'
 import {
   useInvalidateRunSummary,
@@ -6,7 +6,7 @@ import {
   useRunSummary,
   useTestSummary,
 } from '../hooks/useAiSummary.js'
-import { regenerateRunSummary, regenerateTestSummary } from '../lib/api.js'
+import { type AiSummary, regenerateRunSummary, regenerateTestSummary } from '../lib/api.js'
 
 // -- Shared sub-components --
 
@@ -139,10 +139,32 @@ function EmptyState({ onGenerate, disabled }: { onGenerate: () => void; disabled
 export function RunAiSummaryTab({ runId }: { runId: string }) {
   const { data: summary, isLoading } = useRunSummary(runId)
   const invalidate = useInvalidateRunSummary()
+  const qc = useQueryClient()
+  const queryKey = ['run-summary', runId]
 
   const mutation = useMutation({
     mutationFn: () => regenerateRunSummary(runId),
+    onMutate: async () => {
+      // Cancel in-flight refetches so they don't overwrite the optimistic value
+      await qc.cancelQueries({ queryKey })
+      const snapshot = qc.getQueryData<AiSummary | null>(queryKey)
+      // Immediately show generating state — component transitions away from buttons
+      qc.setQueryData<AiSummary>(queryKey, {
+        status: 'generating',
+        content: null,
+        errorMsg: null,
+        generatedAt: null,
+        model: snapshot?.model ?? '',
+        provider: snapshot?.provider ?? '',
+      })
+      return snapshot
+    },
     onSuccess: () => invalidate(runId),
+    onError: (_err, _vars, snapshot) => {
+      // Rollback to previous state; server refetch will resolve final status
+      qc.setQueryData(queryKey, snapshot)
+      invalidate(runId)
+    },
   })
 
   // SSE: invalidate on summary_run_done / summary_run_error
@@ -199,10 +221,29 @@ export function RunAiSummaryTab({ runId }: { runId: string }) {
 export function TestAiSummaryTab({ runId, testId }: { runId: string; testId: string }) {
   const { data: summary, isLoading } = useTestSummary(runId, testId)
   const invalidate = useInvalidateTestSummary()
+  const qc = useQueryClient()
+  const queryKey = ['test-summary', runId, testId]
 
   const mutation = useMutation({
     mutationFn: () => regenerateTestSummary(runId, testId),
+    onMutate: async () => {
+      await qc.cancelQueries({ queryKey })
+      const snapshot = qc.getQueryData<AiSummary | null>(queryKey)
+      qc.setQueryData<AiSummary>(queryKey, {
+        status: 'generating',
+        content: null,
+        errorMsg: null,
+        generatedAt: null,
+        model: snapshot?.model ?? '',
+        provider: snapshot?.provider ?? '',
+      })
+      return snapshot
+    },
     onSuccess: () => invalidate(runId, testId),
+    onError: (_err, _vars, snapshot) => {
+      qc.setQueryData(queryKey, snapshot)
+      invalidate(runId, testId)
+    },
   })
 
   // SSE: invalidate on summary_test_done / summary_test_error matching this test
