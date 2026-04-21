@@ -6,6 +6,7 @@ import ChartsPage from './pages/ChartsPage.js'
 import LoginPage from './pages/LoginPage.js'
 import RunDetailPage from './pages/RunDetailPage.js'
 import RunsPage from './pages/RunsPage.js'
+import SessionExpiredPage from './pages/SessionExpiredPage.js'
 import SettingsPage from './pages/SettingsPage.js'
 import TestDetailPage from './pages/TestDetailPage.js'
 import TestReliabilityPage from './pages/TestReliabilityPage.js'
@@ -16,6 +17,7 @@ export default function App() {
     <BrowserRouter>
       <Routes>
         <Route path="/login" element={<LoginPage />} />
+        <Route path="/session-expired" element={<SessionExpiredPage />} />
         <Route element={<ProtectedRoute />}>
           <Route element={<Layout />}>
             <Route index element={<RunsPage />} />
