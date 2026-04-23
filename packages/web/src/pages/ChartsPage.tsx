@@ -18,13 +18,26 @@ import { updateMe } from '../lib/api.js'
 import { CHART_CONFIGS, type ChartId, DEFAULT_ORDER } from '../lib/charts.js'
 
 const VALID_CHART_IDS = new Set<string>(CHART_CONFIGS.map((c) => c.id))
+const CHARTS_FILTER_KEY = 'playwright-cart.charts-filter'
+
+function readStoredChartsFilter(): FilterValue {
+  try {
+    return JSON.parse(localStorage.getItem(CHARTS_FILTER_KEY) ?? '{}')
+  } catch {
+    return {}
+  }
+}
 
 export default function ChartsPage() {
   const queryClient = useQueryClient()
   const { user } = useCurrentUser()
   const { data: meta } = useRunsMeta()
-  const [filter, setFilter] = useState<FilterValue>({})
+  const [filter, setFilter] = useState<FilterValue>(readStoredChartsFilter)
   const [order, setOrder] = useState<ChartId[]>(DEFAULT_ORDER)
+
+  useEffect(() => {
+    localStorage.setItem(CHARTS_FILTER_KEY, JSON.stringify(filter))
+  }, [filter])
 
   // Sync order from user preference once loaded — validate all IDs before applying
   useEffect(() => {
@@ -97,6 +110,7 @@ export default function ChartsPage() {
                 id={id}
                 buckets={id === 'test-reliability' ? [] : buckets}
                 isLoading={id !== 'test-reliability' && isLoading}
+                filter={filter}
               />
             ))}
           </div>

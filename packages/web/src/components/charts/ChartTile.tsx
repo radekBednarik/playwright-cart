@@ -5,6 +5,7 @@ import { useNavigate } from 'react-router-dom'
 import type { TimelineBucket } from '../../lib/api.js'
 import type { ChartId } from '../../lib/charts.js'
 import { getChartConfig } from '../../lib/charts.js'
+import type { FilterValue } from './ChartFilterBar.js'
 import TrendChart from './TrendChart.js'
 
 function getSparklineValue(id: ChartId, bucket: TimelineBucket): number {
@@ -50,9 +51,10 @@ interface Props {
   id: ChartId
   buckets: TimelineBucket[]
   isLoading: boolean
+  filter?: FilterValue
 }
 
-export default function ChartTile({ id, buckets, isLoading }: Props) {
+export default function ChartTile({ id, buckets, isLoading, filter }: Props) {
   const config = getChartConfig(id)
   const navigate = useNavigate()
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
@@ -86,7 +88,11 @@ export default function ChartTile({ id, buckets, isLoading }: Props) {
       wasDragging.current = false
       return
     }
-    navigate(config.path)
+    const q = new URLSearchParams()
+    if (filter?.project) q.set('project', filter.project)
+    if (filter?.branch) q.set('branch', filter.branch)
+    const qs = q.size > 0 ? `?${q}` : ''
+    navigate(config.path + qs)
   }
 
   return (

@@ -1,5 +1,5 @@
 import { useEffect, useId, useState } from 'react'
-import { Link, useNavigate, useParams } from 'react-router-dom'
+import { Link, useNavigate, useParams, useSearchParams } from 'react-router-dom'
 import ChartControls, { type ControlsValue } from '../components/charts/ChartControls.js'
 import ChartFilterBar, { type FilterValue } from '../components/charts/ChartFilterBar.js'
 import DurationChart from '../components/charts/DurationChart.js'
@@ -8,6 +8,26 @@ import { useRunsMeta } from '../hooks/useRunsMeta.js'
 import { useRunTimeline } from '../hooks/useRunTimeline.js'
 import type { TimelineBucket } from '../lib/api.js'
 import { type ChartId, getChartConfig } from '../lib/charts.js'
+
+const DETAIL_FILTER_KEY = 'playwright-cart.chart-detail-filter'
+const DETAIL_CONTROLS_KEY = 'playwright-cart.chart-detail-controls'
+const DEFAULT_CONTROLS: ControlsValue = { interval: 'day', days: 30, limit: 25 }
+
+function readStoredDetailFilter(): FilterValue {
+  try {
+    return JSON.parse(localStorage.getItem(DETAIL_FILTER_KEY) ?? '{}')
+  } catch {
+    return {}
+  }
+}
+
+function readStoredDetailControls(): ControlsValue {
+  try {
+    return JSON.parse(localStorage.getItem(DETAIL_CONTROLS_KEY) ?? 'null') ?? DEFAULT_CONTROLS
+  } catch {
+    return DEFAULT_CONTROLS
+  }
+}
 
 const CHART_CONFIGS_DETAIL: Record<
   Exclude<ChartId, 'test-reliability'>,
@@ -89,9 +109,19 @@ function StatPill({
 export default function ChartDetailPage() {
   const { chartId } = useParams<{ chartId: string }>()
   const navigate = useNavigate()
+  const [searchParams] = useSearchParams()
   const { data: meta } = useRunsMeta()
-  const [controls, setControls] = useState<ControlsValue>({ interval: 'day', days: 30, limit: 25 })
-  const [filter, setFilter] = useState<FilterValue>({})
+
+  const urlFilter: FilterValue = {
+    project: searchParams.get('project') ?? undefined,
+    branch: searchParams.get('branch') ?? undefined,
+  }
+  const hasUrlFilter = !!(urlFilter.project || urlFilter.branch)
+
+  const [controls, setControls] = useState<ControlsValue>(readStoredDetailControls)
+  const [filter, setFilter] = useState<FilterValue>(
+    hasUrlFilter ? urlFilter : readStoredDetailFilter,
+  )
 
   const validId = chartId as ChartId
   const config = getChartConfig(validId)
@@ -107,6 +137,14 @@ export default function ChartDetailPage() {
   useEffect(() => {
     if (invalid) navigate('/charts', { replace: true })
   }, [invalid, navigate])
+
+  useEffect(() => {
+    localStorage.setItem(DETAIL_FILTER_KEY, JSON.stringify(filter))
+  }, [filter])
+
+  useEffect(() => {
+    localStorage.setItem(DETAIL_CONTROLS_KEY, JSON.stringify(controls))
+  }, [controls])
 
   if (invalid) return null
 
