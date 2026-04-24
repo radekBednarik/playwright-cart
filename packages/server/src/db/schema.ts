@@ -152,6 +152,13 @@ export const revokedTokens = pgTable('revoked_tokens', {
   exp: timestamp('exp', { withTimezone: true }).notNull(),
 })
 
+export const llmProviderConfigs = pgTable('llm_provider_configs', {
+  provider: text('provider').primaryKey(),
+  apiKey: text('api_key').notNull(),
+  model: text('model').notNull(),
+  updatedAt: timestamp('updated_at', { withTimezone: true }).notNull().defaultNow(),
+})
+
 export const aiSummaries = pgTable(
   'ai_summaries',
   {
