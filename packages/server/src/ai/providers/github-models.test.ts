@@ -213,4 +213,58 @@ describe('GitHubModelsProvider', () => {
       p.generateSummary({ prompt: 'test', images: [], model: 'openai/gpt-4o', apiKey: 'ghp' }),
     ).rejects.toThrow('An unexpected error occurred while generating the summary.')
   })
+
+  it('throws ProviderError with connection category on connection error', async () => {
+    const OpenAI = (await import('openai')).default
+    const { APIConnectionError } = await import('openai')
+    const mockCreate = vi
+      .fn()
+      .mockRejectedValue(new APIConnectionError({ message: 'Connection failed' }))
+    // biome-ignore lint/complexity/useArrowFunction: must be a constructor-compatible function for `new OpenAI()`
+    vi.mocked(OpenAI).mockImplementation(function () {
+      return { chat: { completions: { create: mockCreate } } } as never
+    })
+
+    const p = new GitHubModelsProvider()
+    await expect(
+      p.generateSummary({ prompt: 'test', images: [], model: 'openai/gpt-4o', apiKey: 'sk' }),
+    ).rejects.toThrow(
+      'Could not connect to the AI provider. Check your network or try again later.',
+    )
+  })
+
+  it('throws ProviderError with bad_request category when provider rejects request', async () => {
+    const OpenAI = (await import('openai')).default
+    const { BadRequestError } = await import('openai')
+    const mockCreate = vi
+      .fn()
+      .mockRejectedValue(
+        new BadRequestError(400, { message: 'Bad Request' }, 'Bad Request', new Headers() as never),
+      )
+    // biome-ignore lint/complexity/useArrowFunction: must be a constructor-compatible function for `new OpenAI()`
+    vi.mocked(OpenAI).mockImplementation(function () {
+      return { chat: { completions: { create: mockCreate } } } as never
+    })
+
+    const p = new GitHubModelsProvider()
+    await expect(
+      p.generateSummary({ prompt: 'test', images: [], model: 'openai/gpt-4o', apiKey: 'sk' }),
+    ).rejects.toThrow(
+      'The request was rejected by the AI provider. Check your model selection in Settings.',
+    )
+  })
+
+  it('throws ProviderError with unknown category when response has empty choices', async () => {
+    const OpenAI = (await import('openai')).default
+    const mockCreate = vi.fn().mockResolvedValue({ choices: [] })
+    // biome-ignore lint/complexity/useArrowFunction: must be a constructor-compatible function for `new OpenAI()`
+    vi.mocked(OpenAI).mockImplementation(function () {
+      return { chat: { completions: { create: mockCreate } } } as never
+    })
+
+    const p = new GitHubModelsProvider()
+    await expect(
+      p.generateSummary({ prompt: 'test', images: [], model: 'openai/gpt-4o', apiKey: 'sk' }),
+    ).rejects.toThrow('An unexpected error occurred while generating the summary.')
+  })
 })
