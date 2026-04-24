@@ -5,7 +5,7 @@ import { listProviders } from '../ai/providers/index.js'
 import { adminMiddleware } from '../auth/middleware.js'
 import type { HonoEnv } from '../auth/types.js'
 import { db } from '../db/client.js'
-import { appSettings } from '../db/schema.js'
+import { appSettings, llmProviderConfigs } from '../db/schema.js'
 import { type AppEvent, runEmitter } from '../events.js'
 
 export const settingsRouter = new Hono<HonoEnv>()
@@ -38,17 +38,30 @@ settingsRouter.patch('/', adminMiddleware, async (c) => {
 })
 
 settingsRouter.get('/llm', async (c) => {
-  const rows = await db
+  const settingsRows = await db
     .select()
     .from(appSettings)
-    .where(inArray(appSettings.key, ['llm_enabled', 'llm_provider', 'llm_model', 'llm_api_key']))
-  const map = Object.fromEntries(rows.map((r) => [r.key, r.value]))
+    .where(inArray(appSettings.key, ['llm_enabled', 'llm_provider']))
+  const map = Object.fromEntries(settingsRows.map((r) => [r.key, r.value]))
+
+  const configRows = await db.select().from(llmProviderConfigs)
+  const configByProvider = Object.fromEntries(configRows.map((r) => [r.provider, r]))
+
+  const activeProvider = map.llm_provider ?? 'anthropic'
+
+  const providers = listProviders().map((p) => {
+    const cfg = configByProvider[p.name]
+    return {
+      ...p,
+      isConfigured: !!cfg,
+      model: cfg?.model ?? p.models[0]?.id ?? '',
+    }
+  })
+
   return c.json({
     enabled: map.llm_enabled === 'true',
-    provider: map.llm_provider ?? 'anthropic',
-    model: map.llm_model ?? 'claude-sonnet-4-6',
-    isConfigured: !!map.llm_api_key,
-    providers: listProviders(),
+    provider: activeProvider,
+    providers,
   })
 })
 
@@ -60,47 +73,95 @@ settingsRouter.patch('/llm', adminMiddleware, async (c) => {
     apiKey?: string
   }>()
 
+  const hasEnabled = typeof body.enabled === 'boolean'
+  const hasProvider = typeof body.provider === 'string'
+  const hasApiKey = typeof body.apiKey === 'string' && body.apiKey.length > 0
+  const hasModel = typeof body.model === 'string' && body.model.length > 0
+
+  if (!hasEnabled && !hasProvider && !hasApiKey && !hasModel) {
+    return c.json({ error: 'No fields to update' }, 400)
+  }
+  if (hasApiKey && !hasProvider) {
+    return c.json({ error: 'provider is required when updating apiKey' }, 400)
+  }
+
   const jwtSecret = process.env.JWT_SECRET ?? ''
-  const updates: { key: string; value: string }[] = []
+  const encryptedKey = hasApiKey ? encrypt(body.apiKey as string, jwtSecret) : null
+  const targetProvider = hasProvider ? (body.provider as string) : null
+  let enabledValue: boolean | null = null
 
-  if (typeof body.enabled === 'boolean') {
-    updates.push({ key: 'llm_enabled', value: String(body.enabled) })
-  }
-  if (typeof body.provider === 'string') {
-    updates.push({ key: 'llm_provider', value: body.provider })
-  }
-  if (typeof body.model === 'string') {
-    updates.push({ key: 'llm_model', value: body.model })
-  }
-  if (typeof body.apiKey === 'string' && body.apiKey.length > 0) {
-    updates.push({ key: 'llm_api_key', value: encrypt(body.apiKey, jwtSecret) })
-  }
-
-  if (updates.length === 0) return c.json({ error: 'No fields to update' }, 400)
-
-  const enabledUpdate = updates.find((u) => u.key === 'llm_enabled')
-  if (enabledUpdate?.value === 'true') {
-    const hasKeyUpdate = updates.some((u) => u.key === 'llm_api_key')
-    if (!hasKeyUpdate) {
-      const [existing] = await db
-        .select()
-        .from(appSettings)
-        .where(eq(appSettings.key, 'llm_api_key'))
-      if (!existing) return c.json({ error: 'Cannot enable without an API key configured' }, 400)
+  await db.transaction(async (tx) => {
+    if (hasApiKey && targetProvider) {
+      const model = hasModel ? (body.model as string) : null
+      let resolvedModel = model
+      if (!resolvedModel) {
+        const [existing] = await tx
+          .select({ model: llmProviderConfigs.model })
+          .from(llmProviderConfigs)
+          .where(eq(llmProviderConfigs.provider, targetProvider))
+          .limit(1)
+        resolvedModel = existing?.model ?? ''
+      }
+      await tx
+        .insert(llmProviderConfigs)
+        .values({ provider: targetProvider, apiKey: encryptedKey as string, model: resolvedModel })
+        .onConflictDoUpdate({
+          target: llmProviderConfigs.provider,
+          set: { apiKey: encryptedKey as string, model: resolvedModel, updatedAt: new Date() },
+        })
+    } else if (hasModel && targetProvider) {
+      await tx
+        .update(llmProviderConfigs)
+        .set({ model: body.model as string, updatedAt: new Date() })
+        .where(eq(llmProviderConfigs.provider, targetProvider))
     }
-  }
 
-  for (const { key, value } of updates) {
-    await db
-      .insert(appSettings)
-      .values({ key, value })
-      .onConflictDoUpdate({ target: appSettings.key, set: { value } })
-  }
+    if (hasEnabled && body.enabled === true) {
+      if (!hasApiKey) {
+        const checkProvider =
+          targetProvider ??
+          (
+            await tx
+              .select({ value: appSettings.value })
+              .from(appSettings)
+              .where(eq(appSettings.key, 'llm_provider'))
+              .limit(1)
+          ).at(0)?.value
+        if (!checkProvider)
+          throw Object.assign(new Error('Cannot enable without a provider selected'), {
+            status: 400,
+          })
+        const [existing] = await tx
+          .select()
+          .from(llmProviderConfigs)
+          .where(eq(llmProviderConfigs.provider, checkProvider))
+          .limit(1)
+        if (!existing)
+          throw Object.assign(new Error('Cannot enable without an API key configured'), {
+            status: 400,
+          })
+      }
+    }
 
-  if (enabledUpdate) {
+    if (hasEnabled) {
+      enabledValue = body.enabled as boolean
+      await tx
+        .insert(appSettings)
+        .values({ key: 'llm_enabled', value: String(body.enabled) })
+        .onConflictDoUpdate({ target: appSettings.key, set: { value: String(body.enabled) } })
+    }
+    if (hasProvider) {
+      await tx
+        .insert(appSettings)
+        .values({ key: 'llm_provider', value: body.provider as string })
+        .onConflictDoUpdate({ target: appSettings.key, set: { value: body.provider as string } })
+    }
+  })
+
+  if (enabledValue !== null) {
     runEmitter.emit('event', {
       type: 'settings:llm_updated',
-      enabled: enabledUpdate.value === 'true',
+      enabled: enabledValue,
     } satisfies AppEvent)
   }
 
