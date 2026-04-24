@@ -1,8 +1,8 @@
 import { readFileSync } from 'node:fs'
 import { join } from 'node:path'
-import { inArray } from 'drizzle-orm'
+import { eq, inArray } from 'drizzle-orm'
 import { db } from '../db/client.js'
-import { aiSummaries, appSettings } from '../db/schema.js'
+import { aiSummaries, appSettings, llmProviderConfigs } from '../db/schema.js'
 import { type AppEvent, runEmitter } from '../events.js'
 import type { TestRecord } from '../runs/storage.js'
 import * as storage from '../runs/storage.js'
@@ -25,13 +25,24 @@ async function getLlmConfig(): Promise<LlmConfig | null> {
   const rows = await db
     .select()
     .from(appSettings)
-    .where(inArray(appSettings.key, ['llm_enabled', 'llm_provider', 'llm_model', 'llm_api_key']))
+    .where(inArray(appSettings.key, ['llm_enabled', 'llm_provider']))
   const map = Object.fromEntries(rows.map((r) => [r.key, r.value]))
   if (map.llm_enabled !== 'true') return null
-  if (!map.llm_api_key || !map.llm_provider || !map.llm_model) return null
+  if (!map.llm_provider) return null
+
+  const [config] = await db
+    .select()
+    .from(llmProviderConfigs)
+    .where(eq(llmProviderConfigs.provider, map.llm_provider))
+    .limit(1)
+  if (!config) return null
+
   const jwtSecret = process.env.JWT_SECRET ?? ''
-  const apiKey = decrypt(map.llm_api_key, jwtSecret)
-  return { provider: map.llm_provider, model: map.llm_model, apiKey }
+  return {
+    provider: config.provider,
+    model: config.model,
+    apiKey: decrypt(config.apiKey, jwtSecret),
+  }
 }
 
 function loadErrorContextMarkdown(
