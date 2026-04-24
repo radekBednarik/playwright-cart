@@ -31,7 +31,7 @@ describe('GitHubModelsProvider', () => {
   it('exposes correct name, displayName, and available models', () => {
     expect(provider.name).toBe('github-models')
     expect(provider.displayName).toBe('GitHub Models')
-    expect(provider.availableModels.length).toBeGreaterThan(0)
+    expect(provider.availableModels.length).toBe(10)
     expect(provider.availableModels[0]).toHaveProperty('id')
     expect(provider.availableModels[0]).toHaveProperty('label')
   })

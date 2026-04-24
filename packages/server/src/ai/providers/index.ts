@@ -16,7 +16,7 @@ export function getProvider(name: string): LLMProvider {
 export function listProviders(): {
   name: string
   displayName: string
-  models: { id: string; label: string }[]
+  models: ReadonlyArray<{ id: string; label: string }>
 }[] {
   return Object.values(providers).map((p) => ({
     name: p.name,

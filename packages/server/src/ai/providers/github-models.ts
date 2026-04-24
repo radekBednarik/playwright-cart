@@ -11,48 +11,25 @@ import OpenAI, {
 import { ProviderError } from '../errors.js'
 import type { LLMProvider } from './types.js'
 
-const FALLBACK_MODELS = [
+// Model IDs use the openai/ prefix (GitHub Models inference endpoint; azure-openai/ endpoint deprecated Jul 2025).
+// Update this list when GitHub Models adds or retires models.
+const MODELS = [
+  { id: 'openai/gpt-5', label: 'GPT-5' },
+  { id: 'openai/gpt-5-mini', label: 'GPT-5 Mini' },
+  { id: 'openai/gpt-5-nano', label: 'GPT-5 Nano' },
   { id: 'openai/gpt-4.1', label: 'GPT-4.1' },
   { id: 'openai/gpt-4.1-mini', label: 'GPT-4.1 Mini' },
   { id: 'openai/gpt-4.1-nano', label: 'GPT-4.1 Nano' },
   { id: 'openai/gpt-4o', label: 'GPT-4o' },
-]
+  { id: 'openai/gpt-4o-mini', label: 'GPT-4o Mini' },
+  { id: 'openai/o3', label: 'OpenAI o3' },
+  { id: 'openai/o4-mini', label: 'OpenAI o4-mini' },
+] as const satisfies ReadonlyArray<{ id: string; label: string }>
 
 export class GitHubModelsProvider implements LLMProvider {
   readonly name = 'github-models'
   readonly displayName = 'GitHub Models'
-  availableModels = FALLBACK_MODELS
-
-  constructor() {
-    // Fire-and-forget catalog fetch in background; errors swallowed, fallback used
-    this.#refreshCatalog()
-  }
-
-  async #refreshCatalog() {
-    try {
-      const res = await fetch('https://models.github.ai/catalog/models', {
-        headers: { Accept: 'application/vnd.github+json' },
-      })
-      if (!res.ok) return
-      const data = await res.json()
-      // GitHub catalog response is an array at the top level.
-      // Each item has: id (string), task (string), friendly_name (string)
-      // Filter for chat-completion capable models only.
-      const raw: unknown[] = Array.isArray(data) ? data : []
-      const models = raw
-        .filter(
-          (m): m is { id: string; task: string; friendly_name?: string; name?: string } =>
-            typeof m === 'object' &&
-            m !== null &&
-            typeof (m as { id?: unknown }).id === 'string' &&
-            (m as { task?: unknown }).task === 'chat-completion',
-        )
-        .map((m) => ({ id: m.id, label: m.friendly_name ?? m.name ?? m.id }))
-      if (models.length > 0) this.availableModels = models
-    } catch {
-      // silently fall back to FALLBACK_MODELS
-    }
-  }
+  readonly availableModels = MODELS
 
   async generateSummary(opts: {
     prompt: string
