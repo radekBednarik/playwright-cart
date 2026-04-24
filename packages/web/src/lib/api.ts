@@ -398,7 +398,7 @@ export interface LlmSettings {
   provider: string
   model: string
   isConfigured: boolean
-  providers: { name: string; models: { id: string; label: string }[] }[]
+  providers: { name: string; displayName: string; models: { id: string; label: string }[] }[]
 }
 
 export async function fetchRunSummary(runId: string): Promise<AiSummary | null> {

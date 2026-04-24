@@ -798,7 +798,7 @@ function AiSummariesSection() {
           <option value="">— select provider —</option>
           {availableProviders.map((p) => (
             <option key={p.name} value={p.name}>
-              {p.name}
+              {p.displayName}
             </option>
           ))}
         </select>
