@@ -13,6 +13,7 @@ import type { LLMProvider } from './types.js'
 
 export class AnthropicProvider implements LLMProvider {
   readonly name = 'anthropic'
+  readonly displayName = 'Anthropic'
   readonly availableModels = [
     { id: 'claude-opus-4-7', label: 'Claude Opus 4.7' },
     { id: 'claude-sonnet-4-6', label: 'Claude Sonnet 4.6' },
