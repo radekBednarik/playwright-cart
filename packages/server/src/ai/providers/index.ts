@@ -11,6 +11,14 @@ export function getProvider(name: string): LLMProvider {
   return p
 }
 
-export function listProviders(): { name: string; models: { id: string; label: string }[] }[] {
-  return Object.values(providers).map((p) => ({ name: p.name, models: p.availableModels }))
+export function listProviders(): {
+  name: string
+  displayName: string
+  models: { id: string; label: string }[]
+}[] {
+  return Object.values(providers).map((p) => ({
+    name: p.name,
+    displayName: p.displayName,
+    models: p.availableModels,
+  }))
 }
