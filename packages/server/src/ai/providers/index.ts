@@ -1,8 +1,10 @@
 import { AnthropicProvider } from './anthropic.js'
+import { GitHubModelsProvider } from './github-models.js'
 import type { LLMProvider } from './types.js'
 
 const providers: Record<string, LLMProvider> = {
   anthropic: new AnthropicProvider(),
+  'github-models': new GitHubModelsProvider(),
 }
 
 export function getProvider(name: string): LLMProvider {
