@@ -84,6 +84,9 @@ settingsRouter.patch('/llm', adminMiddleware, async (c) => {
   if (hasApiKey && !hasProvider) {
     return c.json({ error: 'provider is required when updating apiKey' }, 400)
   }
+  if (hasModel && !hasProvider) {
+    return c.json({ error: 'provider is required when updating model' }, 400)
+  }
 
   const jwtSecret = process.env.JWT_SECRET ?? ''
   const encryptedKey = hasApiKey ? encrypt(body.apiKey as string, jwtSecret) : null
@@ -100,7 +103,8 @@ settingsRouter.patch('/llm', adminMiddleware, async (c) => {
           .from(llmProviderConfigs)
           .where(eq(llmProviderConfigs.provider, targetProvider))
           .limit(1)
-        resolvedModel = existing?.model ?? ''
+        const providerDef = listProviders().find((p) => p.name === targetProvider)
+        resolvedModel = existing?.model ?? providerDef?.models[0]?.id ?? ''
       }
       await tx
         .insert(llmProviderConfigs)

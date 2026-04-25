@@ -19,4 +19,5 @@ SELECT
 FROM app_settings s1
 JOIN app_settings s2 ON s2.key = 'llm_api_key'
 LEFT JOIN app_settings s3 ON s3.key = 'llm_model'
-WHERE s1.key = 'llm_provider';
+WHERE s1.key = 'llm_provider'
+ON CONFLICT ("provider") DO NOTHING;

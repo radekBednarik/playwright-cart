@@ -735,7 +735,9 @@ function AiSummariesSection() {
   }, [settings])
 
   const availableProviders = settings?.providers ?? []
-  const currentProviderModels = availableProviders.find((p) => p.name === provider)?.models ?? []
+  const currentProviderConfig = availableProviders.find((p) => p.name === provider)
+  const currentProviderModels = currentProviderConfig?.models ?? []
+  const isConfigured = currentProviderConfig?.isConfigured ?? false
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
@@ -835,9 +837,7 @@ function AiSummariesSection() {
           <label htmlFor="ai-api-key" className="font-display text-xs text-tn-muted">
             API Key
           </label>
-          {settings?.providers.find((p) => p.name === provider)?.isConfigured && (
-            <span className="font-mono text-xs text-tn-green">● Configured</span>
-          )}
+          {isConfigured && <span className="font-mono text-xs text-tn-green">● Configured</span>}
         </div>
         <input
           id="ai-api-key"
@@ -847,11 +847,7 @@ function AiSummariesSection() {
             setApiKey(e.target.value)
             setStatus('idle')
           }}
-          placeholder={
-            settings?.providers.find((p) => p.name === provider)?.isConfigured
-              ? 'Leave blank to keep existing key'
-              : 'Enter API key'
-          }
+          placeholder={isConfigured ? 'Leave blank to keep existing key' : 'Enter API key'}
           autoComplete="new-password"
           className={inputClass}
         />
