@@ -730,7 +730,8 @@ function AiSummariesSection() {
     if (!settings) return
     setEnabled(settings.enabled)
     setProvider(settings.provider)
-    setModel(settings.model)
+    const active = settings.providers.find((p) => p.name === settings.provider)
+    setModel(active?.model ?? '')
   }, [settings])
 
   const availableProviders = settings?.providers ?? []
@@ -789,8 +790,10 @@ function AiSummariesSection() {
           id="ai-provider"
           value={provider}
           onChange={(e) => {
-            setProvider(e.target.value)
-            setModel('')
+            const next = e.target.value
+            setProvider(next)
+            const nextConfig = settings?.providers.find((p) => p.name === next)
+            setModel(nextConfig?.model ?? '')
             setStatus('idle')
           }}
           className={inputClass}
@@ -832,7 +835,7 @@ function AiSummariesSection() {
           <label htmlFor="ai-api-key" className="font-display text-xs text-tn-muted">
             API Key
           </label>
-          {settings?.isConfigured && (
+          {settings?.providers.find((p) => p.name === provider)?.isConfigured && (
             <span className="font-mono text-xs text-tn-green">● Configured</span>
           )}
         </div>
@@ -845,7 +848,9 @@ function AiSummariesSection() {
             setStatus('idle')
           }}
           placeholder={
-            settings?.isConfigured ? 'Leave blank to keep existing key' : 'Enter API key'
+            settings?.providers.find((p) => p.name === provider)?.isConfigured
+              ? 'Leave blank to keep existing key'
+              : 'Enter API key'
           }
           autoComplete="new-password"
           className={inputClass}

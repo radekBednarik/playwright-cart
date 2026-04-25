@@ -396,9 +396,13 @@ export interface AiSummary {
 export interface LlmSettings {
   enabled: boolean
   provider: string
-  model: string
-  isConfigured: boolean
-  providers: { name: string; displayName: string; models: { id: string; label: string }[] }[]
+  providers: {
+    name: string
+    displayName: string
+    models: { id: string; label: string }[]
+    isConfigured: boolean
+    model: string
+  }[]
 }
 
 export async function fetchRunSummary(runId: string): Promise<AiSummary | null> {
