@@ -31,9 +31,9 @@ app.use(
   '/api/auth/login',
   rateLimiter({
     windowMs: 15 * 60 * 1000,
-    limit: 100,
+    limit: 10,
     message: { error: 'Too many login attempts. Please try again later.' },
-    keyGenerator: (c) => c.req.header('x-real-ip') ?? c.req.header('x-forwarded-for') ?? 'unknown',
+    keyGenerator: (c) => c.req.header('x-real-ip') ?? 'unknown',
   }),
 )
 app.use('/api/*', async (c, next) => {
