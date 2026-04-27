@@ -1,19 +1,18 @@
 # Security Audit — 2026-04-12
 
-## Overall Score: 8.4 / 10  (Grade: B)
+## Overall Score: 8.9 / 10  (Grade: B)
 
-Penalties: 0 Critical · 0 High · 2 Medium × 0.5 = 1.0 · 6 Low × 0.1 = 0.6 · 1 Info = 0
+Penalties: 0 Critical · 0 High · 1 Medium × 0.5 = 0.5 · 6 Low × 0.1 = 0.6 · 1 Info = 0
 
 ## Executive Summary
 
-Strong improvement since the 2026-04-11 audit (6.7/10 C → 8.4/10 B). SA-NEW-1 (API key in
-git) has been resolved — `packages/e2e/.env` is no longer tracked. Authentication foundations
-remain solid: bcrypt, httpOnly/SameSite:strict cookies, JTI revocation, rate-limited login,
-CORS restricted to an explicit origin. The two remaining Medium findings — nginx missing
-security headers and no Zod validation on test metadata JSON — are the top priorities. Six
-Low findings are infrastructure hygiene items (credential templating, logger redaction, upload
-guards). SA-012 is reclassified from Medium to Low: CVSS 3.5 falls in the Low range; the
-label in the previous report was incorrect.
+Strong improvement since the 2026-04-11 audit (6.7/10 C → 8.9/10 B). SA-NEW-1 (API key in
+git) and SA-007 (nginx security headers) have been resolved. Authentication foundations remain
+solid: bcrypt, httpOnly/SameSite:strict cookies, JTI revocation, rate-limited login, CORS
+restricted to an explicit origin. One Medium finding remains — no Zod validation on test
+metadata JSON. Six Low findings remain as infrastructure hygiene items (credential templating,
+logger redaction, upload guards). SA-012 is reclassified from Medium to Low: CVSS 3.5 falls in
+the Low range; the label in the previous report was incorrect.
 
 ---
 
@@ -32,36 +31,6 @@ label in the previous report was incorrect.
 ---
 
 ### Medium  (CVSS 4.0–6.9)
-
-#### [SA-007] Nginx ships with no security response headers
-- **Severity:** Medium (CVSS 5.3) — unfixed from 2026-04-11
-- **Location:** `packages/web/nginx.conf`
-- **Description:** The entire nginx config contains zero security headers. Playwright HTML
-  reports served under `/reports/` contain user-controlled JavaScript — without CSP, a
-  malicious test result could exfiltrate the authenticated session cookie.
-- **Impact:** Clickjacking via missing `X-Frame-Options`; MIME-sniffing attacks via missing
-  `X-Content-Type-Options`; stored-XSS escalation through embedded report JS without CSP.
-- **Fix:**
-
-```nginx
-# packages/web/nginx.conf — add inside the server {} block, before location blocks
-add_header X-Frame-Options "SAMEORIGIN" always;
-add_header X-Content-Type-Options "nosniff" always;
-add_header Referrer-Policy "strict-origin-when-cross-origin" always;
-add_header Strict-Transport-Security "max-age=63072000; includeSubDomains" always;
-
-# CSP only for the SPA — /reports/ uses inline scripts and would break under a strict policy
-location / {
-  add_header Content-Security-Policy "default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline';" always;
-  try_files $uri $uri/ /index.html;
-}
-```
-
-Note: do NOT apply a restrictive CSP to `/reports/` — Playwright HTML reports rely on inline
-scripts. Consider serving reports from a separate subdomain to isolate their permissions from
-the main SPA.
-
----
 
 #### [SA-008] No schema validation on test metadata JSON
 - **Severity:** Medium (CVSS 4.5) — unfixed from 2026-04-11
@@ -287,6 +256,7 @@ Update `drizzle-kit` when an upstream release pulls in esbuild ≥0.25.0.
 | Finding | Fix |
 |---------|-----|
 | SA-NEW-1 Raw API key committed to git | `packages/e2e/.env` no longer tracked by git |
+| SA-007 Nginx ships with no security response headers | `packages/web/nginx.conf` now sets `X-Frame-Options`, `X-Content-Type-Options`, `Referrer-Policy`, `Strict-Transport-Security`, and a SPA-only CSP while leaving `/reports/` CSP-free |
 
 Previously fixed items (SA-001–004, SA-006, SA-009) remain verified fixed.
 
@@ -305,13 +275,12 @@ Previously fixed items (SA-001–004, SA-006, SA-009) remain verified fixed.
 Work through in this order:
 
 1. **[SA-008]** Add Zod validation + JSON.parse error handling to test metadata — closes DoS, data integrity, and unhandled exception in one change
-2. **[SA-007]** Add security headers to nginx.conf — prevents XSS escalation via Playwright report JS
-3. **[SA-NEW-2]** Redact Authorization headers from logger — one wrapper, prevents key leakage in logs
-4. **[SA-NEW-5]** Rate-limit reporter upload endpoints — backpressure against compromised API keys
-5. **[SA-011]** Remove weak JWT_SECRET fallback from dev compose — use `:?` to force explicit value
-6. **[SA-010]** Template Postgres credentials in prod compose — use env vars, document in .env.example
-7. **[SA-012]** Add magic-byte check on zip upload — defence-in-depth for zip processing
-8. **[SA-NEW-4]** Add per-file size cap on attachment uploads — prevents memory spike on large files
-9. **[SA-014]** Guard stack traces from UI in production — `import.meta.env.DEV &&`
+2. **[SA-NEW-2]** Redact Authorization headers from logger — one wrapper, prevents key leakage in logs
+3. **[SA-NEW-5]** Rate-limit reporter upload endpoints — backpressure against compromised API keys
+4. **[SA-011]** Remove weak JWT_SECRET fallback from dev compose — use `:?` to force explicit value
+5. **[SA-010]** Template Postgres credentials in prod compose — use env vars, document in .env.example
+6. **[SA-012]** Add magic-byte check on zip upload — defence-in-depth for zip processing
+7. **[SA-NEW-4]** Add per-file size cap on attachment uploads — prevents memory spike on large files
+8. **[SA-014]** Guard stack traces from UI in production — `import.meta.env.DEV &&`
 
 Won't fix: SA-005 (JWT_SECRET dual-use — not warranted for this threat model)
