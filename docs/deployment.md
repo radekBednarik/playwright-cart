@@ -128,13 +128,16 @@ This enables Coolify to pull code and set up webhooks for automatic deployments 
 
 ### Set environment variables
 
-In the application's **Environment Variables** tab, add:
+In the application's **Environment Variables** tab, add every variable referenced as `${...}` in `docker-compose.prod.yml`:
 
 | Key | Value |
 |-----|-------|
 | `JWT_SECRET` | run `openssl rand -hex 32` and paste the output |
 | `ADMIN_USERNAME` | your preferred admin username |
 | `ADMIN_PASSWORD` | a strong password |
+| `ALLOWED_ORIGIN` | `https://your-domain.example.com` |
+
+`ALLOWED_ORIGIN` must exactly match the public dashboard origin, including `https://` and no trailing slash.
 
 ### Configure the domain
 
@@ -198,6 +201,7 @@ services:
       ADMIN_USERNAME: "${ADMIN_USERNAME}"
       ADMIN_PASSWORD: "${ADMIN_PASSWORD}"
       JWT_SECRET: "${JWT_SECRET}"
+      ALLOWED_ORIGIN: "${ALLOWED_ORIGIN}"
     healthcheck:
       test: ["CMD", "wget", "-qO-", "http://localhost:3001/api/health"]
       interval: 10s
