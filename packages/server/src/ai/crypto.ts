@@ -1,11 +1,11 @@
-import { createCipheriv, createDecipheriv, createHash, randomBytes } from 'node:crypto'
+import { createCipheriv, createDecipheriv, hkdfSync, randomBytes } from 'node:crypto'
 
 const ALGORITHM = 'aes-256-gcm'
 const IV_BYTES = 12
 const TAG_BYTES = 16
 
 function deriveKey(secret: string): Buffer {
-  return createHash('sha256').update(secret).digest()
+  return Buffer.from(hkdfSync('sha256', secret, '', 'playwright-cart-aes-key', 32))
 }
 
 export function encrypt(plaintext: string, secret: string): string {

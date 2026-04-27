@@ -1,6 +1,7 @@
 import { serve } from '@hono/node-server'
 import { eq } from 'drizzle-orm'
 import { app } from './app.js'
+import { runRekeyMigration } from './ai/rekeymigration.js'
 import { db } from './db/client.js'
 import { runMigrations } from './db/migrate.js'
 import { aiSummaries } from './db/schema.js'
@@ -11,6 +12,9 @@ const port = Number(process.env.PORT ?? 3001)
 
 await runMigrations()
 await runSeed()
+const jwtSecret = process.env.JWT_SECRET
+if (!jwtSecret) throw new Error('[startup] JWT_SECRET environment variable must be set')
+await runRekeyMigration(jwtSecret)
 
 await db
   .update(aiSummaries)
