@@ -366,6 +366,92 @@ describe('POST /api/runs/:runId/tests', () => {
     expect(results[0].tags).toEqual(['@auth', '@smoke'])
   })
 
+  it('returns 400 for invalid metadata JSON', async () => {
+    await storage.createRun({
+      runId: 'run-1',
+      project: 'p',
+      tags: [],
+      startedAt: '2026-04-02T10:00:00.000Z',
+      status: 'running',
+    })
+
+    const form = new FormData()
+    form.append('metadata', '{not-json')
+
+    const res = await runs.request('/run-1/tests', { method: 'POST', body: form })
+
+    expect(res.status).toBe(400)
+    await expect(res.json()).resolves.toEqual({ error: 'Invalid metadata JSON' })
+    await expect(storage.getTestResults('run-1')).resolves.toEqual([])
+  })
+
+  it('returns 400 for invalid metadata shape', async () => {
+    await storage.createRun({
+      runId: 'run-1',
+      project: 'p',
+      tags: [],
+      startedAt: '2026-04-02T10:00:00.000Z',
+      status: 'running',
+    })
+
+    const form = new FormData()
+    form.append(
+      'metadata',
+      JSON.stringify({
+        testId: 'suite--my-test',
+        tags: [],
+        titlePath: ['suite', 'my test'],
+        location: { file: 'a.spec.ts', line: 5, column: 1 },
+        status: 'passed',
+        duration: 300,
+        errors: [],
+        retry: 0,
+        annotations: [],
+        attachments: [],
+      }),
+    )
+
+    const res = await runs.request('/run-1/tests', { method: 'POST', body: form })
+
+    expect(res.status).toBe(400)
+    await expect(res.json()).resolves.toEqual({ error: 'Invalid metadata' })
+    await expect(storage.getTestResults('run-1')).resolves.toEqual([])
+  })
+
+  it('returns 400 for invalid metadata field types', async () => {
+    await storage.createRun({
+      runId: 'run-1',
+      project: 'p',
+      tags: [],
+      startedAt: '2026-04-02T10:00:00.000Z',
+      status: 'running',
+    })
+
+    const form = new FormData()
+    form.append(
+      'metadata',
+      JSON.stringify({
+        testId: 'suite--my-test',
+        title: 'my test',
+        tags: [],
+        titlePath: ['suite', 'my test'],
+        location: { file: 'a.spec.ts', line: 5, column: 1 },
+        status: 'passed',
+        duration: 300,
+        errors: [],
+        retry: '0',
+        annotations: [],
+        attachments: [],
+      }),
+    )
+
+    const res = await runs.request('/run-1/tests', { method: 'POST', body: form })
+
+    expect(res.status).toBe(400)
+    await expect(res.json()).resolves.toEqual({ error: 'Invalid metadata' })
+    await expect(storage.getTestResults('run-1')).resolves.toEqual([])
+  })
+
   it('saves attachment files to disk', async () => {
     await storage.createRun({
       runId: 'run-1',

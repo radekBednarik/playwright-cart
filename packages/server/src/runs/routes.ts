@@ -3,6 +3,7 @@ import { basename, join, resolve } from 'node:path'
 import AdmZip from 'adm-zip'
 import { and, eq, sql } from 'drizzle-orm'
 import { Hono } from 'hono'
+import { z } from 'zod'
 import {
   generateRunSummaries,
   markRunSummaryGenerating,
@@ -19,6 +20,40 @@ import * as storage from './storage.js'
 export const runs = new Hono<HonoEnv>()
 
 const SAFE_ID = /^[a-z0-9_\-.]+$/i
+
+const testRecordSchema = z.object({
+  testId: z.string(),
+  title: z.string(),
+  tags: z.array(z.string()),
+  titlePath: z.array(z.string()),
+  location: z.object({
+    file: z.string(),
+    line: z.number().int(),
+    column: z.number().int(),
+  }),
+  status: z.enum(['passed', 'failed', 'timedOut', 'skipped', 'interrupted']),
+  duration: z.number().nonnegative(),
+  errors: z.array(
+    z.object({
+      message: z.string(),
+      stack: z.string().optional(),
+    }),
+  ),
+  retry: z.number().int().nonnegative(),
+  annotations: z.array(
+    z.object({
+      type: z.string(),
+      description: z.string().optional(),
+    }),
+  ),
+  attachments: z.array(
+    z.object({
+      name: z.string(),
+      contentType: z.string(),
+      filename: z.string().optional(),
+    }),
+  ),
+}) satisfies z.ZodType<storage.TestRecord>
 
 function normalizeTags(tags: string[] | undefined): string[] {
   if (!tags || tags.length === 0) return []
@@ -146,7 +181,15 @@ runs.post('/:runId/tests', async (c) => {
   const runId = c.req.param('runId')
   if (!SAFE_ID.test(runId)) return c.json({ error: 'Invalid runId' }, 400)
   const body = await c.req.parseBody()
-  const metadata = JSON.parse(body.metadata as string) as storage.TestRecord & { tags?: string[] }
+  let rawMetadata: unknown
+  try {
+    rawMetadata = JSON.parse(body.metadata as string)
+  } catch {
+    return c.json({ error: 'Invalid metadata JSON' }, 400)
+  }
+  const parsedMetadata = testRecordSchema.safeParse(rawMetadata)
+  if (!parsedMetadata.success) return c.json({ error: 'Invalid metadata' }, 400)
+  const metadata = parsedMetadata.data
   if (!SAFE_ID.test(metadata.testId)) return c.json({ error: 'Invalid testId' }, 400)
   const attachmentsDir = storage.getAttachmentsDir(runId, metadata.testId)
 
