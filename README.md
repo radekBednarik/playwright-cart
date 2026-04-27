@@ -178,7 +178,7 @@ cp .env.example .env
 | `DATA_DIR` | `./data` | Directory for binary files: attachments and extracted HTML reports. `docker compose` overrides this to `/app/data`. |
 | `ADMIN_USERNAME` | `admin` | Username for the initial admin account |
 | `ADMIN_PASSWORD` | `changeme123` | Password for the initial admin account — **change in production** |
-| `JWT_SECRET` | *(insecure default)* | Secret for signing JWT session tokens and encrypting stored AI provider API keys. Generate with `openssl rand -hex 32`. **Must be set in production.** |
+| `JWT_SECRET` | `change-this-secret-in-production` | Secret for signing JWT session tokens and encrypting stored AI provider API keys. Generate with `openssl rand -hex 32`. **Required — the server will not start without it.** Replace the default before exposing this instance to a network. |
 | `NODE_ENV` | `development` | Set to `production` to enable secure (HTTPS-only) cookies |
 | `ALLOWED_ORIGIN` | `http://localhost:5173` | CORS allowed origin for `/api/*`. Set to your dashboard URL in production. |
 
