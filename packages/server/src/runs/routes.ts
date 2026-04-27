@@ -20,6 +20,7 @@ import * as storage from './storage.js'
 export const runs = new Hono<HonoEnv>()
 
 const SAFE_ID = /^[a-z0-9_\-.]+$/i
+const AUTO_SUMMARY_STATUSES: storage.RunRecord['status'][] = ['failed', 'interrupted', 'timedOut']
 
 const testRecordSchema = z.object({
   testId: z.string(),
@@ -59,6 +60,35 @@ function normalizeTags(tags: string[] | undefined): string[] {
   if (!tags || tags.length === 0) return []
 
   return [...new Set(tags.map((tag) => tag.trim()).filter((tag) => tag.length > 0))].sort()
+}
+
+async function maybeStartAutoSummary(runId: string, status: storage.RunRecord['status']): Promise<void> {
+  if (!AUTO_SUMMARY_STATUSES.includes(status)) return
+
+  const [settingsRow, existingSummary] = await Promise.all([
+    db.select({ value: appSettings.value }).from(appSettings).where(eq(appSettings.key, 'llm_enabled')),
+    db
+      .select({ status: aiSummaries.status })
+      .from(aiSummaries)
+      .where(
+        and(
+          eq(aiSummaries.entityType, 'run'),
+          eq(aiSummaries.runId, runId),
+          eq(aiSummaries.entityId, runId),
+        ),
+      )
+      .limit(1),
+  ])
+
+  if (settingsRow.at(0)?.value !== 'true') return
+
+  const currentStatus = existingSummary.at(0)?.status
+  if (currentStatus === 'generating' || currentStatus === 'done') return
+
+  const marked = await markRunSummaryGenerating(runId)
+  if (!marked) return
+
+  generateRunSummaries(runId).catch((err) => console.error('[ai] summary error:', err))
 }
 
 runs.post('/', async (c) => {
@@ -162,17 +192,8 @@ runs.post('/:runId/complete', async (c) => {
     status: storage.RunRecord['status']
   }>()
   await storage.updateRun(runId, { completedAt, status })
+  await maybeStartAutoSummary(runId, status)
   runEmitter.emit('event', { type: 'run:updated', runId } satisfies RunEvent)
-
-  if (status === 'failed' || status === 'interrupted' || status === 'timedOut') {
-    const [row] = await db
-      .select({ value: appSettings.value })
-      .from(appSettings)
-      .where(eq(appSettings.key, 'llm_enabled'))
-    if (row?.value === 'true') {
-      generateRunSummaries(runId).catch((err) => console.error('[ai] summary error:', err))
-    }
-  }
 
   return c.json({})
 })
@@ -230,6 +251,7 @@ runs.post('/:runId/report', async (c) => {
 
   const reportUrl = `/reports/${runId}/report/index.html`
   await storage.updateRun(runId, { completedAt, status, reportUrl })
+  await maybeStartAutoSummary(runId, status)
   runEmitter.emit('event', { type: 'run:updated', runId } satisfies RunEvent)
 
   return c.json({ reportUrl })

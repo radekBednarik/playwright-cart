@@ -9,7 +9,7 @@ import {
   markTestSummaryGenerating,
 } from '../ai/summarizer.js'
 import { db } from '../db/client.js'
-import { aiSummaries } from '../db/schema.js'
+import { aiSummaries, appSettings } from '../db/schema.js'
 import { resetDb, startTestDatabase, stopTestDatabase } from '../db/test-utils.js'
 import { runEmitter } from '../events.js'
 import { runs } from './routes.js'
@@ -23,6 +23,12 @@ vi.mock('../ai/summarizer.js', () => ({
 
 let testDir: string
 let container: StartedPostgreSqlContainer
+
+const enableLlm = () =>
+  db
+    .insert(appSettings)
+    .values({ key: 'llm_enabled', value: 'true' })
+    .onConflictDoUpdate({ target: appSettings.key, set: { value: 'true' } })
 
 beforeAll(async () => {
   container = await startTestDatabase()
@@ -518,6 +524,8 @@ describe('POST /api/runs/:runId/tests', () => {
 })
 
 describe('POST /api/runs/:runId/report', () => {
+  beforeEach(() => vi.clearAllMocks())
+
   it('extracts zip, sets reportUrl, updates run status', async () => {
     const AdmZip = (await import('adm-zip')).default
     await storage.createRun({
@@ -572,9 +580,127 @@ describe('POST /api/runs/:runId/report', () => {
     expect(spy).toHaveBeenCalledWith('event', { type: 'run:updated', runId: 'run-1' })
     spy.mockRestore()
   })
+
+  it('starts auto summary generation for failed runs when LLM is enabled', async () => {
+    const AdmZip = (await import('adm-zip')).default
+    await storage.createRun({
+      runId: 'run-1',
+      project: 'p',
+      tags: [],
+      startedAt: '2026-04-04T10:00:00.000Z',
+      status: 'running',
+    })
+    await enableLlm()
+
+    const zip = new AdmZip()
+    zip.addFile('index.html', Buffer.from('<html/>'))
+    const form = new FormData()
+    form.append('report', new Blob([zip.toBuffer()], { type: 'application/zip' }), 'report.zip')
+    form.append('completedAt', '2026-04-04T10:05:00.000Z')
+    form.append('status', 'failed')
+
+    const res = await runs.request('/run-1/report', { method: 'POST', body: form })
+
+    expect(res.status).toBe(200)
+    expect(markRunSummaryGenerating).toHaveBeenCalledWith('run-1')
+    expect(generateRunSummaries).toHaveBeenCalledWith('run-1')
+  })
+
+  it('does not start auto summary generation for passed runs', async () => {
+    const AdmZip = (await import('adm-zip')).default
+    await storage.createRun({
+      runId: 'run-1',
+      project: 'p',
+      tags: [],
+      startedAt: '2026-04-04T10:00:00.000Z',
+      status: 'running',
+    })
+    await enableLlm()
+
+    const zip = new AdmZip()
+    zip.addFile('index.html', Buffer.from('<html/>'))
+    const form = new FormData()
+    form.append('report', new Blob([zip.toBuffer()], { type: 'application/zip' }), 'report.zip')
+    form.append('completedAt', '2026-04-04T10:05:00.000Z')
+    form.append('status', 'passed')
+
+    const res = await runs.request('/run-1/report', { method: 'POST', body: form })
+
+    expect(res.status).toBe(200)
+    expect(markRunSummaryGenerating).not.toHaveBeenCalled()
+    expect(generateRunSummaries).not.toHaveBeenCalled()
+  })
+
+  it('does not start auto summary generation when summary already exists', async () => {
+    const AdmZip = (await import('adm-zip')).default
+    await storage.createRun({
+      runId: 'run-1',
+      project: 'p',
+      tags: [],
+      startedAt: '2026-04-04T10:00:00.000Z',
+      status: 'running',
+    })
+    await enableLlm()
+    await db.insert(aiSummaries).values({
+      entityType: 'run',
+      entityId: 'run-1',
+      runId: 'run-1',
+      status: 'done',
+      provider: 'anthropic',
+      model: 'test-model',
+      content: 'existing',
+      errorMsg: null,
+      generatedAt: new Date(),
+    })
+
+    const zip = new AdmZip()
+    zip.addFile('index.html', Buffer.from('<html/>'))
+    const form = new FormData()
+    form.append('report', new Blob([zip.toBuffer()], { type: 'application/zip' }), 'report.zip')
+    form.append('completedAt', '2026-04-04T10:05:00.000Z')
+    form.append('status', 'failed')
+
+    const res = await runs.request('/run-1/report', { method: 'POST', body: form })
+
+    expect(res.status).toBe(200)
+    expect(markRunSummaryGenerating).not.toHaveBeenCalled()
+    expect(generateRunSummaries).not.toHaveBeenCalled()
+  })
+
+  it('marks summary generating before emitting run update', async () => {
+    const AdmZip = (await import('adm-zip')).default
+    await storage.createRun({
+      runId: 'run-1',
+      project: 'p',
+      tags: [],
+      startedAt: '2026-04-04T10:00:00.000Z',
+      status: 'running',
+    })
+    await enableLlm()
+    const spy = vi.spyOn(runEmitter, 'emit')
+
+    const zip = new AdmZip()
+    zip.addFile('index.html', Buffer.from('<html/>'))
+    const form = new FormData()
+    form.append('report', new Blob([zip.toBuffer()], { type: 'application/zip' }), 'report.zip')
+    form.append('completedAt', '2026-04-04T10:05:00.000Z')
+    form.append('status', 'failed')
+
+    const res = await runs.request('/run-1/report', { method: 'POST', body: form })
+
+    expect(res.status).toBe(200)
+    const markRunSummaryGeneratingMock = vi.mocked(markRunSummaryGenerating)
+    expect(markRunSummaryGeneratingMock).toHaveBeenCalledWith('run-1')
+    expect(spy.mock.invocationCallOrder[0]).toBeGreaterThan(
+      markRunSummaryGeneratingMock.mock.invocationCallOrder[0],
+    )
+    spy.mockRestore()
+  })
 })
 
 describe('POST /api/runs/:runId/complete', () => {
+  beforeEach(() => vi.clearAllMocks())
+
   it('updates run status and completedAt', async () => {
     await storage.createRun({
       runId: 'run-1',
@@ -610,6 +736,27 @@ describe('POST /api/runs/:runId/complete', () => {
     })
     expect(spy).toHaveBeenCalledWith('event', { type: 'run:updated', runId: 'run-1' })
     spy.mockRestore()
+  })
+
+  it('starts auto summary generation for failed runs when LLM is enabled', async () => {
+    await storage.createRun({
+      runId: 'run-1',
+      project: 'p',
+      tags: [],
+      startedAt: '2026-04-04T10:00:00.000Z',
+      status: 'running',
+    })
+    await enableLlm()
+
+    const res = await runs.request('/run-1/complete', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ completedAt: '2026-04-04T10:05:00.000Z', status: 'failed' }),
+    })
+
+    expect(res.status).toBe(200)
+    expect(markRunSummaryGenerating).toHaveBeenCalledWith('run-1')
+    expect(generateRunSummaries).toHaveBeenCalledWith('run-1')
   })
 })
 
