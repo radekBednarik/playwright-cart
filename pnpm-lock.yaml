@@ -75,7 +75,7 @@ importers:
         version: 0.91.1(zod@4.3.6)
       '@hono/node-server':
         specifier: ^1.19.13
-        version: 1.19.13(hono@4.12.21)
+        version: 1.19.13(hono@4.12.25)
       adm-zip:
         specifier: ^0.5.17
         version: 0.5.17
@@ -86,11 +86,11 @@ importers:
         specifier: ^0.45.2
         version: 0.45.2(@types/pg@8.20.0)(pg@8.20.0)
       hono:
-        specifier: ^4.12.21
-        version: 4.12.21
+        specifier: ^4.12.25
+        version: 4.12.25
       hono-rate-limiter:
         specifier: ^0.5.3
-        version: 0.5.3(hono@4.12.21)
+        version: 0.5.3(hono@4.12.25)
       openai:
         specifier: ^4.0.0
         version: 4.104.0(zod@4.3.6)
@@ -2074,8 +2074,8 @@ packages:
       unstorage:
         optional: true
 
-  hono@4.12.21:
-    resolution: {integrity: sha512-uV63apnb0kyPtAUwoWgaGh9HyIFcv8lgmzPZSiTBQAFOFGIzka5EZ1dZocmGnn0XdX0+XTqJ6Tqv7selMuGLRQ==}
+  hono@4.12.25:
+    resolution: {integrity: sha512-2NFaIyNVgJmBs/ecmtGzlmluTFs5cHEWGTdu0t1HBwYzoGXOL5nUQBRMXsXWla5i4KkG//QMzVP88m1+I3fdAQ==}
     engines: {node: '>=16.9.0'}
 
   html-encoding-sniffer@6.0.0:
@@ -3622,9 +3622,9 @@ snapshots:
       protobufjs: 7.5.8
       yargs: 17.7.2
 
-  '@hono/node-server@1.19.13(hono@4.12.21)':
+  '@hono/node-server@1.19.13(hono@4.12.25)':
     dependencies:
-      hono: 4.12.21
+      hono: 4.12.25
 
   '@isaacs/cliui@8.0.2':
     dependencies:
@@ -4769,11 +4769,11 @@ snapshots:
     dependencies:
       '@types/hast': 3.0.4
 
-  hono-rate-limiter@0.5.3(hono@4.12.21):
+  hono-rate-limiter@0.5.3(hono@4.12.25):
     dependencies:
-      hono: 4.12.21
+      hono: 4.12.25
 
-  hono@4.12.21: {}
+  hono@4.12.25: {}
 
   html-encoding-sniffer@6.0.0:
     dependencies:
