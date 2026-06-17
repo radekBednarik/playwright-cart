@@ -1,8 +1,7 @@
 /**
  * Seed script: wipes run/test data and fills 90 days of realistic multi-project history.
  * Run with:
- *   DATABASE_URL=postgresql://playwright_cart:playwright_cart@localhost:5432/playwright_cart \
- *     tsx packages/server/src/db/seed-demo.ts
+ * DATABASE_URL="postgresql://playwright_cart:playwright_cart@localhost:5432/playwright_cart" pnpm --filter ./packages/server exec tsx src/db/seed-demo.ts
  */
 
 import { sql } from 'drizzle-orm'
@@ -404,8 +403,8 @@ interface TestEntry {
   annotations: Omit<AnnotationInsert, 'testPk'>[]
 }
 
-const TODAY = new Date('2026-04-17T00:00:00.000Z')
-const DAYS = 90
+const TODAY = new Date('2026-06-17T00:00:00.000Z')
+const DAYS = 120
 const r = makePrng(20260417)
 
 const projectNames = Object.keys(PROJECTS)
